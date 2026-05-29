@@ -4,6 +4,19 @@ import bcrypt from 'bcryptjs';
 import { Model } from 'mongoose';
 import { UserSchemaClass } from 'src/users/infrastructure/document/entities/user.schema';
 
+/**
+ * Seed service that drops the Users collection and inserts two canonical
+ * test users with hardcoded ObjectIds for deterministic local development.
+ *
+ * Inserted records (Source: this file:L29-L56):
+ * - admin (email admin@example.com, _id 672c8442346b022fbd49c179)
+ * - john.doe (email john.doe@example.com, _id 672c73612ae468b9bb358205)
+ *
+ * Both passwords are bcrypt-hashed from the literal 'secret'.
+ *
+ * Destructive on every run — see backend/src/database/README.md
+ * § Known Limitations.
+ */
 @Injectable()
 export class UserSeedService {
   constructor(
@@ -11,10 +24,25 @@ export class UserSeedService {
     private readonly model: Model<UserSchemaClass>,
   ) {}
 
+  /**
+   * Drop the Users collection via Mongoose's native collection.drop().
+   *
+   * @returns Promise<void>
+   */
   async dropCollection() {
     await this.model.collection.drop();
   }
 
+  // TODO(prod): Seed runner drops collections (dropCollection) before reseeding.
+  // TODO(prod): Gate behind explicit flag before production.
+  /**
+   * Drop the Users collection and re-insert the seed users.
+   *
+   * Idempotent: re-running produces the same ObjectIds and password hashes,
+   * but destroys any user data created in between runs.
+   *
+   * @returns Promise<void>
+   */
   async run() {
     await this.dropCollection();
 
