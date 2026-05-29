@@ -1,8 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+// NOTE: 'IngridientSchemaClass', 'IngridientSchema', 'IngridientSeedService' spellings
+// NOTE: preserved verbatim across the backend codebase. Do not rename.
 import { IngridientSchemaClass } from 'src/ingridient/infrastructure/document/entities/ingridient.schema';
 
+/**
+ * Seed service for the Ingridient catalog (spelling preserved verbatim).
+ *
+ * Drops the Ingridients collection and re-inserts 21 ingredient fixtures
+ * across categories: spice, vegetable, fruit, dairy, protein, baking,
+ * sauce, herb, bread. Each fixture has a stable hardcoded _id so that
+ * RecipeSeedService.ingridientList[].ingridient references and
+ * PantrySeedService.ingridient references resolve correctly.
+ *
+ * Destructive on every run — see backend/src/database/README.md
+ * § Known Limitations.
+ */
 @Injectable()
 export class IngridientSeedService {
   constructor(
@@ -10,10 +24,23 @@ export class IngridientSeedService {
     private readonly model: Model<IngridientSchemaClass>,
   ) {}
 
+  /**
+   * Drop the Ingridients collection (spelling preserved verbatim).
+   *
+   * @returns Promise<void>
+   */
   async dropCollection() {
     await this.model.collection.drop();
   }
 
+  // TODO(prod): Seed runner drops collections (dropCollection) before reseeding.
+  // TODO(prod): Gate behind explicit flag before production.
+  /**
+   * Drop the Ingridients collection (spelling preserved verbatim) and
+   * re-insert the 21 seed ingredients via insertMany.
+   *
+   * @returns Promise<void>
+   */
   async run() {
     await this.dropCollection();
 
