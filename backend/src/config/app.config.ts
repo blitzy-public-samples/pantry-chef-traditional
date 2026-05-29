@@ -9,6 +9,23 @@ enum Environment {
   Test = 'test',
 }
 
+/**
+ * class-validator schema applied to `process.env` at application boot.
+ *
+ * Decorators on each field:
+ * - `@IsEnum(Environment)` + `@IsOptional()` on `NODE_ENV` (accepts
+ *   `'development'`, `'production'`, or `'test'`).
+ * - `@IsInt()` + `@Min(0)` + `@Max(65535)` + `@IsOptional()` on `APP_PORT`
+ *   (TCP port range — class-transformer's `enableImplicitConversion`
+ *   converts the env-var string to a number before validation).
+ * - `@IsString()` + `@IsOptional()` on `API_PREFIX`.
+ *
+ * The validator is consumed by the factory below via `validateConfig()`
+ * (see `../utils/validate-config.ts`), which calls `validateSync()` and
+ * throws an `Error` at boot if any field fails validation. Because every
+ * field is `@IsOptional()`, missing env vars do not throw — only malformed
+ * values (e.g. `APP_PORT="not-a-number"`) abort startup.
+ */
 class EnvironmentVariablesValidator {
   @IsEnum(Environment)
   @IsOptional()
@@ -25,6 +42,40 @@ class EnvironmentVariablesValidator {
   API_PREFIX: string;
 }
 
+/**
+ * App configuration factory for the `app` namespace.
+ *
+ * Reads the following env vars from `process.env` (see `backend/env_example`):
+ * - `NODE_ENV`           → `nodeEnv` (default `'development'`).
+ * - `APP_NAME`           → `name` (code fallback `'app'`; `env_example:L3`
+ *   ships `"NestJS API"`).
+ * - `PWD` / `process.cwd()` → `workingDirectory`.
+ * - `FRONTEND_DOMAIN`    → `frontendDomain` (undefined if unset).
+ * - `BACKEND_DOMAIN`     → `backendDomain` (default `'http://localhost'`).
+ * - `APP_PORT` / `PORT`  → `port` (default `3000`, parsed with `parseInt`).
+ * - `API_PREFIX`         → `apiPrefix` (default `'api'`).
+ *
+ * Validation: invokes `validateConfig(process.env, EnvironmentVariablesValidator)`
+ * which runs `plainToClass()` + `validateSync()` with
+ * `enableImplicitConversion: true` and throws at boot on validation errors.
+ *
+ * Consumption: registered in `backend/src/app.module.ts:L22` via
+ * `ConfigModule.forRoot({ isGlobal: true, load: [..., appConfig], ... })`
+ * and read elsewhere with `configService.getOrThrow('app.apiPrefix',
+ * { infer: true })` (e.g., `backend/src/main.ts:L14-L19` for the global
+ * prefix and `backend/src/main.ts:L33` for the HTTP port).
+ *
+ * NOTE: The returned object includes `frontendDomain` and `backendDomain`,
+ * but the `AppConfig` type alias in `./app-config.type.ts` does not declare
+ * those two fields. TypeScript does not flag this because object literals
+ * may have *fewer* than the declared properties when contextually typed by
+ * a generic — `registerAs<AppConfig>` widens the return type. Consumers
+ * should reach the two domain fields via `configService.get('app')` and
+ * a narrowing cast, or by extending `AppConfig` in a follow-up task.
+ *
+ * @returns The `AppConfig`-compatible namespace object (with two extra
+ *   domain fields present at runtime).
+ */
 export default registerAs<AppConfig>('app', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
