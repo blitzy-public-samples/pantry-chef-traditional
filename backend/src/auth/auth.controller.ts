@@ -10,6 +10,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
@@ -28,6 +29,12 @@ import { User } from 'src/users/domain/user';
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP on this credential
+  // endpoint. @UseGuards(ThrottlerGuard) scopes enforcement to THIS route ONLY (ThrottlerGuard is NOT
+  // bound globally via APP_GUARD — see app.module.ts), so per AAP §0.11 all other endpoints continue to
+  // dispatch without throttling enforcement.
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public login(
@@ -36,6 +43,12 @@ export class AuthController {
     return this.service.validateLogin(loginDto);
   }
 
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP on this credential
+  // endpoint. @UseGuards(ThrottlerGuard) scopes enforcement to THIS route ONLY (ThrottlerGuard is NOT
+  // bound globally via APP_GUARD — see app.module.ts), so per AAP §0.11 all other endpoints continue to
+  // dispatch without throttling enforcement.
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('email/register')
   @HttpCode(HttpStatus.OK)
   async register(

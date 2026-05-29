@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
-import * as path from 'path';
-import { existsSync } from 'fs';
 import { IngridientService } from 'src/ingridient/ingridient.service';
 
 @Injectable()
@@ -49,15 +47,26 @@ export class AiService {
   ];
 
   constructor(private readonly ingirdientService: IngridientService) {
-    const keyPath = path.join(__dirname, '../config/ai.json');
-    if (!existsSync(keyPath)) {
-      console.error(`Key file not found at path: ${keyPath}`);
+    // SECURITY(SEC-B2): Load GCV credentials from environment variable instead of disk
+    // Preserves graceful-degradation: missing/unparseable creds => isGoogleVisionEnabled=false, empty result
+    const raw = process.env.GOOGLE_CLOUD_VISION_CREDENTIALS;
+    if (!raw) {
       this.isGoogleVisionEnabled = false;
+      console.warn(
+        'GOOGLE_CLOUD_VISION_CREDENTIALS not set; AI vision disabled',
+      );
+    } else {
+      try {
+        const credentials = JSON.parse(raw);
+        this.client = new ImageAnnotatorClient({ credentials });
+        this.isGoogleVisionEnabled = true;
+      } catch {
+        this.isGoogleVisionEnabled = false;
+        console.warn(
+          'GOOGLE_CLOUD_VISION_CREDENTIALS could not be parsed; AI vision disabled',
+        );
+      }
     }
-
-    this.client = new ImageAnnotatorClient({
-      keyFilename: keyPath,
-    });
   }
 
   async detectIngredientsFromBuffer(imageBuffer: Buffer): Promise<any> {

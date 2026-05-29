@@ -20,4 +20,19 @@ AWS_DEFAULT_S3_BUCKET=
 AUTH_JWT_SECRET=secret
 AUTH_JWT_TOKEN_EXPIRES_IN=15m
 AUTH_REFRESH_SECRET=secret_for_refresh
-AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d
+# SECURITY(SEC-B3): Refresh token TTL hardened to 30d (former 10-year default removed) per OWASP ASVS V3.3.5
+AUTH_REFRESH_TOKEN_EXPIRES_IN=30d
+
+# SECURITY(SEC-B1): Mongo credentials externalized — operators MUST populate per-deployment
+MONGO_USERNAME=
+MONGO_PASSWORD=
+
+# SECURITY(SEC-B2): Google Cloud Vision service-account JSON (single-line compacted JSON value)
+GOOGLE_CLOUD_VISION_CREDENTIALS=
+
+# SECURITY(SEC-C1): Comma-separated CORS allowlist; empty => deny all cross-origin (fail-closed)
+ALLOWED_ORIGINS=
+
+# SECURITY(SEC-A1): Rate limiting for login/register (TTL in milliseconds, limit per window)
+AUTH_THROTTLE_TTL=60000
+AUTH_THROTTLE_LIMIT=10

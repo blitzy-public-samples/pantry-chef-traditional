@@ -52,3 +52,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# SECURITY(SEC-B4): Prevent recurrence of SEC-B2 — never commit credential JSON files
+src/config/ai.json
+src/config/*.json
