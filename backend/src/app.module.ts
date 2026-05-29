@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -27,7 +26,9 @@ import { AiModule } from './ai/ai.module';
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),
-    // SECURITY(SEC-A1): Rate-limiting infrastructure; per-route @Throttle() decorators control enforcement
+    // SECURITY(SEC-A1): Rate-limiting infrastructure ONLY. ThrottlerGuard is intentionally NOT bound globally
+    // (no APP_GUARD), so throttling does NOT apply to every route. Enforcement is scoped exclusively to the
+    // login/register credential endpoints via @UseGuards(ThrottlerGuard) + @Throttle(...) on those handlers.
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -47,13 +48,6 @@ import { AiModule } from './ai/ai.module';
     AiModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    // SECURITY(SEC-A1): Globally bind ThrottlerGuard so @Throttle decorators on specific handlers take effect
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

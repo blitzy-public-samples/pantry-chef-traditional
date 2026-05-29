@@ -10,7 +10,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
@@ -29,8 +29,10 @@ import { User } from 'src/users/domain/user';
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
-  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP.
+  // ThrottlerGuard is applied per-route here (not globally) so only this credential endpoint is rate-limited.
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public login(
@@ -39,8 +41,10 @@ export class AuthController {
     return this.service.validateLogin(loginDto);
   }
 
-  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP.
+  // ThrottlerGuard is applied per-route here (not globally) so only this credential endpoint is rate-limited.
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseGuards(ThrottlerGuard)
   @Post('email/register')
   @HttpCode(HttpStatus.OK)
   async register(

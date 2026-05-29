@@ -5,8 +5,9 @@ API_PREFIX=api
 
 DATABASE_TYPE=mongodb
 DATABASE_PORT=27017
-DATABASE_USERNAME=admin
-DATABASE_PASSWORD=123456
+# SECURITY(SEC-B1): DB credentials externalized — populate per-deployment; MUST match MONGO_USERNAME/MONGO_PASSWORD below. No literal credentials in value positions.
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
 DATABASE_NAME=blitzy
 DATABASE_URL=mongodb://localhost:27017
 
