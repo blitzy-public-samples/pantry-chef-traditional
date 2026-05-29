@@ -6,6 +6,13 @@ import {
 } from 'src/users/infrastructure/document/entities/user.schema';
 import { UserSeedService } from './user-seed.service';
 
+/**
+ * NestJS module registering UserSeedService.
+ *
+ * Imports MongooseModule.forFeature([{ name: UserSchemaClass.name,
+ * schema: UserSchema }]) to bind the Users collection model for injection
+ * into UserSeedService.
+ */
 @Module({
   imports: [
     MongooseModule.forFeature([
