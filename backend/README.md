@@ -4,7 +4,7 @@
 
 ## Module Purpose
 
-The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0` (Source: `backend/package.json:L26`). Its package identity is `blitzy-backend` version `0.0.1`, marked `private` and licensed `UNLICENSED`, which restricts redistribution (Source: `backend/package.json:L2-L7`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — alongside a global `ConfigModule` and an asynchronous `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). The server exposes a versioned REST API under `/api/v1/*` and serves interactive OpenAPI/Swagger documentation at `/docs` (Source: `backend/src/main.ts:L14-L31`). Internal identifiers keep the verbatim `Ingridient` spelling, while the public URL path uses `/api/v1/ingredient`.
+The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0`; its package identity is `blitzy-backend` `0.0.1`, marked `private` and `UNLICENSED` (Source: `backend/package.json:L2-L7,L26`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — plus a global `ConfigModule` and an async `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). Most controllers declare `version: '1'`, so their routes sit under `/api/v1/*`; the AI controller is unversioned, so its route is `/api/ai/*`. Swagger is served at `/docs` (Source: `backend/src/main.ts:L14-L31`).
 
 ## Key Components
 
@@ -36,21 +36,23 @@ The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.
 
 ## Architecture Fit
 
-The NestJS root module wires together the seven feature modules plus a global `ConfigModule.forRoot({ isGlobal: true, load: [databaseConfig, authConfig, appConfig] })` and `MongooseModule.forRootAsync({ useClass: MongooseConfigService })` (Source: `backend/src/app.module.ts:L18-L35`). Each feature module follows a **controller → service → repository → MongoDB** layering: the repository contract is an abstract class in `infrastructure/<module>.repository.ts`, bound to a Mongoose-backed implementation under `infrastructure/document/repositories/*.repository.ts`. The bootstrap entrypoint enables CORS, applies the global prefix `/api` (excluding `/`), installs a global `ValidationPipe`, registers Bearer auth in the Swagger spec, and serves the Swagger UI at `/docs` (Source: `backend/src/main.ts:L10-L35`). For the system-wide request flow and the dedicated Recipe Matching Pipeline deep-dive, see [`../ARCHITECTURE.md`](../ARCHITECTURE.md); for the persistence collections and the embedded `Preferences` subdocument, see [`../DATA_MODEL.md`](../DATA_MODEL.md).
+The root module wires the seven feature modules plus a global `ConfigModule.forRoot({ isGlobal: true, load: [databaseConfig, authConfig, appConfig] })` and `MongooseModule.forRootAsync({ useClass: MongooseConfigService })` (Source: `backend/src/app.module.ts:L18-L35`). Each feature follows **controller → service → repository → MongoDB** layering: an abstract repository contract in `infrastructure/<module>.repository.ts` is bound to a Mongoose implementation under `infrastructure/document/repositories/*.repository.ts`. Bootstrap enables CORS, applies the `/api` prefix (excluding `/`), installs a global `ValidationPipe`, and serves Swagger at `/docs` (Source: `backend/src/main.ts:L10-L35`). See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the request flow and matching pipeline, and [`../DATA_MODEL.md`](../DATA_MODEL.md) for the collections and embedded `Preferences`.
 
 ## Dependencies
 
 ### Internal
 
-The root module imports the seven feature modules in this exact order (Source: `backend/src/app.module.ts:L28-L34`):
+The root module imports the seven feature modules in this order (Source: `backend/src/app.module.ts:L28-L34`):
 
-- `AuthModule` — JWT login/register/refresh with three Passport strategies (`jwt`, `jwt-refresh`, `anonymous`).
-- `SessionModule` — session lifecycle persistence, referenced by auth refresh and logout.
-- `UsersModule` — user CRUD with the embedded `Preferences` subdocument.
-- `IngridientModule` (spelling preserved verbatim) — ingredient catalogue and reference data.
-- `PantryModule` — user-scoped pantry items in the `PantryIngridient` collection (spelling preserved verbatim).
-- `RecipeModule` — recipe CRUD plus the pantry-aware matching pipeline.
-- `AiModule` — Google Cloud Vision integration for ingredient detection.
+| Module | Role |
+| --- | --- |
+| `AuthModule` | JWT login/register/refresh; Passport `jwt`, `jwt-refresh`, `anonymous` strategies |
+| `SessionModule` | Session persistence, used by auth refresh and logout |
+| `UsersModule` | User CRUD with the embedded `Preferences` subdocument |
+| `IngridientModule` (spelling preserved verbatim) | Ingredient catalogue and reference data |
+| `PantryModule` | User-scoped `PantryIngridient` (spelling preserved verbatim) items |
+| `RecipeModule` | Recipe CRUD plus the pantry-aware matching pipeline |
+| `AiModule` | Google Cloud Vision ingredient detection |
 
 ### External
 
@@ -105,12 +107,12 @@ Key dev dependencies from `backend/package.json:L46-L75`:
 
 ## Primary Use Cases
 
-- **NestJS bootstrap** — `bootstrap()` initializes the app, applies global validation, and starts the HTTP listener (Source: `backend/src/main.ts:L10-L35`).
-- **Modular feature composition** — the root `AppModule` aggregates seven feature modules via NestJS dependency injection (Source: `backend/src/app.module.ts:L28-L34`).
-- **OpenAPI/Swagger surface** — the Swagger UI is mounted at `/docs` for interactive API exploration (Source: `backend/src/main.ts:L23-L31`).
-- **Global API versioning** — `setGlobalPrefix('api', { exclude: ['/'] })` mounts every feature controller under `/api/v1/<feature>`, with `version: '1'` set per `@Controller` (Source: `backend/src/main.ts:L14-L19`).
-- **Containerized dev stack** — `docker-compose up` brings up MongoDB and NestJS together with bind-mounted source for live reload (Source: `backend/docker-compose.yml:L1-L30`).
-- **Seed runner** — `npm run seed:run:document` orchestrates User → Ingridient → Recipe → Pantry seeding (Source: `backend/package.json:L16`).
+- **NestJS bootstrap** — `bootstrap()` initializes the app, applies global validation, and starts the listener (Source: `backend/src/main.ts:L10-L35`).
+- **Modular composition** — `AppModule` aggregates the seven feature modules via DI (Source: `backend/src/app.module.ts:L28-L34`).
+- **OpenAPI/Swagger surface** — Swagger UI at `/docs` (Source: `backend/src/main.ts:L23-L31`).
+- **Global prefix + versioning** — `setGlobalPrefix('api', { exclude: ['/'] })`; `version: '1'` controllers add `/v1`, unversioned ones (AI) do not — see the API Reference note (Source: `backend/src/main.ts:L14-L19`).
+- **Containerized dev stack** — `docker-compose up` runs MongoDB + NestJS with bind-mounted source (Source: `backend/docker-compose.yml:L1-L30`).
+- **Seed runner** — `npm run seed:run:document` seeds User → Ingridient → Recipe → Pantry (Source: `backend/package.json:L16`).
 
 ## API / Endpoint Reference
 
@@ -121,13 +123,14 @@ Only root-level and cross-cutting endpoints are listed here; per-feature endpoin
 | `GET` | `/` | None | Returns the literal `'Hello World!'` from `AppService.getHello()` — boilerplate, retained as-is (Source: `backend/src/app.controller.ts:L8-L11`) |
 | `GET` | `/docs` | None | Swagger UI mounted by `SwaggerModule.setup('docs', app, document)` (Source: `backend/src/main.ts:L31`) |
 | `GET` | `/docs-json` | None | OpenAPI JSON spec (Nest Swagger default) |
-| (other) | `/api/v1/<feature>/*` | varies | See each feature module's README under `src/<feature>/README.md` |
+| (versioned) | `/api/v1/<feature>/*` | varies | Controllers with `version: '1'` — auth, users, pantry, ingridient, recipe; see `src/<feature>/README.md` |
+| (unversioned) | `/api/ai/vision` | None | `AiController` declares no `version`, so it omits `/v1`; see `src/ai/README.md` |
 
-**Note:** the global prefix is `/api` (the default value of `API_PREFIX`) with the version suffix `/v1` set per controller (for example, `@Controller({ path: 'auth', version: '1' })`). The table assumes this prefix on every feature endpoint.
+**Note:** the global prefix is `/api` (default `API_PREFIX`). Controllers that set `version: '1'` (e.g. `@Controller({ path: 'auth', version: '1' })`) add a `/v1` segment; the unversioned `@Controller('ai')` does not, so its route is `POST /api/ai/vision`.
 
 ## Data Flows
 
-The composition diagram below shows how the seven feature modules and the two global infrastructure modules are wired into the root `AppModule` at bootstrap. The arrangement is read directly from the `imports` array of the root module (Source: `backend/src/app.module.ts:L18-L35`).
+The diagram below shows the seven feature modules and two global infrastructure modules wired into the root `AppModule`, read directly from its `imports` array (Source: `backend/src/app.module.ts:L18-L35`).
 
 ```mermaid
 flowchart LR
@@ -142,11 +145,11 @@ flowchart LR
     A --> J[AiModule]
 ```
 
-At startup, `bootstrap()` instantiates `AppModule`, applies the global prefix and the `ValidationPipe`, and exposes the Swagger UI at `/docs` (Source: `backend/src/main.ts:L10-L35`). For the full end-to-end request path — Flutter UI → DioClient → bearer JWT → NestJS → feature controller → MongoDB or Google Cloud Vision — see [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+For the full end-to-end request path (Flutter → DioClient → bearer JWT → NestJS → controller → MongoDB / Google Cloud Vision) see [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 ## Configuration
 
-The backend reads its configuration from a `.env` file (created from `env_example`), validated at boot by `EnvironmentVariablesValidator` via `@nestjs/config`. The typed `AllConfigType` aggregate provides namespaced access to `app.*`, `auth.*`, and `database.*` settings.
+The backend reads configuration from a `.env` file (created from `env_example`), validated at boot by `EnvironmentVariablesValidator`. The typed `AllConfigType` aggregate exposes the `app.*`, `auth.*`, and `database.*` namespaces.
 
 ### Initial Setup
 
@@ -164,9 +167,8 @@ $ docker-compose up
 
 ### Google Cloud Vision Setup
 
-- Enable Cloud Vision in your Google Cloud project.
-- Create a key file for the service account.
-- Rename it to `ai.json` and copy it to `src/config/`; the `AiService` loads it at boot and gracefully disables Vision if the file is missing (Source: `backend/src/ai/ai.service.ts:L52-L56`).
+- Enable Cloud Vision and create a service-account key file.
+- Rename it to `ai.json` and copy it to `src/config/`; `AiService` loads it at boot and disables Vision if the file is missing (Source: `backend/src/ai/ai.service.ts:L52-L56`).
 
 ### Environment Variables
 
@@ -206,24 +208,24 @@ Scripts are defined in `backend/package.json:L8-L23`:
 
 ## Known Limitations and Implementation Gaps
 
-> ⚠️ **Dev-grade Docker setup** — the container `CMD npm i && npm run dev` installs dependencies on every start and runs the watch-mode dev server, which is unsuitable for production (slow startup, large image, no compiled output). A multi-stage Dockerfile that runs `nest build` then `node dist/main` is required (Source: `backend/Dockerfile:L13`).
+> ⚠️ **Dev-grade Docker setup** — the container `CMD npm i && npm run dev` reinstalls deps and runs watch-mode dev on every start (slow, bloated, no compiled output). A multi-stage build (`nest build` → `node dist/main`) is required (Source: `backend/Dockerfile:L13`).
 
-> ⚠️ **Hardcoded MongoDB credentials** — `docker-compose.yml` ships `MONGO_INITDB_ROOT_USERNAME: admin` and `MONGO_INITDB_ROOT_PASSWORD: 123456` in plain text; these are also the defaults in `env_example`. They must move to a secrets manager before deployment (Source: `backend/docker-compose.yml:L9-L10`; `backend/env_example:L8-L9`).
+> ⚠️ **Hardcoded MongoDB credentials** — `docker-compose.yml` ships `admin` / `123456` in plain text, matching the `env_example` defaults; move them to a secrets manager before deployment (Source: `backend/docker-compose.yml:L9-L10`; `backend/env_example:L8-L9`).
 
 > ⚠️ **Open CORS by default** — the Nest app is created with `{ cors: true }`, allowing any origin; production requires an explicit allowlist (Source: `backend/src/main.ts:L11`).
 
-> ⚠️ **Refresh token TTL is ~10 years** — `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` is far longer than a sensible production window (e.g., 30 days with rotation). See [`src/auth/README.md`](src/auth/README.md) for the full token flow (Source: `backend/env_example:L23`).
+> ⚠️ **Refresh token TTL ~10 years** — `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` far exceeds a sane production window (e.g. 30 days with rotation); see [`src/auth/README.md`](src/auth/README.md) (Source: `backend/env_example:L23`).
 
-> ⚠️ **Spelling preserved verbatim** — the module path `backend/src/ingridient/` and the identifiers `IngridientModule`, `IngridientService`, `IngridientSchemaClass`, `PantryIngridient`, and `IngridientList` keep their spelling preserved verbatim throughout the backend codebase. The URL path `/api/v1/ingredient` uses the conventional spelling; the internal identifiers are stable API contracts and must not be "fixed".
+> ⚠️ **Spelling preserved verbatim** — `backend/src/ingridient/` and identifiers like `IngridientModule`, `IngridientService`, `PantryIngridient`, and `IngridientList` keep their spelling verbatim across the backend; the URL path `/api/v1/ingredient` uses the conventional spelling. These are stable contracts and must not be "fixed".
 
 ## Production Readiness Status
 
-> 🚧 See [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md) for the complete checklist with status (❌/⚠️/✅) across eleven categories: Build & Runtime, Secrets Management, Networking & TLS, Infrastructure & Orchestration, File Storage, Security Hardening, Observability, CI/CD, Database, Testing, and Mobile Release.
+> 🚧 See [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md) for the full checklist (❌/⚠️/✅) across eleven categories: Build & Runtime, Secrets Management, Networking & TLS, Infrastructure & Orchestration, File Storage, Security Hardening, Observability, CI/CD, Database, Testing, Mobile Release.
 
-> 🚧 **Build & Runtime** — replace the dev-grade Dockerfile with a multi-stage build that runs `nest build` and launches `node dist/main`, removing `npm i && npm run dev` from the container `CMD` (Source: `backend/Dockerfile:L13`).
+> 🚧 **Build & Runtime** — replace the dev-grade Dockerfile with a multi-stage build (`nest build` → `node dist/main`) (Source: `backend/Dockerfile:L13`).
 
-> 🚧 **Secrets Management** — extract `AUTH_JWT_SECRET`, `AUTH_REFRESH_SECRET`, the MongoDB credentials, and the Google Cloud Vision service-account file (loaded from `src/config/ai.json`) into a secrets manager such as AWS Secrets Manager, HashiCorp Vault, or Kubernetes Secrets (Source: `backend/env_example:L20-L22`; `backend/src/ai/ai.service.ts:L52-L56`).
+> 🚧 **Secrets Management** — move `AUTH_JWT_SECRET`, `AUTH_REFRESH_SECRET`, the MongoDB credentials, and the Vision service-account file (`src/config/ai.json`) into a secrets manager (AWS Secrets Manager, Vault, or Kubernetes Secrets) (Source: `backend/env_example:L20-L22`; `backend/src/ai/ai.service.ts:L52-L56`).
 
 > 🚧 **Database** — gate `npm run seed:run:document` behind an explicit flag; each seed service calls `dropCollection()` before inserting fixtures (Source: `backend/package.json:L16`; see [`src/database/README.md`](src/database/README.md)).
 
-> 🚧 **Security Hardening** — wire the password-reset endpoints (the `AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no controller routes are mapped), add a JWT guard to `POST /api/v1/ai/vision`, and uncomment the MIME-type filter in `src/ai/ai.controller.ts` (Source: `backend/src/ai/ai.controller.ts:L20-L28`).
+> 🚧 **Security Hardening** — wire the password-reset endpoints (`AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no routes are mapped), add a JWT guard to the unversioned `POST /api/ai/vision`, and uncomment the MIME-type filter in `src/ai/ai.controller.ts` (Source: `backend/src/ai/ai.controller.ts:L20-L28`).

@@ -2,22 +2,22 @@
 
 ## Module Purpose
 
-The `backend/src/config/` folder provides the typed application-configuration layer for the NestJS backend. It pairs the runtime factory `app.config.ts` — which registers an `app` namespace via `registerAs<AppConfig>('app', …)` from `@nestjs/config` — with an inline `EnvironmentVariablesValidator` class (decorated with `class-validator` rules) and two type aliases, `AppConfig` and `AllConfigType`, that give compile-time guarantees to every feature module (Source: `backend/src/config/app.config.ts:L1-L44`). The `AllConfigType` aggregate unifies the `app`, `auth`, and `database` sub-namespaces, enabling type-safe access like `configService.getOrThrow('app.apiPrefix', { infer: true })` (Source: `backend/src/main.ts:L14-L19`). Validation runs once at boot inside `validateConfig()`, so malformed env values abort startup before any module wires up (Source: `backend/src/utils/validate-config.ts:L16-L18`).
+The `backend/src/config/` folder is the typed application-configuration layer for the NestJS backend. The factory `app.config.ts` registers an `app` namespace via `registerAs<AppConfig>('app', …)` from `@nestjs/config`, paired with an inline `EnvironmentVariablesValidator` (`class-validator` rules) and two type aliases, `AppConfig` and `AllConfigType` (Source: `backend/src/config/app.config.ts:L29-L93`). `AllConfigType` unifies the `app`, `auth`, and `database` sub-namespaces for type-safe access like `configService.getOrThrow('app.apiPrefix', { infer: true })` (Source: `backend/src/main.ts:L14-L19`). Validation runs once at boot inside `validateConfig()`, so malformed env values abort startup (Source: `backend/src/utils/validate-config.ts:L16-L18`).
 
 ## Key Components
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `appConfig` factory | `app.config.ts:L28-L44` | `registerAs<AppConfig>('app', …)` — reads env, validates via `EnvironmentVariablesValidator`, returns the typed `app` namespace |
-| `EnvironmentVariablesValidator` | `app.config.ts:L12-L26` | class-validator schema: `@IsEnum(Environment)` on `NODE_ENV`, `@IsInt() @Min(0) @Max(65535)` on `APP_PORT`, `@IsString()` on `API_PREFIX`; all `@IsOptional()` |
-| `AppConfig` type | `app-config.type.ts:L1-L7` | Typed shape with five fields: `nodeEnv`, `name`, `workingDirectory`, `port`, `apiPrefix` |
-| `AllConfigType` | `config.type.ts:L6-L11` | Aggregate of `app: AppConfig`, `auth: AuthConfig`, `database: DatabaseConfig`; `// mail: MailConfig;` is commented out |
+| `appConfig` factory | `app.config.ts:L71-L93` | `registerAs<AppConfig>('app', …)` — reads env, validates via `EnvironmentVariablesValidator`, returns the typed `app` namespace |
+| `EnvironmentVariablesValidator` | `app.config.ts:L29-L43` | class-validator schema: `@IsEnum(Environment)` on `NODE_ENV`, `@IsInt() @Min(0) @Max(65535)` on `APP_PORT`, `@IsString()` on `API_PREFIX`; all `@IsOptional()` |
+| `AppConfig` type | `app-config.type.ts:L24-L30` | Typed shape with five fields: `nodeEnv`, `name`, `workingDirectory`, `port`, `apiPrefix` |
+| `AllConfigType` | `config.type.ts:L27-L37` | Aggregate of `app: AppConfig`, `auth: AuthConfig`, `database: DatabaseConfig`; `// mail: MailConfig;` is commented out |
 
 ## Architecture Fit
 
-`ConfigModule.forRoot({ isGlobal: true, load: [databaseConfig, authConfig, appConfig], envFilePath: ['.env'] })` is registered once at composition time (Source: `backend/src/app.module.ts:L20-L24`). The `isGlobal: true` flag means every other module receives `ConfigService` through dependency injection without re-importing `ConfigModule`. Feature modules then consume configuration via `ConfigService<AllConfigType>` and the `getOrThrow('<namespace>.<key>', { infer: true })` pattern, leveraging the aggregate type alias for autocomplete and compile-time key validation (Source: `backend/src/main.ts:L13-L19`).
+`ConfigModule.forRoot({ isGlobal: true, load: [databaseConfig, authConfig, appConfig], envFilePath: ['.env'] })` is registered once at composition time (Source: `backend/src/app.module.ts:L20-L24`). `isGlobal: true` means every module receives `ConfigService` via DI without re-importing `ConfigModule`. Feature modules consume config via `ConfigService<AllConfigType>` and `getOrThrow('<namespace>.<key>', { infer: true })`, leveraging the aggregate alias for autocomplete and compile-time key validation (Source: `backend/src/main.ts:L13-L19`).
 
-This module is the architecture's foundation: feature modules depend on it, not the reverse. See [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md) § Technology Choices and § Cross-Cutting Concerns for the system-level view, and [../../../DATA_MODEL.md](../../../DATA_MODEL.md) for schema conventions.
+This module is the architecture's foundation: feature modules depend on it, not the reverse. See [ARCHITECTURE.md](../../../ARCHITECTURE.md) and [DATA_MODEL.md](../../../DATA_MODEL.md) for system-level context.
 
 ## Dependencies
 
@@ -34,9 +34,9 @@ This module is the architecture's foundation: feature modules depend on it, not 
 ## Primary Use Cases
 
 - **Type-safe env var access** — `configService.getOrThrow('app.apiPrefix', { infer: true })` returns a `string` with no runtime cast (Source: `backend/src/main.ts:L14-L19`).
-- **Validate environment variables at application boot** — invalid values such as `APP_PORT="not-a-number"` throw inside `validateConfig` before any feature module wires up (Source: `backend/src/utils/validate-config.ts:L16-L18`).
-- **Provide a single shared `AllConfigType` aggregate** consumed by `MongooseConfigService` (database namespace), `JwtModule.registerAsync` (auth namespace), and every feature module (app namespace) (Source: `backend/src/config/config.type.ts:L6-L11`).
-- **Support graceful fallbacks** — every validator field is `@IsOptional()`, and the factory applies code fallbacks (for example, `port` falls back through `APP_PORT → PORT → 3000`) so the app boots in development even with an empty `.env` (Source: `backend/src/config/app.config.ts:L37-L42`).
+- **Validate environment variables at boot** — invalid values such as `APP_PORT="not-a-number"` throw inside `validateConfig` (Source: `backend/src/utils/validate-config.ts:L16-L18`).
+- **Provide a single shared `AllConfigType` aggregate** consumed by `MongooseConfigService` (database), `JwtModule.registerAsync` (auth), and every feature module (app) (Source: `backend/src/config/config.type.ts:L27-L37`).
+- **Support graceful fallbacks** — every validator field is `@IsOptional()` and the factory applies code fallbacks (e.g. `port` → `APP_PORT → PORT → 3000`), so the app boots even with an empty `.env` (Source: `backend/src/config/app.config.ts:L86-L90`).
 
 ## API / Endpoint Reference
 
@@ -72,17 +72,17 @@ The `app` namespace reads four env vars from `backend/env_example`.
 | `APP_NAME` | `"NestJS API"` (env_example) / `'app'` (code fallback) | `backend/env_example:L3` | (none) | Application display name; the env_example default and the code fallback differ |
 | `API_PREFIX` | `api` | `backend/env_example:L4` | `@IsString() @IsOptional()` | Global API prefix consumed by `app.setGlobalPrefix(...)` (Source: `backend/src/main.ts:L14-L19`) |
 
-Other env namespaces are documented in `backend/src/auth/README.md` § Configuration (the `AUTH_*` secrets and token TTLs) and `backend/src/database/README.md` § Configuration (the `DATABASE_*` vars). The `FILE_DRIVER` and `AWS_*` placeholders at `backend/env_example:L13-L18` are surfaced in [../../../PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § File Storage (the S3 driver is not yet implemented).
+Other namespaces are documented in `backend/src/auth/README.md` (the `AUTH_*` secrets/TTLs) and `backend/src/database/README.md` (the `DATABASE_*` vars). The `FILE_DRIVER` and `AWS_*` placeholders at `backend/env_example:L13-L18` are surfaced in [PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § File Storage (S3 driver not yet implemented).
 
-Note a runtime-versus-type discrepancy: the factory also returns `frontendDomain` (from `FRONTEND_DOMAIN`) and `backendDomain` (from `BACKEND_DOMAIN`, default `'http://localhost'`), so it yields seven fields while the `AppConfig` type alias declares only five (Source: `backend/src/config/app.config.ts:L31-L43` versus `backend/src/config/app-config.type.ts:L1-L7`). Those two extra fields cannot be fetched type-safely via `getOrThrow`; see Known Limitations below.
+Note a runtime-versus-type discrepancy: the factory also returns `frontendDomain` and `backendDomain` (default `'http://localhost'`), yielding seven fields while `AppConfig` declares only five (Source: `backend/src/config/app.config.ts:L80-L92` versus `backend/src/config/app-config.type.ts:L24-L30`). These extras cannot be fetched type-safely via `getOrThrow`; see Known Limitations.
 
 ## Known Limitations and Implementation Gaps
 
-> ⚠️ **Validator catches malformed values at boot but does not enforce strong production policy.** `EnvironmentVariablesValidator` (Source: `backend/src/config/app.config.ts:L12-L26`) rejects `APP_PORT="abc"` or `NODE_ENV="invalid"`, but it does not reject `NODE_ENV=production` paired with `AUTH_JWT_SECRET=secret` (the default in `backend/env_example:L20`) — that policy must be added separately. The auth namespace's `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` default (`backend/env_example:L23`) likewise passes validation today.
+> ⚠️ **Validator catches malformed values at boot but does not enforce strong production policy.** `EnvironmentVariablesValidator` (Source: `backend/src/config/app.config.ts:L29-L43`) rejects `APP_PORT="abc"` or `NODE_ENV="invalid"`, but it does not reject `NODE_ENV=production` paired with `AUTH_JWT_SECRET=secret` (the default in `backend/env_example:L20`) — that policy must be added separately. The auth namespace's `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` default (`backend/env_example:L23`) likewise passes validation today.
 
-> ⚠️ **`MailConfig` is intentionally commented out in `AllConfigType`** (Source: `backend/src/config/config.type.ts:L4,L10`). This pairs with the commented `// MailModule,` line in `backend/src/auth/auth.module.ts:L17`. The unwired pair documents a password-reset / mail feature that is not yet implemented — the `AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no endpoints route to them (see `backend/src/auth/README.md` § Known Limitations).
+> ⚠️ **`MailConfig` is intentionally commented out in `AllConfigType`** (Source: `backend/src/config/config.type.ts:L4,L36`). This pairs with the commented `// MailModule,` line in `backend/src/auth/auth.module.ts:L17`. The unwired pair documents a password-reset / mail feature that is not yet implemented — the `AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no endpoints route to them (see `backend/src/auth/README.md` § Known Limitations).
 
-> ⚠️ **Environment variables are loaded only from a single `.env` file.** `ConfigModule.forRoot({ envFilePath: ['.env'] })` (Source: `backend/src/app.module.ts:L23`) does not layer `.env.production`, `.env.test`, or `.env.local` overrides. Multi-environment workflows require either repeated manual swaps of `.env` or extending the `envFilePath` array.
+> ⚠️ **Environment variables load only from a single `.env` file.** `ConfigModule.forRoot({ envFilePath: ['.env'] })` (Source: `backend/src/app.module.ts:L23`) does not layer `.env.production`, `.env.test`, or `.env.local`. Multi-environment workflows require manual `.env` swaps or extending `envFilePath`.
 
 ## Production Readiness Status
 

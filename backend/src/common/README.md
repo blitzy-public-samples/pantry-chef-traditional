@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The `common/` module is the backend's cross-feature contract layer — shared type primitives that feature modules reuse for consistent data shapes. It contains one file, `types.ts`, declaring a single exported alias, `Reference`: a denormalized `{ id, name }` pair for embedded reference caching in MongoDB documents (Source: `backend/src/common/types.ts:L1-L4`).
+The `common/` module is the backend's cross-feature contract layer — shared type primitives that feature modules reuse for consistent data shapes. It contains one file, `types.ts`, declaring a single exported alias, `Reference`: a denormalized `{ id, name }` pair for embedded reference caching in MongoDB documents (Source: `backend/src/common/types.ts:L21-L24`).
 
 Despite its 4-line footprint, the contract is consumed across the `Ingridient` (spelling preserved verbatim throughout the backend codebase) feature: the `IngridientSchemaClass` (spelling preserved verbatim), the `Ingridient` domain entity, and both the `CreateIngridientDto` and `UpdateIngridientDto` rely on `Reference` for their `category` and `unit` fields. Centralising the alias avoids duplication and gives a single editing point.
 
@@ -10,7 +10,7 @@ Despite its 4-line footprint, the contract is consumed across the `Ingridient` (
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `Reference` | `types.ts:L1-L4` | Shared type alias `{ id: string; name: string }` for denormalized reference caching |
+| `Reference` | `types.ts:L21-L24` | Shared type alias `{ id: string; name: string }` for denormalized reference caching |
 
 ```typescript
 export type Reference = {

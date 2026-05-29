@@ -1,4 +1,5 @@
-// NOTE: 'Ingridient', 'IngridientSchemaClass' identifiers referenced in JSDoc preserved verbatim across the backend codebase. Do not rename.
+// NOTE: 'Ingridient', 'IngridientSchemaClass' identifiers referenced in JSDoc are preserved
+// NOTE: verbatim across the backend codebase. Do not rename.
 
 /**
  * Shared type alias for denormalized reference caching.

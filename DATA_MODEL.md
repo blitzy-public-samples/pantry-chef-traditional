@@ -81,6 +81,7 @@ erDiagram
         ObjectId _id PK
         ObjectId user FK
         Date createdAt
+        Date updatedAt "via timestamps"
         Date deletedAt "logout marker"
     }
     INGRIDIENT {
@@ -110,6 +111,7 @@ erDiagram
     }
     RECIPE {
         ObjectId _id PK
+        ObjectId id "extra schema field"
         string title "indexed"
         string description
         IngridientList ingridientList "array"
@@ -202,9 +204,9 @@ Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L8-L20
 ### Session
 
 `Session` records an authenticated login. It holds a single Mongoose reference to
-the owning user and is created on login / refresh. Logout does not drop the
-document; instead it stamps `deletedAt`, so the field doubles as a logout marker
-and an audit trail. The collection declares an index on the `user` field to make
+the owning user and is created on login / register; refresh reuses an existing
+session rather than creating a new one. Logout does not drop the document; instead
+it stamps `deletedAt`, so the field doubles as a logout marker and an audit trail. The collection declares an index on the `user` field to make
 "find sessions for this user" lookups efficient.
 
 | Field | Type | Notes | Source |
@@ -212,6 +214,7 @@ and an audit trail. The collection declares an index on the `user` field to make
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
 | `user` | `ObjectId` (ref `UserSchemaClass`) | Reference to the owning user. | session.schema.ts:L16-L17 |
 | `createdAt` | `Date` | `@Prop({ default: now })`. | session.schema.ts:L19-L20 |
+| `updatedAt` | `Date` | Supplied by Mongoose `timestamps: true`; not declared as a class property. | session.schema.ts:L8-L9 |
 | `deletedAt` | `Date` | Set on logout; used as a logout marker. | session.schema.ts:L22-L23 |
 
 Index: `SessionSchema.index({ user: 1 })`
@@ -324,10 +327,12 @@ them once here avoids repeating the same notes in every per-collection table.
 
 Each schema is declared with `@Schema({ timestamps: true })`, which tells Mongoose
 to maintain `createdAt` and `updatedAt` automatically through its built-in
-timestamp middleware on every insert and update. In addition, each schema class
-explicitly declares both fields with `@Prop({ default: now })`, so a default value
+timestamp middleware on every insert and update. In addition, most schema classes
+explicitly declare both fields with `@Prop({ default: now })`, so a default value
 is present even when a document is constructed outside Mongoose's normal write
-path.
+path. The exception is `SessionSchemaClass`, which declares only `createdAt`
+explicitly (Source: session.schema.ts:L19-L20) and relies on `timestamps: true`
+to supply `updatedAt` at runtime.
 
 ```typescript
 @Prop({ default: now })
@@ -355,9 +360,10 @@ deleting the document. This preserves history and keeps foreign references intac
 > `PantryIngridientDocumentRepository.softDelete()` (spelling preserved verbatim)
 > does **not** stamp `deletedAt`; despite its name it calls
 > `this.pantryIngridientModel.deleteOne({ _id: id })`, physically destroying the
-> record. This is preserved as-is for this documentation pass and flagged inline
-> with `// FIXME:` / `// TODO(prod):`; the production-readiness follow-up is
-> catalogued in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+> record. This is preserved as-is for this documentation pass; it will be flagged
+> inline with `// FIXME:` / `// TODO(prod):` when the pantry source is annotated in a
+> later checkpoint, and the production-readiness follow-up is catalogued in
+> [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 > Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123.
 
 By contrast, the recipe repository honours the contract, issuing
@@ -384,10 +390,10 @@ separate `categories` or `units` collection, the schema caches the human-readabl
 `name` alongside the `id`, so an ingredient document is self-describing without a
 join. The reference data itself (the catalogue of valid categories and units, each
 with an integer `id` and a display `name`) is hardcoded and served to clients by
-`GET /v1/ingredient/creation-data`
+`GET /api/v1/ingredient/creation-data`
 (Source: backend/src/ingridient/ingridient.controller.ts:L41). Note that although
 the catalogue ids are integers, the `Reference.id` field is typed as `string`
-(Source: backend/src/common/types.ts:L1-L4).
+(Source: backend/src/common/types.ts:L21-L24).
 
 ---
 

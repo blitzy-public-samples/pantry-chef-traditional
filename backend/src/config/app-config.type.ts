@@ -1,3 +1,7 @@
+// NOTE: The factory in `./app.config.ts` additionally returns `frontendDomain` and
+// NOTE: `backendDomain` at runtime, but those two fields are NOT declared on this type.
+// NOTE: Reach them via `configService.get('app')` with a narrowing cast, or extend
+// NOTE: `AppConfig` in a follow-up task. See backend/src/config/README.md § Known Limitations.
 /**
  * Typed shape of the `'app'` configuration namespace produced by the
  * `appConfig` factory in `./app.config.ts`.
@@ -16,13 +20,6 @@
  *
  * Consumed via `ConfigService<AllConfigType>` — e.g.,
  * `configService.getOrThrow('app.apiPrefix', { infer: true })`.
- *
- * NOTE: The factory in `./app.config.ts` additionally returns
- * `frontendDomain` and `backendDomain` at runtime, but those two fields
- * are NOT declared on this type. Consumers reaching for them must use
- * `configService.get('app')` and a narrowing cast, or extend `AppConfig`
- * in a follow-up task. This discrepancy is documented in
- * `backend/src/config/README.md` § Known Limitations.
  */
 export type AppConfig = {
   nodeEnv: string;

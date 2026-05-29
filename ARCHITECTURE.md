@@ -18,7 +18,7 @@ gaps that block a production deployment see
 The repository is a two-part workspace with three cross-cutting documentation
 files at its root:
 
-```
+```text
 PantryChef/
 ├── ARCHITECTURE.md              (this file)
 ├── DATA_MODEL.md
@@ -157,10 +157,11 @@ The field-level contract is described in [DATA_MODEL.md](DATA_MODEL.md).
 > despite its name it calls `deleteOne({ _id: id })`, physically destroying the
 > record rather than flagging it
 > (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123).
-> The discrepancy is flagged inline with a `// FIXME:` and catalogued in
+> The discrepancy will be flagged inline with a `// FIXME:` when the pantry source is
+> annotated in a later checkpoint, and is catalogued in
 > [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
-### Pagination Cap (50 records)
+### Pagination Cap 50
 
 Every list endpoint caps page size defensively. The recipe controller defaults
 `limit` to 10 and clamps it with `if (limit > 50) { limit = 50; }` before
@@ -194,7 +195,7 @@ flowchart LR
     UI[Flutter UI Screen] --> BLoC[BLoC Event Handler]
     BLoC --> UC[UseCase / Repository]
     UC --> DIO[DioClient + JWT Interceptor]
-    DIO -->|HTTPS Bearer JWT| API[NestJS: CORS, /api prefix, ValidationPipe, AuthGuard jwt]
+    DIO -->|HTTP/HTTPS Bearer JWT| API[NestJS: CORS, /api prefix, ValidationPipe, AuthGuard jwt]
     API --> CTRL[Feature Controller]
     CTRL --> SVC[Feature Service]
     SVC --> REPO[Document Repository]
@@ -353,7 +354,8 @@ flowchart TD
 > catalogued in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 For endpoint-level usage of this pipeline see the
-[recipe module README](backend/src/recipe/README.md); for the `IngridientList` and
-`InstractionItem` sub-schemas it relies on (both spellings preserved verbatim, with
-the mobile mirror defined in `instraction_item.dart`), see
-[DATA_MODEL.md](DATA_MODEL.md).
+[recipe module README](backend/src/recipe/README.md); for the backend `IngridientList`
+(spelling preserved verbatim) and `Instruction` sub-schemas it relies on, see
+[DATA_MODEL.md](DATA_MODEL.md). The mobile client mirrors these with a separately spelled
+`InstractionItem` (spelling preserved verbatim) in `instraction_item.dart`, documented when
+the mobile recipe feature is in scope.

@@ -23,19 +23,15 @@ import { DatabaseConfig } from '../database/config/database-config.type';
  * `configService.getOrThrow('<namespace>.<key>', { infer: true })`
  * — e.g., `backend/src/main.ts:L14-L19` reads `app.apiPrefix` and
  * `backend/src/main.ts:L33` reads `app.port`.
- *
- * NOTE: The `mail: MailConfig;` line below is intentionally commented out;
- * it pairs with the commented `// MailModule,` import in
- * `backend/src/auth/auth.module.ts:L17`. The mail feature (and the wiring
- * required to deliver `AuthForgotPasswordDto` / `AuthResetPasswordDto`
- * password-reset emails) is NOT implemented. Both lines are preserved
- * verbatim as a deliberate marker for the follow-up task. See
- * `backend/src/auth/README.md` § Known Limitations and
- * `backend/src/config/README.md` § Known Limitations for context.
  */
 export type AllConfigType = {
   app: AppConfig;
   auth: AuthConfig;
   database: DatabaseConfig;
+  // NOTE: The `mail: MailConfig;` line below is intentionally commented out; it pairs with
+  // NOTE: the commented `// MailModule,` import in `backend/src/auth/auth.module.ts`. The mail
+  // NOTE: feature (delivering AuthForgotPasswordDto / AuthResetPasswordDto reset emails) is NOT
+  // NOTE: implemented; both lines are preserved verbatim as a follow-up marker. See
+  // NOTE: backend/src/auth/README.md and backend/src/config/README.md § Known Limitations.
   // mail: MailConfig;
 };

@@ -65,20 +65,18 @@ class EnvironmentVariablesValidator {
  * { infer: true })` (e.g., `backend/src/main.ts:L14-L19` for the global
  * prefix and `backend/src/main.ts:L33` for the HTTP port).
  *
- * NOTE: The returned object includes `frontendDomain` and `backendDomain`,
- * but the `AppConfig` type alias in `./app-config.type.ts` does not declare
- * those two fields. TypeScript does not flag this because object literals
- * may have *fewer* than the declared properties when contextually typed by
- * a generic — `registerAs<AppConfig>` widens the return type. Consumers
- * should reach the two domain fields via `configService.get('app')` and
- * a narrowing cast, or by extending `AppConfig` in a follow-up task.
- *
  * @returns The `AppConfig`-compatible namespace object (with two extra
  *   domain fields present at runtime).
  */
 export default registerAs<AppConfig>('app', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
+  // NOTE: The returned object includes two EXTRA properties, `frontendDomain` and
+  // NOTE: `backendDomain`, that `AppConfig` (./app-config.type.ts) does not declare.
+  // NOTE: TypeScript permits these excess properties because the literal flows through
+  // NOTE: the generic `registerAs<AppConfig>` factory (not a directly-typed position),
+  // NOTE: where structural assignability allows extras. Reach them via
+  // NOTE: `configService.get('app')` with a narrowing cast, or extend `AppConfig` later.
   return {
     nodeEnv: process.env.NODE_ENV || 'development',
     name: process.env.APP_NAME || 'app',

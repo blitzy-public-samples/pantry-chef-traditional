@@ -23,11 +23,12 @@ soft-delete (`deletedAt`) contract referenced repeatedly below, see
 
 > **Important — minimal-change clause.** This checklist *documents* gaps; it
 > does **not** fix them. No production code, configuration value, environment
-> default, or seed data is modified by this engagement. Source files carry the
-> corresponding inline markers (`// TODO(prod):` for production gaps, `// NOTE:`
-> for intentional decisions, `// FIXME:` for genuine bugs) added separately
-> under `backend/` and `mobile/`; the remediation steps here describe the
-> recommended path without applying it.
+> default, or seed data is modified by this engagement. As each source module is
+> processed, its files receive the corresponding inline markers (`// TODO(prod):`
+> for production gaps, `// NOTE:` for intentional decisions, `// FIXME:` for
+> genuine bugs); the backend foundation is annotated at this checkpoint, with the
+> remaining backend modules and the mobile client to follow in later checkpoints.
+> The remediation steps here describe the recommended path without applying it.
 
 **Legend.** Each category carries a status indicator:
 
@@ -46,7 +47,7 @@ soft-delete (`deletedAt`) contract referenced repeatedly below, see
 | Networking & TLS | Open CORS (`cors: true`); no reverse proxy / TLS termination | ❌ |
 | Infrastructure & Orchestration | Docker Compose for dev only; no Kubernetes / managed service; no DB backup | ❌ |
 | File Storage | `FILE_DRIVER=local` placeholder; AWS_* env vars empty; S3 driver not implemented | ⚠️ |
-| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/v1/ai/vision`; MIME filter commented out; password reset endpoints unwired | ❌ |
+| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired | ❌ |
 | Observability | No structured logging; no `/metrics`; no tracing; no alerting | ❌ |
 | CI/CD | No pipeline configured (no GitHub Actions, GitLab CI, etc.) | ❌ |
 | Database | Seed runner runs unconditionally; no migration versioning; only one collection index on each schema | ⚠️ |
@@ -207,8 +208,9 @@ password-reset flow is half-built.
 > issuance, email delivery, hash verification).
 > *Source: backend/src/auth/dto/auth-forgot-password.dto.ts:L6; backend/src/auth/dto/auth-reset-password.dto.ts:L4; backend/src/auth/auth.controller.ts:L31-L92.*
 
-Each of these is flagged at its source location with a `// TODO(prod):` marker
-per the project's tag taxonomy; the AI gaps additionally appear in
+Each of these will be flagged at its source location with a `// TODO(prod):`
+marker per the project's tag taxonomy when the AI and auth modules are processed
+in a later checkpoint; the AI gaps will additionally be documented in
 [backend/src/ai/README.md](backend/src/ai/README.md) and the auth gap in
 [backend/src/auth/README.md](backend/src/auth/README.md).
 
@@ -256,7 +258,8 @@ production scale. See [DATA_MODEL.md](DATA_MODEL.md) for the full schema and the
 soft-delete (`deletedAt`) contract that the items below relate to.
 
 > 🚧 **The seed runner is unconditional and destructive.** `run-seed.ts` invokes
-> `UserSeedService.run()`, then `IngridientSeedService.run()`, then
+> `UserSeedService.run()`, then `IngridientSeedService.run()` (spelling
+> preserved verbatim), then
 > `RecipeSeedService.run()`, then `PantrySeedService.run()` on every invocation
 > of `npm run seed:run:document`; the seed services drop their collections
 > before reseeding. Gate this behind an explicit flag (e.g. `--force-reseed`)
@@ -270,7 +273,8 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 
 > 🚧 **Minimal indexing.** Each schema declares a single index —
 > `SessionSchema.index({ user: 1 })`,
-> `PantryIngridientSchema.index({ userId: 1 })`, and
+> `PantryIngridientSchema.index({ userId: 1 })` (spelling preserved verbatim),
+> and
 > `RecipeSchema.index({ title: 1 })`. The recipe matching pipeline filters on
 > `ingridientList.ingridient` (spelling preserved verbatim) with `$nin` and on
 > `tags` with `$all`, neither of which is indexed, so matching will degrade as
@@ -281,8 +285,9 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 A related correctness issue lives in the pantry repository: `softDelete` calls
 `deleteOne`, physically removing the document instead of setting `deletedAt`,
 which violates the soft-delete contract documented in
-[DATA_MODEL.md](DATA_MODEL.md). It is preserved as-is and flagged with
-`// FIXME:` and `// TODO(prod):` at its source.
+[DATA_MODEL.md](DATA_MODEL.md). It is preserved as-is and will be flagged with
+`// FIXME:` and `// TODO(prod):` at its source when the pantry module is
+processed in a later checkpoint.
 *Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123.*
 
 This category is ⚠️ rather than ❌ because the database is functional and
@@ -344,13 +349,16 @@ The Flutter client has no production release configuration on any platform.
 
 ## Summary Table — Gap to Module Mapping
 
-The table below provides traceability from each code-level gap surfaced in this
-central checklist down to the module README that also documents it and the
-inline annotation that flags it at the source. A developer reading a single
-module can find its local context; an operator scanning for blockers reads this
-document.
+The table below maps each code-level gap surfaced in this central checklist to
+the module README that will document it and the inline annotation that will flag
+it at the source — the planned end-state traceability for the engagement. These
+annotations and READMEs are populated as each module is processed across
+checkpoints; the database foundation is complete at this checkpoint, while the
+remaining rows are populated in later checkpoints. A developer reading a single
+module can then find its local context; an operator scanning for blockers reads
+this document.
 
-| Gap | Module README | Inline Annotation |
+| Gap | Module README | Planned Inline Annotation |
 |-----|---------------|-------------------|
 | Recipe `_id` matching only / no unit normalization / no quantity check | [backend/src/recipe/README.md](backend/src/recipe/README.md) | `// TODO(prod):` block comment above `matches()` in `recipe.repository.ts` |
 | AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts:L20-L28` |
@@ -366,4 +374,3 @@ document.
 > `InstractionItem`, and the `singup` route are intentional, stable contracts
 > across the codebase (spelling preserved verbatim). They are documented, never
 > "corrected," in keeping with the minimal-change clause.
-

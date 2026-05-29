@@ -29,7 +29,7 @@ import validateConfig from '../../utils/validate-config';
  * on the first violation. The class is intentionally not exported because
  * it is an implementation detail of the factory below.
  *
- * Source: backend/src/database/config/database.config.ts:L14-L74
+ * Source: backend/src/database/config/database.config.ts:L34-L94
  */
 class EnvironmentVariablesValidator {
   @ValidateIf((envValues) => envValues.DATABASE_URL)
@@ -95,7 +95,7 @@ class EnvironmentVariablesValidator {
 
 /**
  * Database configuration factory registered under the `database` namespace
- * of AllConfigType (backend/src/config/config.type.ts:L9).
+ * of AllConfigType (backend/src/config/config.type.ts:L30).
  *
  * Reads DATABASE_TYPE, DATABASE_HOST, DATABASE_PORT, DATABASE_USERNAME,
  * DATABASE_PASSWORD, DATABASE_NAME, DATABASE_URL, DATABASE_SYNCHRONIZE,
@@ -112,9 +112,9 @@ class EnvironmentVariablesValidator {
  * maxConnections = 100 when DATABASE_MAX_CONNECTIONS is unset.
  *
  * Loaded into ConfigModule at backend/src/app.module.ts:L20-L24 (load array
- * at L22) and again at backend/src/database/seeds/seed.module.ts:L18-L22
+ * at L22) and again at backend/src/database/seeds/seed.module.ts:L34-L38
  * for the standalone seed runner. Consumed by MongooseConfigService at
- * backend/src/database/mongoose-config.service.ts:L13-L20 via
+ * backend/src/database/mongoose-config.service.ts:L36-L43 via
  * `this.configService.get('database')`.
  *
  * @returns DatabaseConfig — the typed configuration object.
