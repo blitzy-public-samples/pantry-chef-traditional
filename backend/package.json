@@ -21,6 +21,11 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "env-cmd jest --config ./test/jest-e2e.json"
   },
+  "securityAnnotations": {
+    "_comment": "JSON does not support inline comments; this field provides SECURITY(SEC-Xn) traceability for the security-motivated dependency additions below (per AAP section 0.11). It is ignored by npm and does not affect package resolution, npm install/ci, or package-lock.json.",
+    "@nestjs/throttler": "SECURITY(SEC-A1): NestJS-native rate limiting; wired as opt-in infrastructure (ThrottlerModule) and enforced only on the login/register credential endpoints.",
+    "helmet": "SECURITY(SEC-A2): HTTP security-headers middleware (app.use(helmet()) in main.ts); also subsumes SEC-C2 Strict-Transport-Security."
+  },
   "dependencies": {
     "@google-cloud/vision": "^4.3.2",
     "@nestjs/common": "^10.0.0",
