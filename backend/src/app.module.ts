@@ -26,9 +26,12 @@ import { AiModule } from './ai/ai.module';
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),
-    // SECURITY(SEC-A1): Rate-limiting infrastructure ONLY. ThrottlerGuard is intentionally NOT bound globally
-    // (no APP_GUARD), so throttling does NOT apply to every route. Enforcement is scoped exclusively to the
-    // login/register credential endpoints via @UseGuards(ThrottlerGuard) + @Throttle(...) on those handlers.
+    // SECURITY(SEC-A1): Rate-limiting infrastructure. This default throttler config is driven by the
+    // AUTH_THROTTLE_TTL / AUTH_THROTTLE_LIMIT env vars (operator-tunable; defaults 60000ms / 10 requests).
+    // ThrottlerGuard is intentionally NOT bound globally (no APP_GUARD), so throttling does NOT apply to
+    // every route. Enforcement is scoped exclusively to the login/register credential endpoints, which apply
+    // @UseGuards(ThrottlerGuard) per-route and (having no @Throttle override) consume THIS env-driven default,
+    // so changing the env vars changes those endpoints' limits without affecting any other route.
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
