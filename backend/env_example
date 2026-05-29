@@ -20,7 +20,7 @@ AWS_DEFAULT_S3_BUCKET=
 AUTH_JWT_SECRET=secret
 AUTH_JWT_TOKEN_EXPIRES_IN=15m
 AUTH_REFRESH_SECRET=secret_for_refresh
-# SECURITY(SEC-B3): Refresh token TTL reduced from 3650d (10 years) to 30d per OWASP ASVS V3.3.5
+# SECURITY(SEC-B3): Refresh token TTL hardened to 30d (former 10-year default removed) per OWASP ASVS V3.3.5
 AUTH_REFRESH_TOKEN_EXPIRES_IN=30d
 
 # SECURITY(SEC-B1): Mongo credentials externalized — operators MUST populate per-deployment

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   UploadedFile,
   UseGuards,
@@ -16,6 +18,9 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('vision')
+  // AI vision success contract is HTTP 200 (AAP §0.8.1 — SEC-A3 expected outcome), overriding the
+  // NestJS default of 201 for POST handlers so the graceful-degradation empty body returns 200.
+  @HttpCode(HttpStatus.OK)
   // SECURITY(SEC-A3): Require valid JWT to prevent unauthenticated Google Cloud Vision quota abuse
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(

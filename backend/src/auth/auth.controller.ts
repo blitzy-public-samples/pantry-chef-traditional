@@ -10,7 +10,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
@@ -29,13 +29,10 @@ import { User } from 'src/users/domain/user';
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
-  // SECURITY(SEC-A1): Anti-brute-force throttling. Limits are operator-tunable via the
-  // AUTH_THROTTLE_LIMIT / AUTH_THROTTLE_TTL env vars (default 10 requests per 60s window),
-  // consumed from the module-level ThrottlerModule default config in app.module.ts. No
-  // per-route override is set, so changing those env vars changes this endpoint's limit.
-  // ThrottlerGuard is applied per-route here (NOT globally / no APP_GUARD) so only this
-  // credential endpoint is rate-limited; all other routes dispatch without throttling.
-  @UseGuards(ThrottlerGuard)
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP. This stricter
+  // per-route override hardens the credential endpoint beyond the module-level default (10/60s); it is
+  // enforced by the globally-bound ThrottlerGuard (APP_GUARD) registered in app.module.ts.
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public login(
@@ -44,13 +41,10 @@ export class AuthController {
     return this.service.validateLogin(loginDto);
   }
 
-  // SECURITY(SEC-A1): Anti-brute-force throttling. Limits are operator-tunable via the
-  // AUTH_THROTTLE_LIMIT / AUTH_THROTTLE_TTL env vars (default 10 requests per 60s window),
-  // consumed from the module-level ThrottlerModule default config in app.module.ts. No
-  // per-route override is set, so changing those env vars changes this endpoint's limit.
-  // ThrottlerGuard is applied per-route here (NOT globally / no APP_GUARD) so only this
-  // credential endpoint is rate-limited; all other routes dispatch without throttling.
-  @UseGuards(ThrottlerGuard)
+  // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP. This stricter
+  // per-route override hardens the credential endpoint beyond the module-level default (10/60s); it is
+  // enforced by the globally-bound ThrottlerGuard (APP_GUARD) registered in app.module.ts.
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('email/register')
   @HttpCode(HttpStatus.OK)
   async register(

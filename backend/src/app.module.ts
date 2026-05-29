@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -28,10 +29,9 @@ import { AiModule } from './ai/ai.module';
     }),
     // SECURITY(SEC-A1): Rate-limiting infrastructure. This default throttler config is driven by the
     // AUTH_THROTTLE_TTL / AUTH_THROTTLE_LIMIT env vars (operator-tunable; defaults 60000ms / 10 requests).
-    // ThrottlerGuard is intentionally NOT bound globally (no APP_GUARD), so throttling does NOT apply to
-    // every route. Enforcement is scoped exclusively to the login/register credential endpoints, which apply
-    // @UseGuards(ThrottlerGuard) per-route and (having no @Throttle override) consume THIS env-driven default,
-    // so changing the env vars changes those endpoints' limits without affecting any other route.
+    // ThrottlerGuard is bound globally via APP_GUARD (see providers below), so this default (10 requests
+    // per 60s) applies to every route. The credential endpoints (login/register) carry a stricter
+    // per-route @Throttle({ default: { limit: 5, ttl: 60000 } }) override in auth.controller.ts.
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -51,6 +51,14 @@ import { AiModule } from './ai/ai.module';
     AiModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // SECURITY(SEC-A1): Globally bind ThrottlerGuard so the module default (10/60s) applies to ALL
+    // routes and the per-route @Throttle override on login/register (5/60s) takes effect.
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
