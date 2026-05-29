@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -25,6 +27,17 @@ import { AiModule } from './ai/ai.module';
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),
+    // SECURITY(SEC-A1): Rate-limiting infrastructure; per-route @Throttle() decorators control enforcement
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => [
+        {
+          ttl: +cfg.get('AUTH_THROTTLE_TTL') || 60000,
+          limit: +cfg.get('AUTH_THROTTLE_LIMIT') || 10,
+        },
+      ],
+    }),
     AuthModule,
     SessionModule,
     UsersModule,
@@ -34,6 +47,13 @@ import { AiModule } from './ai/ai.module';
     AiModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // SECURITY(SEC-A1): Globally bind ThrottlerGuard so @Throttle decorators on specific handlers take effect
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
