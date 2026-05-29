@@ -1,8 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+// NOTE: 'PantryIngridientSchemaClass', 'PantryIngridientSchema', 'PantryIngridient'
+// NOTE: spellings preserved verbatim across the backend codebase. Do not rename.
 import { PantryIngridientSchemaClass } from 'src/pantry/infrastructure/document/entities/pantryIngridient.schema';
 
+/**
+ * Seed service for PantryIngridients (spelling preserved verbatim).
+ *
+ * Drops the PantryIngridients collection and re-inserts 6 seed pantry
+ * items assigned to john.doe (userId 672c73612ae468b9bb358205) with
+ * location values from the {freezer, pantry, fridge} enum.
+ *
+ * Items: minced beef, onions, milk, romaine lettuce, croutons, feta cheese.
+ *
+ * Destructive on every run — see backend/src/database/README.md
+ * § Known Limitations.
+ */
 @Injectable()
 export class PantrySeedService {
   constructor(
@@ -10,10 +24,27 @@ export class PantrySeedService {
     private readonly model: Model<PantryIngridientSchemaClass>,
   ) {}
 
+  /**
+   * Drop the PantryIngridients collection (spelling preserved verbatim).
+   *
+   * @returns Promise<void>
+   */
   async dropCollection() {
     await this.model.collection.drop();
   }
 
+  // TODO(prod): Seed runner drops collections (dropCollection) before reseeding.
+  // TODO(prod): Gate behind explicit flag before production.
+  /**
+   * Drop the PantryIngridients collection (spelling preserved verbatim)
+   * and re-insert the 6 seed pantry items via insertMany.
+   *
+   * Seed payloads reference both the seeded john.doe userId and seeded
+   * Ingridient ObjectIds; therefore this service must run AFTER
+   * UserSeedService and IngridientSeedService (orchestrated by run-seed.ts).
+   *
+   * @returns Promise<void>
+   */
   async run() {
     await this.dropCollection();
 
