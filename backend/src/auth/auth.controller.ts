@@ -10,10 +10,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-// SECURITY(SEC-A1): Throttle declares the per-endpoint rate limit; ThrottlerGuard enforces it.
-// ThrottlerModule is registered globally in app.module.ts WITHOUT a global APP_GUARD binding, so
-// the guard is attached per-route (below) to keep throttling scoped to the credential endpoints only.
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
@@ -34,7 +31,6 @@ export class AuthController {
 
   // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @UseGuards(ThrottlerGuard)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public login(
@@ -45,7 +41,6 @@ export class AuthController {
 
   // SECURITY(SEC-A1): Anti-brute-force throttling — 5 attempts per 60s window per IP
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @UseGuards(ThrottlerGuard)
   @Post('email/register')
   @HttpCode(HttpStatus.OK)
   async register(
