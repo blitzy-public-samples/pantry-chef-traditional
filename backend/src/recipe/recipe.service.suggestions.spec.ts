@@ -413,4 +413,34 @@ describe('RecipeService.getSuggestions', () => {
     expect(notFinite.data).toHaveLength(10);
     expect(notFinite.hasMore).toBe(true);
   });
+
+  it('clamps positive fractional page/limit below 1 (which floor to 0) to the safe defaults', async () => {
+    const recipes: Recipe[] = [];
+    for (let index = 0; index < 12; index += 1) {
+      recipes.push(makeRecipe(`r${index}`, [['i1', 'Egg']], 1));
+    }
+    recipeRepositoryMock.matches.mockResolvedValue(recipes);
+
+    // page=0.5 and limit=0.5 are positive (> 0) but floor to 0. A "raw > 0 then
+    // floor" check would let them through and create a bad slice — slice(-10, 0)
+    // for page or slice(0, 0) for limit — returning empty data with
+    // hasMore=true. Flooring FIRST and requiring >= 1 makes both fall back to the
+    // safe defaults (page=1, limit=10) and return a valid first page.
+    const fractional = await service.getSuggestions('u1', {}, 0.5, 0.5);
+    expect(fractional.data).toHaveLength(10);
+    expect(fractional.data[0].recipe.id).toBe('r0');
+    expect(fractional.hasMore).toBe(true);
+
+    // A fractional limit below 1 alone must also default to 10 rather than 0.
+    const fractionalLimit = await service.getSuggestions('u1', {}, 1, 0.9);
+    expect(fractionalLimit.data).toHaveLength(10);
+    expect(fractionalLimit.hasMore).toBe(true);
+
+    // Fractional values at or above 1 still floor to a valid integer (not the
+    // default): page=1.9 floors to page 1 and limit=5.9 floors to 5.
+    const fractionalAboveOne = await service.getSuggestions('u1', {}, 1.9, 5.9);
+    expect(fractionalAboveOne.data).toHaveLength(5);
+    expect(fractionalAboveOne.data[0].recipe.id).toBe('r0');
+    expect(fractionalAboveOne.hasMore).toBe(true);
+  });
 });

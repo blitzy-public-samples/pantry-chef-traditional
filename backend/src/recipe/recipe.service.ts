@@ -158,18 +158,24 @@ export class RecipeService {
     });
 
     // In-memory pagination over the already-sorted list. Query params arrive as
-    // strings and may be malformed (negative, zero, non-numeric), so sanitize
-    // them: clamp page to a finite positive integer (default 1) and limit to a
-    // finite positive integer in 1..50 (default 10, cap 50 to mirror findAll).
-    // This prevents a value such as limit=-1 from bypassing the 50-item cap via
+    // strings and may be malformed (negative, zero, fractional, non-numeric), so
+    // sanitize them: clamp page to a finite integer >= 1 (default 1) and limit to
+    // a finite integer in 1..50 (default 10, cap 50 to mirror findAll).
+    // Floor FIRST, then require the floored value to be >= 1. Doing it in this
+    // order is what closes the fractional-below-1 hole: a value such as page=0.5
+    // or limit=0.5 is positive but floors to 0, so a "raw > 0 then floor" check
+    // would let it through and produce a bad slice (slice(-10, 0) / slice(0, 0))
+    // with hasMore=true and empty data. Flooring up front means those values are
+    // compared as 0, fail the >= 1 test, and fall back to the safe defaults. The
+    // >= 1 floor also stops limit=-1 from bypassing the 50-item cap via
     // slice(0, -1). The matches() ordering (matchScore DESC) is preserved by
     // map/slice.
-    const rawPage = Number(page);
+    const flooredPage = Math.floor(Number(page));
     const pageNum =
-      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
-    const rawLimit = Number(limit);
+      Number.isFinite(flooredPage) && flooredPage >= 1 ? flooredPage : 1;
+    const flooredLimit = Math.floor(Number(limit));
     let limitNum =
-      Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 10;
+      Number.isFinite(flooredLimit) && flooredLimit >= 1 ? flooredLimit : 10;
     if (limitNum > 50) {
       limitNum = 50;
     }

@@ -92,7 +92,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                       color: context.theme.appColors.red,
                     ),
                   ),
-                  const SizedBox(height: CommonConstants.spacingLarge),
+                  const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: CommonConstants.pagePadding,
@@ -119,9 +119,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                 children: [
                   Image.asset(
                     'assets/images/empty_pantry.webp',
-                    width: CommonConstants.emptyStateImageWidth,
+                    width: 200,
                   ),
-                  const SizedBox(height: CommonConstants.spacingXLarge),
+                  const SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: CommonConstants.pagePadding,
@@ -151,14 +151,14 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    vertical: CommonConstants.spacingSmall,
+                    vertical: 8,
                   ),
                   // Wrap (not Row) so the two chips reflow onto a second line
                   // instead of overflowing on narrow widths or at larger text
                   // scales; `spacing`/`runSpacing` provide the inter-chip gaps.
                   child: Wrap(
-                    spacing: CommonConstants.spacingSmall,
-                    runSpacing: CommonConstants.spacingSmall,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       FilterChip(
                         label: Text(
@@ -218,7 +218,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                       itemBuilder: (context, index) {
                         return Container(
                           margin: const EdgeInsets.only(
-                            bottom: CommonConstants.spacingMedium,
+                            bottom: 12,
                           ),
                           child: SuggestionCard(item: state.items![index]),
                         );

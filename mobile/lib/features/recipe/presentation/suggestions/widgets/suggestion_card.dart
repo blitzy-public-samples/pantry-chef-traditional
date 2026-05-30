@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pantry_chef/core/constants/common.dart';
 import 'package:pantry_chef/core/presentation/widgets/image_widget.dart';
 import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/recipe/data/dto/index.dart';
@@ -56,17 +55,17 @@ class SuggestionCard extends StatelessWidget {
       child: Column(
         children: [
           ImageWidget(
-            height: CommonConstants.cardImageHeight,
+            height: 150,
             width: double.infinity,
             fit: BoxFit.cover,
             imageUrl: item.recipe.imageUrl,
           ),
           Padding(
             padding: const EdgeInsets.only(
-              left: CommonConstants.spacingSmall,
-              right: CommonConstants.spacingSmall,
-              bottom: CommonConstants.spacingMedium,
-              top: CommonConstants.spacingXSmall,
+              left: 8,
+              right: 8,
+              bottom: 12,
+              top: 4,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,17 +74,17 @@ class SuggestionCard extends StatelessWidget {
                   item.recipe.title,
                   style: context.theme.appTextTheme.semiBold18,
                 ),
-                const SizedBox(height: CommonConstants.spacingSmall),
+                const SizedBox(height: 8),
                 LinearProgressIndicator(
-                  minHeight: CommonConstants.progressBarMinHeight,
+                  minHeight: 10,
                   color: _getProgressBarColor(context),
                   backgroundColor: context.theme.appColors.grey,
                   value: item.matchScore,
                 ),
-                const SizedBox(height: CommonConstants.spacingSmall),
+                const SizedBox(height: 8),
                 Wrap(
-                  spacing: CommonConstants.spacingSmall,
-                  runSpacing: CommonConstants.spacingSmall,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     Chip(
                       label: Text(
@@ -107,10 +106,10 @@ class SuggestionCard extends StatelessWidget {
                   ],
                 ),
                 if (item.missingIngredients.isNotEmpty) ...[
-                  const SizedBox(height: CommonConstants.spacingSmall),
+                  const SizedBox(height: 8),
                   Wrap(
-                    spacing: CommonConstants.spacingSmall,
-                    runSpacing: CommonConstants.spacingSmall,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: item.missingIngredients
                         .map(
                           (m) => Chip(

@@ -39,7 +39,8 @@ class _RecipeMainState extends State<RecipeMain> {
             padding: const EdgeInsets.all(CommonConstants.pagePadding),
             child: ActionButton(
               text: AppLocalizations.of(context)!.whatCanIMakeTonight,
-              onPress: () => Navigator.of(context).pushNamed(Navigation.suggestions),
+              onPress: () =>
+                  Navigator.of(context).pushNamed(Navigation.suggestions),
             ),
           ),
           Expanded(
@@ -65,7 +66,8 @@ class _RecipeMainState extends State<RecipeMain> {
                             const SizedBox(height: 24),
                             Text(
                               AppLocalizations.of(context)!.recipeEmptyMessage,
-                              style: context.theme.appTextTheme.semiBold14.copyWith(
+                              style: context.theme.appTextTheme.semiBold14
+                                  .copyWith(
                                 color: context.theme.appColors.grey,
                               ),
                             )
@@ -73,10 +75,12 @@ class _RecipeMainState extends State<RecipeMain> {
                         ),
                       );
                     }
-                    final favoriteList = profileState.userProfile?.favoriteRecipes ?? [];
+                    final favoriteList =
+                        profileState.userProfile?.favoriteRecipes ?? [];
                     return RefreshIndicator.adaptive(
                       color: context.theme.appColors.green,
-                      onRefresh: () async => context.read<RecipeBloc>().add(RecipeMatching()),
+                      onRefresh: () async =>
+                          context.read<RecipeBloc>().add(RecipeMatching()),
                       child: ListView.builder(
                           itemCount: state.items!.length,
                           itemBuilder: (BuildContext context, int index) {
@@ -85,7 +89,8 @@ class _RecipeMainState extends State<RecipeMain> {
                               margin: EdgeInsets.only(bottom: 12),
                               child: RecipeCard(
                                 item: state.items![index],
-                                isFavorite: favoriteList.any((el) => el == item.id),
+                                isFavorite:
+                                    favoriteList.any((el) => el == item.id),
                               ),
                             );
                           }),
