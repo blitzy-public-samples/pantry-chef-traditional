@@ -4,7 +4,7 @@
 
 ## Module Purpose
 
-The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0`; its package identity is `blitzy-backend` `0.0.1`, marked `private` and `UNLICENSED` (Source: `backend/package.json:L2-L7,L26`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — plus a global `ConfigModule` and an async `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). Most controllers declare `version: '1'`, so their routes sit under `/api/v1/*`; the AI controller is unversioned, so its route is `/api/ai/*`. Swagger is served at `/docs` (Source: `backend/src/main.ts:L14-L31`).
+The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0`; its package identity is `blitzy-backend` `0.0.1`, marked `private` and `UNLICENSED` (Source: `backend/package.json:L2-L7,L26`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — plus a global `ConfigModule` and an async `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). Most controllers declare `version: '1'` in their `@Controller` decorator, but `app.enableVersioning()` is never called during bootstrap, so the `version` option is inert and every route resolves directly under the global `/api` prefix (for example `/api/auth/*` and `/api/ai/*`) — there is no `/v1` segment at runtime. Swagger is served at `/docs` (Source: `backend/src/main.ts:L14-L31`).
 
 ## Key Components
 
@@ -110,7 +110,7 @@ Key dev dependencies from `backend/package.json:L46-L75`:
 - **NestJS bootstrap** — `bootstrap()` initializes the app, applies global validation, and starts the listener (Source: `backend/src/main.ts:L10-L35`).
 - **Modular composition** — `AppModule` aggregates the seven feature modules via DI (Source: `backend/src/app.module.ts:L28-L34`).
 - **OpenAPI/Swagger surface** — Swagger UI at `/docs` (Source: `backend/src/main.ts:L23-L31`).
-- **Global prefix + versioning** — `setGlobalPrefix('api', { exclude: ['/'] })`; `version: '1'` controllers add `/v1`, unversioned ones (AI) do not — see the API Reference note (Source: `backend/src/main.ts:L14-L19`).
+- **Global prefix** — `setGlobalPrefix('api', { exclude: ['/'] })`. Although most controllers declare `version: '1'`, `app.enableVersioning()` is never called, so no `/v1` segment is added and all routes resolve under `/api/<feature>` — see the API Reference note (Source: `backend/src/main.ts:L14-L19`).
 - **Containerized dev stack** — `docker-compose up` runs MongoDB + NestJS with bind-mounted source (Source: `backend/docker-compose.yml:L1-L30`).
 - **Seed runner** — `npm run seed:run:document` seeds User → Ingridient → Recipe → Pantry (Source: `backend/package.json:L16`).
 
@@ -123,10 +123,10 @@ Only root-level and cross-cutting endpoints are listed here; per-feature endpoin
 | `GET` | `/` | None | Returns the literal `'Hello World!'` from `AppService.getHello()` — boilerplate, retained as-is (Source: `backend/src/app.controller.ts:L8-L11`) |
 | `GET` | `/docs` | None | Swagger UI mounted by `SwaggerModule.setup('docs', app, document)` (Source: `backend/src/main.ts:L31`) |
 | `GET` | `/docs-json` | None | OpenAPI JSON spec (Nest Swagger default) |
-| (versioned) | `/api/v1/<feature>/*` | varies | Controllers with `version: '1'` — auth, users, pantry, ingridient, recipe; see `src/<feature>/README.md` |
-| (unversioned) | `/api/ai/vision` | None | `AiController` declares no `version`, so it omits `/v1`; see `src/ai/README.md` |
+| (feature routes) | `/api/<feature>/*` | varies | auth, users, pantry, ingridient, recipe controllers; `version: '1'` is declared but inert (no `enableVersioning()`), so routes resolve under `/api/<feature>`; see `src/<feature>/README.md` |
+| ai | `/api/ai/vision` | None | `AiController` declares no `version`; route is `/api/ai/vision`; see `src/ai/README.md` |
 
-**Note:** the global prefix is `/api` (default `API_PREFIX`). Controllers that set `version: '1'` (e.g. `@Controller({ path: 'auth', version: '1' })`) add a `/v1` segment; the unversioned `@Controller('ai')` does not, so its route is `POST /api/ai/vision`.
+**Note:** the global prefix is `/api` (default `API_PREFIX`). Controllers set `version: '1'` (e.g. `@Controller({ path: 'auth', version: '1' })`), but because `app.enableVersioning()` is never called this is inert — no `/v1` segment is added — so e.g. auth resolves at `/api/auth/*` and the unversioned `@Controller('ai')` at `POST /api/ai/vision`.
 
 ## Data Flows
 
@@ -168,7 +168,7 @@ $ docker-compose up
 ### Google Cloud Vision Setup
 
 - Enable Cloud Vision and create a service-account key file.
-- Rename it to `ai.json` and copy it to `src/config/`; `AiService` loads it at boot and disables Vision if the file is missing (Source: `backend/src/ai/ai.service.ts:L52-L56`).
+- Rename it to `ai.json` and copy it to `src/config/`; `AiService` loads it at boot and disables Vision if the file is missing (Source: `backend/src/ai/ai.service.ts:L71-L75`).
 
 ### Environment Variables
 
@@ -216,7 +216,7 @@ Scripts are defined in `backend/package.json:L8-L23`:
 
 > ⚠️ **Refresh token TTL ~10 years** — `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` far exceeds a sane production window (e.g. 30 days with rotation); see [`src/auth/README.md`](src/auth/README.md) (Source: `backend/env_example:L23`).
 
-> ⚠️ **Spelling preserved verbatim** — `backend/src/ingridient/` and identifiers like `IngridientModule`, `IngridientService`, `PantryIngridient`, and `IngridientList` keep their spelling verbatim across the backend; the URL path `/api/v1/ingredient` uses the conventional spelling. These are stable contracts and must not be "fixed".
+> ⚠️ **Spelling preserved verbatim** — `backend/src/ingridient/` and identifiers like `IngridientModule`, `IngridientService`, `PantryIngridient`, and `IngridientList` keep their spelling verbatim across the backend; the URL path `/api/ingredient` uses the conventional spelling. These are stable contracts and must not be "fixed".
 
 ## Production Readiness Status
 
@@ -224,8 +224,8 @@ Scripts are defined in `backend/package.json:L8-L23`:
 
 > 🚧 **Build & Runtime** — replace the dev-grade Dockerfile with a multi-stage build (`nest build` → `node dist/main`) (Source: `backend/Dockerfile:L13`).
 
-> 🚧 **Secrets Management** — move `AUTH_JWT_SECRET`, `AUTH_REFRESH_SECRET`, the MongoDB credentials, and the Vision service-account file (`src/config/ai.json`) into a secrets manager (AWS Secrets Manager, Vault, or Kubernetes Secrets) (Source: `backend/env_example:L20-L22`; `backend/src/ai/ai.service.ts:L52-L56`).
+> 🚧 **Secrets Management** — move `AUTH_JWT_SECRET`, `AUTH_REFRESH_SECRET`, the MongoDB credentials, and the Vision service-account file (`src/config/ai.json`) into a secrets manager (AWS Secrets Manager, Vault, or Kubernetes Secrets) (Source: `backend/env_example:L20-L22`; `backend/src/ai/ai.service.ts:L71-L75`).
 
 > 🚧 **Database** — gate `npm run seed:run:document` behind an explicit flag; each seed service calls `dropCollection()` before inserting fixtures (Source: `backend/package.json:L16`; see [`src/database/README.md`](src/database/README.md)).
 
-> 🚧 **Security Hardening** — wire the password-reset endpoints (`AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no routes are mapped), add a JWT guard to the unversioned `POST /api/ai/vision`, and uncomment the MIME-type filter in `src/ai/ai.controller.ts` (Source: `backend/src/ai/ai.controller.ts:L20-L28`).
+> 🚧 **Security Hardening** — wire the password-reset endpoints (`AuthForgotPasswordDto` and `AuthResetPasswordDto` exist but no routes are mapped), add a JWT guard to the unversioned `POST /api/ai/vision`, and uncomment the MIME-type filter in `src/ai/ai.controller.ts` (Source: `backend/src/ai/ai.controller.ts:L53-L61`).

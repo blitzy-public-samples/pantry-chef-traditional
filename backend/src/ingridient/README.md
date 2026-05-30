@@ -4,7 +4,7 @@
 
 The `Ingridient` module (spelling preserved verbatim throughout the backend
 codebase — note the URL path uses the correct `ingredient` spelling at
-`/api/v1/ingredient/*`) manages the catalog of base ingredients used by both the
+`/api/ingredient/*`) manages the catalog of base ingredients used by both the
 `PantryIngridient` (spelling preserved verbatim) and `Recipe` modules. The
 controller exposes six routes — five CRUD endpoints plus a `GET /creation-data`
 route that returns hardcoded reference data (5 categories, 9 units) used by the
@@ -25,7 +25,7 @@ preserved verbatim.
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `IngridientController` | `ingridient.controller.ts` | Six endpoints under `/api/v1/ingredient` (URL spelling is correct `ingredient`) |
+| `IngridientController` | `ingridient.controller.ts` | Six endpoints under `/api/ingredient` (URL spelling is correct `ingredient`) |
 | `IngridientService` | `ingridient.service.ts` | Business orchestration; duplicate-name check and existence check before persistence |
 | `IngridientRepository` (abstract) | `infrastructure/ingridient.repository.ts` | Abstract contract: create, findManyWithPagination, findOne, update, softDelete |
 | `IngridientDocumentRepository` | `infrastructure/document/repositories/ingridient.repository.ts` | Mongoose implementation; proper soft-delete via `updateOne({ deletedAt: new Date() })` |
@@ -74,7 +74,7 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) for the full system c
 
 ## Primary Use Cases
 
-- Fetch the hardcoded creation reference data (5 categories + 9 units) via `GET /api/v1/ingredient/creation-data`.
+- Fetch the hardcoded creation reference data (5 categories + 9 units) via `GET /api/ingredient/creation-data`.
 - Create an `Ingridient` — validates uniqueness by `name` and throws HTTP 422 on conflict (error marker `ingridientAlreadyExists`).
 - List/search `Ingridient` records (paginated, hard cap of 50 per page) with an optional name regex filter and sort directives.
 - Fetch a single `Ingridient` by id.
@@ -85,7 +85,8 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) for the full system c
 
 The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller
 declares `@Controller({ path: 'ingredient', version: '1' })` (Source:
-`ingridient.controller.ts`) so all routes live at `/api/v1/ingredient/*`. The URL
+`ingridient.controller.ts`), but because `app.enableVersioning()` is never called
+the `version: '1'` option is inert, so all routes live at `/api/ingredient/*`. The URL
 spelling is the **correct** `ingredient` (English); only the class/module/file
 identifiers carry the `Ingridient` variant spelling. The decorator is verbatim
 from source (Source: `ingridient.controller.ts`):
@@ -99,12 +100,12 @@ from source (Source: `ingridient.controller.ts`):
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| GET | `/api/v1/ingredient/creation-data` | `AuthGuard('jwt')` | Hardcoded categories + units reference data (Source: `ingridient.controller.ts`) |
-| POST | `/api/v1/ingredient` | `AuthGuard('jwt')` | Create an Ingridient (Source: `ingridient.controller.ts`) |
-| GET | `/api/v1/ingredient` | `AuthGuard('jwt')` | List/search with pagination (cap 50, Source: `ingridient.controller.ts`) |
-| GET | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Get an Ingridient by id (Source: `ingridient.controller.ts`) |
-| PATCH | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Update an Ingridient (Source: `ingridient.controller.ts`) |
-| DELETE | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Soft-delete (proper `updateOne({ deletedAt })`, Source: `ingridient.controller.ts`) |
+| GET | `/api/ingredient/creation-data` | `AuthGuard('jwt')` | Hardcoded categories + units reference data (Source: `ingridient.controller.ts`) |
+| POST | `/api/ingredient` | `AuthGuard('jwt')` | Create an Ingridient (Source: `ingridient.controller.ts`) |
+| GET | `/api/ingredient` | `AuthGuard('jwt')` | List/search with pagination (cap 50, Source: `ingridient.controller.ts`) |
+| GET | `/api/ingredient/:id` | `AuthGuard('jwt')` | Get an Ingridient by id (Source: `ingridient.controller.ts`) |
+| PATCH | `/api/ingredient/:id` | `AuthGuard('jwt')` | Update an Ingridient (Source: `ingridient.controller.ts`) |
+| DELETE | `/api/ingredient/:id` | `AuthGuard('jwt')` | Soft-delete (proper `updateOne({ deletedAt })`, Source: `ingridient.controller.ts`) |
 
 ## Data Flows
 
@@ -112,10 +113,10 @@ The diagram below shows the dual flow exercised by an ingredient-creation client
 
 ```mermaid
 flowchart TD
-    A[Client] -->|GET /api/v1/ingredient/creation-data| B[IngridientController.creationData]
+    A[Client] -->|GET /api/ingredient/creation-data| B[IngridientController.creationData]
     B --> C[Hardcoded categories + units]
     C --> A
-    A -->|POST /api/v1/ingredient with category, unit| D[IngridientController.create]
+    A -->|POST /api/ingredient with category, unit| D[IngridientController.create]
     D --> E[IngridientService.create]
     E --> F[IngridientDocumentRepository.create]
     F --> G[MongoDB Ingridient collection]

@@ -20,8 +20,8 @@ export type UserSchemaDocument = HydratedDocument<UserSchemaClass>;
  * Consumed by `RecipeService.matches` to drive the four pre-filter
  * steps of the recipe matching pipeline (`$nin` on `allergies` and
  * `dislikedIngredients`, `$all` on `dietary`, `$lte` on
- * `cookingTime`). See `../../../../../ARCHITECTURE.md`
- * § Recipe Matching Pipeline and `../../../../../DATA_MODEL.md`
+ * `cookingTime`). See `../../../../../../ARCHITECTURE.md`
+ * § Recipe Matching Pipeline and `../../../../../../DATA_MODEL.md`
  * § Preferences for the canonical schema reference.
  */
 export class Preferences {
@@ -51,7 +51,7 @@ export class Preferences {
  * work in concert with the schema-level option.
  *
  * Notable field-level conventions (canonical reference:
- * `../../../../../DATA_MODEL.md` § User):
+ * `../../../../../../DATA_MODEL.md` § User):
  *  - `email` carries the `unique: true` index option.
  *  - `password` is decorated with `@Exclude({ toPlainOnly: true })`
  *    so it never appears in serialized JSON responses, but it IS

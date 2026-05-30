@@ -18,7 +18,7 @@ export type IngridientSchemaDocument = HydratedDocument<IngridientSchemaClass>;
  * References the shared common/types.ts `Reference` type for `category`
  * and `unit` fields. Soft-delete via deletedAt (proper).
  *
- * See ../../../../../DATA_MODEL.md § Ingridient for the full field reference.
+ * See ../../../../../../DATA_MODEL.md § Ingridient for the full field reference.
  */
 @Schema({
   timestamps: true,

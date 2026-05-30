@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, MinLength } from 'class-validator';
 
 /**
- * Validation contract for PATCH /api/v1/auth/me.
+ * Validation contract for PATCH /api/auth/me.
  *
  * All fields are optional (`@IsOptional()`); only the supplied subset is
  * applied. Fields:

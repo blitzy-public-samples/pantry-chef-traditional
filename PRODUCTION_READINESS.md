@@ -208,11 +208,11 @@ password-reset flow is half-built.
 > issuance, email delivery, hash verification).
 > *Source: backend/src/auth/dto/auth-forgot-password.dto.ts; backend/src/auth/dto/auth-reset-password.dto.ts; backend/src/auth/auth.controller.ts.*
 
-> 🚧 **Plaintext-password update path on `PATCH /api/v1/users`.** `UsersService.create`
+> 🚧 **Plaintext-password update path on `PATCH /api/users`.** `UsersService.create`
 > bcrypt-hashes the password, but `UsersService.update` forwards the payload to
 > `UsersDocumentRepository.update` without re-hashing. The intended password-change
 > flow runs through `AuthService.update` (which verifies the old password upstream),
-> but a direct authenticated call to `PATCH /api/v1/users` carrying a `password`
+> but a direct authenticated call to `PATCH /api/users` carrying a `password`
 > field would persist that value in plaintext. Either add a re-hash step in
 > `UsersService.update` or drop the `password` field from `UpdateUserDto`. Surfaced
 > locally in [backend/src/users/README.md](backend/src/users/README.md) § Known

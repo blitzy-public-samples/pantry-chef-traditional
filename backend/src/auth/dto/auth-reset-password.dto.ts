@@ -4,7 +4,7 @@ import { IsNotEmpty } from 'class-validator';
 /**
  * DTO for the reset-password flow (apply a new password using a reset hash).
  *
- * WARNING — this DTO is currently UNWIRED. No `POST /api/v1/auth/reset-password`
+ * WARNING — this DTO is currently UNWIRED. No `POST /api/auth/reset-password`
  * endpoint exists in AuthController; consequently, even if a user obtained
  * a reset hash through some out-of-band mechanism, there is no route that
  * would accept it.
@@ -17,10 +17,10 @@ import { IsNotEmpty } from 'class-validator';
  *
  * Production gap callouts:
  * - See ../README.md § Known Limitations and Implementation Gaps
- * - See ../../../PRODUCTION_READINESS.md § Security Hardening (Wire password
+ * - See ../../../../PRODUCTION_READINESS.md § Security Hardening (Wire password
  *   reset endpoints)
  */
-// TODO(prod): Wire this DTO into AuthController via POST /api/v1/auth/reset-password.
+// TODO(prod): Wire this DTO into AuthController via POST /api/auth/reset-password.
 export class AuthResetPasswordDto {
   @ApiProperty()
   @IsNotEmpty()

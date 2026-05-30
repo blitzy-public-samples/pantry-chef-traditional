@@ -112,12 +112,12 @@ Five concerns cut across every feature module.
 
 ### JWT Authentication Flow
 
-1. A client signs in by posting to `POST /api/v1/auth/email/login` with an
-   `AuthEmailLoginDto` carrying email and password (Source: backend/src/auth/auth.controller.ts:L31-L37).
-   The mobile signup screen reaches the sibling `POST /api/v1/auth/email/register`
+1. A client signs in by posting to `POST /api/auth/email/login` with an
+   `AuthEmailLoginDto` carrying email and password (Source: backend/src/auth/auth.controller.ts:L56-L62).
+   The mobile signup screen reaches the sibling `POST /api/auth/email/register`
    endpoint after navigating through the `Navigation.singup` route (spelling
    preserved verbatim — the route constant is intentionally misspelled and must
-   not be renamed) (Source: backend/src/auth/auth.controller.ts:L39-L45).
+   not be renamed) (Source: backend/src/auth/auth.controller.ts:L74-L80).
 2. On success the backend returns a `{ token, refreshToken, tokenExpires }`
    payload.
 3. The mobile `DioClient` registers a request interceptor that reads
@@ -128,14 +128,14 @@ Five concerns cut across every feature module.
    error interceptor delegates to a dedicated `_refreshDio` instance that carries
    no auth interceptor, so the refresh call itself cannot recurse
    (Source: mobile/lib/core/utils/dio_client.dart:L44-L51,L55-L69).
-5. `_refreshDio` posts the refresh token to `POST /api/v1/auth/refresh`, which is
+5. `_refreshDio` posts the refresh token to `POST /api/auth/refresh`, which is
    guarded by `AuthGuard('jwt-refresh')` — a `passport-jwt` strategy keyed on the
    separate `AUTH_REFRESH_SECRET`; on success it mints new access and refresh
    tokens, which the client persists before transparently retrying the original
-   request (Source: backend/src/auth/auth.controller.ts:L55-L63; mobile/lib/core/utils/dio_client.dart:L71-L97).
+   request (Source: backend/src/auth/auth.controller.ts:L111-L119; mobile/lib/core/utils/dio_client.dart:L71-L97).
 6. Session state lives in a dedicated `Session` collection so that
-   `POST /api/v1/auth/logout` can invalidate the refresh path by marking the
-   session's `deletedAt` (Source: backend/src/auth/auth.controller.ts:L65-L73).
+   `POST /api/auth/logout` can invalidate the refresh path by marking the
+   session's `deletedAt` (Source: backend/src/auth/auth.controller.ts:L131-L139).
 
 > ⚠️ The default `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` (~10 years) shipped in
 > `backend/env_example:L23` is far too long for production: a compromised refresh
@@ -150,13 +150,13 @@ field. The convention is that `find*` repository methods filter on
 `{ deletedAt: new Date() }` rather than physically deleting. The `Recipe`
 repository honours this faithfully — its `softDelete()` issues
 `updateOne({ _id: id }, { deletedAt: new Date() })`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L288-L290).
 The field-level contract is described in [DATA_MODEL.md](DATA_MODEL.md).
 
 > ⚠️ `PantryIngridientDocumentRepository.softDelete()` violates this contract:
 > despite its name it calls `deleteOne({ _id: id })`, physically destroying the
 > record rather than flagging it
-> (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123).
+> (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204).
 > The discrepancy will be flagged inline with a `// FIXME:` when the pantry source is
 > annotated in a later checkpoint, and is catalogued in
 > [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
@@ -166,9 +166,9 @@ The field-level contract is described in [DATA_MODEL.md](DATA_MODEL.md).
 Every list endpoint caps page size defensively. The recipe controller defaults
 `limit` to 10 and clamps it with `if (limit > 50) { limit = 50; }` before
 querying; the same guard is repeated in the pantry, ingridient, and users
-controllers (Source: backend/src/recipe/recipe.controller.ts:L55-L59). Pages are
+controllers (Source: backend/src/recipe/recipe.controller.ts:L96-L100). Pages are
 1-based, and the repository computes the offset as `skip = (page - 1) * limit`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L84).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L129).
 
 ### BLoC State Management
 
@@ -218,24 +218,24 @@ under `/api` with `/` excluded (Source: backend/src/main.ts:L14-L19), and instal
 a global `ValidationPipe` that validates incoming DTOs
 (Source: backend/src/main.ts:L21). Guarded controller methods such as
 `RecipeController.matches` run only after `AuthGuard('jwt')` has populated
-`request.user` (Source: backend/src/recipe/recipe.controller.ts:L27-L28,L43-L48).
+`request.user` (Source: backend/src/recipe/recipe.controller.ts:L28-L29,L74-L79).
 The controller delegates to its service, which calls the document repository; the
 repository queries MongoDB through Mongoose. For the AI endpoint,
 `AiController.processImageRecognize` additionally forwards the uploaded image
-buffer to Google Cloud Vision (Source: backend/src/ai/ai.controller.ts:L32-L40).
+buffer to Google Cloud Vision (Source: backend/src/ai/ai.controller.ts:L65-L73).
 
 > ⚠️ `NestFactory.create(AppModule, { cors: true })` enables fully open CORS
 > (Source: backend/src/main.ts:L11); a production deployment should restrict the
 > origin allow-list. See [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 > ⚠️ The feature controllers declare a version
-> (`@Controller({ path: 'recipe', version: '1' })`, Source: backend/src/recipe/recipe.controller.ts:L30-L33),
-> and this document uses the intended `/api/v1/...` notation throughout for
-> consistency with the module READMEs. However, `app.enableVersioning()` is never
-> called during bootstrap (Source: backend/src/main.ts:L10-L35), so at runtime the
-> `version` property is inert and the effective paths carry only the `/api` prefix
-> (for example `/api/auth/refresh`). The mobile client confirms this: its endpoint
-> base ends in `/api` with no version segment
+> (`@Controller({ path: 'recipe', version: '1' })`, Source: backend/src/recipe/recipe.controller.ts:L31-L34),
+> but `app.enableVersioning()` is never called during bootstrap
+> (Source: backend/src/main.ts:L10-L35), so at runtime the `version` property is
+> inert and the effective paths carry only the `/api` prefix (for example
+> `/api/auth/refresh`). This document therefore documents the actual runtime paths
+> under `/api` (with no `/v1` segment), matching the module READMEs. The mobile
+> client confirms this: its endpoint base ends in `/api` with no version segment
 > (Source: mobile/lib/env_config.dart:L2; mobile/lib/core/utils/dio_client.dart:L78-L81).
 > Wiring up versioning is tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
@@ -245,7 +245,7 @@ The recipe matching pipeline is PantryChef's headline feature. It answers the
 question "what can I cook right now?" by scoring every candidate recipe against
 the ingredients currently in a user's pantry, narrowed by that user's dietary
 preferences. The whole algorithm lives in a single method
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92-L171).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L171-L251).
 
 ### Algorithm Overview
 
@@ -254,11 +254,11 @@ preferences. The whole algorithm lives in a single method
 `{ isQuickMake?: boolean; isAlmostThere?: boolean }`), and returns a list of
 `Recipe` objects scored by ingredient availability and optionally narrowed to
 quick or almost-complete recipes
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92-L96;
-backend/src/recipe/types/filter.types.ts:L1-L4). It first reduces the pantry to a
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L171-L175;
+backend/src/recipe/types/filter.types.ts:L10-L13). It first reduces the pantry to a
 list of ingredient ids — `pantryIngredients.map((pi) => pi.ingridient.id)` — which
 becomes the lookup set used during scoring
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L97).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L176).
 
 ### Mongo Pre-Filter Chain
 
@@ -266,21 +266,21 @@ Before touching the database, `matches()` assembles a query object and
 conditionally adds four filters:
 
 1. `deletedAt: null` — always applied, to exclude soft-deleted recipes
-   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L99).
+   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L178).
 2. `ingridientList.ingridient: { $nin: excludedIngredients }` — applied only when
    the union of `preferences.allergies` and `preferences.dislikedIngredients` is
    non-empty
-   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L102-L109).
+   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L181-L188).
 3. `tags: { $all: preferences.dietary }` — applied only when the user declares
    dietary tags
-   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L112-L114).
+   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L191-L193).
 4. `cookTime: { $lte: preferences.cookingTime }` — applied only when a cooking-time
    ceiling is set
-   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L117-L119).
+   (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L196-L198).
 
 The assembled query is then executed with
 `.find(query).populate('ingridientList.ingridient').exec()`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L122-L125).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L202-L205).
 
 ### Per-Recipe Scoring Loop
 
@@ -297,33 +297,33 @@ Here `ingridientList` (spelling preserved verbatim) is the recipe's embedded
 ingredient array. `matchScore` is then `availableIngredients.length / totalIngredients`,
 a value in the range `[0, 1]`, and `missingIngredientsCount` is
 `totalIngredients - availableIngredients.length`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L130-L137).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L210-L217).
 
 ### isQuickMake / isAlmostThere Derivation
 
 Two boolean flags are derived for every recipe:
 
 - `isQuickMake = totalIngredients <= 5`
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L139).
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L219).
 - `isAlmostThere = missingIngredientsCount >= 1 && missingIngredientsCount <= 2`
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L141-L142).
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L221-L222).
 
 ### Post-Filter and Sort
 
 A `.filter()` step then applies the request's `FilterType`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L152-L166):
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L232-L246):
 a recipe is kept if `filterOptions.isQuickMake && recipe.isQuickMake`, or if
 `filterOptions.isAlmostThere && recipe.isAlmostThere`, or if neither flag was
 requested (in which case every recipe passes); otherwise it is dropped. Finally the
 survivors are sorted by descending score with
 `.sort((a, b) => b.matchScore - a.matchScore)` and mapped back to domain objects
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L167-L168).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L247-L248).
 
 ### Known Limitations
 
 > ⚠️ **Exact `_id` matching only.** Availability is decided by
 > `pantryIngredientIds.includes(il.ingridient._id.toString())`
-> (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L131-L133).
+> (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L211-L213).
 > A pantry "tomato" with id `A` will not satisfy a recipe ingredient pointing at
 > "tomato" with id `B`, even when the names are identical; substitutes and
 > equivalent ingredients are ignored.

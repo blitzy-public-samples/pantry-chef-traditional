@@ -29,7 +29,7 @@ export class FilterUserDto {
 }
 
 /**
- * Sort directive for `GET /api/v1/users`.
+ * Sort directive for `GET /api/users`.
  *
  * `orderBy` is compile-time constrained to `keyof User` (see `../domain/user.ts`).
  * Consumed by `UsersDocumentRepository.findManyWithPagination` at
@@ -51,7 +51,7 @@ export class SortUserDto {
 }
 
 /**
- * Query string parser for `GET /api/v1/users`.
+ * Query string parser for `GET /api/users`.
  *
  * `page` defaults to `1` and `limit` defaults to `10` via `@Transform` lambdas.
  * `UsersController.findAll` (`../users.controller.ts` lines 47-51) additionally

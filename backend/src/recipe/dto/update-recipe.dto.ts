@@ -8,7 +8,7 @@ import { CreateRecipeDto } from './create-recipe.dto';
 import { IngridientListDto, InstructionDto } from './create-recipe.dto';
 
 /**
- * Validation contract for PATCH /api/v1/recipe/:id.
+ * Validation contract for PATCH /api/recipe/:id.
  *
  * Extends `PartialType(CreateRecipeDto)` so every field from CreateRecipeDto
  * is optional. Re-declares each field locally to expose a different Swagger

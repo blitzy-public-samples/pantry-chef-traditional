@@ -12,7 +12,7 @@ import validateConfig from '../../utils/validate-config';
  *
  * Validators only assert presence (@IsString); they do NOT validate that
  * `AUTH_JWT_SECRET` is high-entropy or that `AUTH_REFRESH_TOKEN_EXPIRES_IN`
- * is a sensible duration. See ../../../PRODUCTION_READINESS.md
+ * is a sensible duration. See ../../../../PRODUCTION_READINESS.md
  * § Secrets Management for the production hardening gap.
  */
 class EnvironmentVariablesValidator {

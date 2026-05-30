@@ -11,7 +11,7 @@ import { DocumentPantryPersistenceModule } from './infrastructure/document/docum
  * Imports DocumentPantryPersistenceModule to bind the abstract
  * PantryRepository contract to its Mongoose-backed implementation
  * (PantryIngridientDocumentRepository), provides PantryService for business
- * orchestration, and registers PantryController for the /api/v1/pantry/*
+ * orchestration, and registers PantryController for the /api/pantry/*
  * HTTP surface. The module re-exports DocumentPantryPersistenceModule and
  * PantryService so RecipeModule can consume them for the pantry-aware
  * matches() flow (see ../../../ARCHITECTURE.md § Recipe Matching Pipeline).

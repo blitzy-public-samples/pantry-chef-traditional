@@ -26,7 +26,7 @@ Four conventions hold across all five schema classes:
   `@Schema({ timestamps: true })`, so Mongoose maintains `createdAt` and
   `updatedAt` automatically; the classes additionally declare those fields with
   `@Prop({ default: now })` (Source:
-  backend/src/users/infrastructure/document/entities/user.schema.ts:L22-L23).
+  backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L68).
 - **Soft-delete marker.** Every collection carries a nullable `deletedAt` field
   so records can be flagged as removed rather than physically destroyed. See
   [Soft-Delete (deletedAt)](#soft-delete-deletedat) for the one repository that
@@ -169,16 +169,16 @@ password?: string;
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
-| `email` | `string \| null` | Unique index; re-exposed via `@Expose({ toPlainOnly: true })`. | user.schema.ts:L30-L35 |
-| `password` | `string?` | bcrypt hash; `@Exclude({ toPlainOnly: true })` keeps it out of responses. | user.schema.ts:L37-L39 |
-| `preferences` | `Preferences` | Embedded subdocument; default `{ dietary: [], allergies: [], dislikedIngredients: [], cookingTime: 0 }`. | user.schema.ts:L41-L50 |
-| `favoriteRecipes` | `string[]` | Recipe id strings; default `[]`. | user.schema.ts:L52-L56 |
-| `recentSearches` | `string[]` | Recent search terms; default `[]`. | user.schema.ts:L58-L59 |
-| `createdAt` | `Date` | `@Prop({ default: now })`. | user.schema.ts:L61-L62 |
-| `updatedAt` | `Date` | `@Prop({ default: now })`. | user.schema.ts:L64-L65 |
-| `deletedAt` | `Date?` | Soft-delete marker; nullable. | user.schema.ts:L67-L68 |
+| `email` | `string \| null` | Unique index; re-exposed via `@Expose({ toPlainOnly: true })`. | user.schema.ts:L75-L80 |
+| `password` | `string?` | bcrypt hash; `@Exclude({ toPlainOnly: true })` keeps it out of responses. | user.schema.ts:L82-L84 |
+| `preferences` | `Preferences` | Embedded subdocument; default `{ dietary: [], allergies: [], dislikedIngredients: [], cookingTime: 0 }`. | user.schema.ts:L86-L95 |
+| `favoriteRecipes` | `string[]` | Recipe id strings; default `[]`. | user.schema.ts:L97-L101 |
+| `recentSearches` | `string[]` | Recent search terms; default `[]`. | user.schema.ts:L103-L104 |
+| `createdAt` | `Date` | `@Prop({ default: now })`. | user.schema.ts:L106-L107 |
+| `updatedAt` | `Date` | `@Prop({ default: now })`. | user.schema.ts:L109-L110 |
+| `deletedAt` | `Date?` | Soft-delete marker; nullable. | user.schema.ts:L112-L113 |
 
-Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L29-L69.
+Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L74-L114.
 
 ### Preferences (embedded subdocument)
 
@@ -189,17 +189,17 @@ non-null preferences object.
 
 | Field | Type | Default | Source |
 |-------|------|---------|--------|
-| `dietary` | `string[]?` | `[]` | user.schema.ts:L9-L10 |
-| `allergies` | `string[]?` | `[]` | user.schema.ts:L12-L13 |
-| `dislikedIngredients` | `string[]?` | `[]` | user.schema.ts:L15-L16 |
-| `cookingTime` | `number?` | `0` | user.schema.ts:L18-L19 |
+| `dietary` | `string[]?` | `[]` | user.schema.ts:L28-L29 |
+| `allergies` | `string[]?` | `[]` | user.schema.ts:L31-L32 |
+| `dislikedIngredients` | `string[]?` | `[]` | user.schema.ts:L34-L35 |
+| `cookingTime` | `number?` | `0` | user.schema.ts:L37-L38 |
 
 These fields feed the recipe matching pre-filter chain: `allergies` and
 `dislikedIngredients` become `$nin` exclusions, `dietary` becomes a `$all`
 requirement on recipe tags, and `cookingTime` bounds the allowable total time. The
 full algorithm is documented in
 [ARCHITECTURE.md → Recipe Matching Pipeline](ARCHITECTURE.md#recipe-matching-pipeline).
-Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L8-L20.
+Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L27-L39.
 
 ### Session
 
@@ -234,16 +234,16 @@ serialisation via `@Exclude({ toPlainOnly: true })`: `unit`, `expirationDate`,
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
-| `name` | `string` | Human-readable ingredient name. | ingridient.schema.ts:L17-L18 |
-| `category` | `Reference` | `{ id, name }`; declared as `@Prop({ type: { id: Number, name: String } })`. | ingridient.schema.ts:L20-L21 |
-| `quantity` | `number?` | Optional quantity. | ingridient.schema.ts:L23-L24 |
-| `unit` | `Reference?` | `{ id, name }`; `@Exclude({ toPlainOnly: true })`. | ingridient.schema.ts:L26-L28 |
-| `expirationDate` | `Date?` | Excluded from serialisation. | ingridient.schema.ts:L30-L32 |
-| `imageUrl` | `string?` | Excluded from serialisation. | ingridient.schema.ts:L34-L36 |
-| `confidence` | `number` | AI-vision confidence; excluded from serialisation. | ingridient.schema.ts:L38-L40 |
-| `createdAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L42-L43 |
-| `updatedAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L45-L46 |
-| `deletedAt` | `Date?` | Soft-delete marker; nullable. | ingridient.schema.ts:L48-L49 |
+| `name` | `string` | Human-readable ingredient name. | ingridient.schema.ts:L31-L32 |
+| `category` | `Reference` | `{ id, name }`; declared as `@Prop({ type: { id: Number, name: String } })`. | ingridient.schema.ts:L34-L35 |
+| `quantity` | `number?` | Optional quantity. | ingridient.schema.ts:L37-L38 |
+| `unit` | `Reference?` | `{ id, name }`; `@Exclude({ toPlainOnly: true })`. | ingridient.schema.ts:L40-L42 |
+| `expirationDate` | `Date?` | Excluded from serialisation. | ingridient.schema.ts:L44-L46 |
+| `imageUrl` | `string?` | Excluded from serialisation. | ingridient.schema.ts:L48-L50 |
+| `confidence` | `number` | AI-vision confidence; excluded from serialisation. | ingridient.schema.ts:L52-L54 |
+| `createdAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L56-L57 |
+| `updatedAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L59-L60 |
+| `deletedAt` | `Date?` | Soft-delete marker; nullable. | ingridient.schema.ts:L62-L63 |
 
 Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts.
 
@@ -264,18 +264,18 @@ location: 'fridge' | 'freezer' | 'pantry';
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
-| `ingridient` | `ObjectId` (ref `IngridientSchemaClass`) | Reference to the catalogue ingredient. | pantryIngridient.schema.ts:L17-L18 |
-| `quantity` | `number` | Amount on hand. | pantryIngridient.schema.ts:L20-L21 |
-| `userId` | `string` | Owning user — a scalar string, **not** an ObjectId. | pantryIngridient.schema.ts:L23-L24 |
-| `unit` | `string` | Free-text unit for this pantry item. | pantryIngridient.schema.ts:L26-L27 |
-| `expirationDate` | `Date?` | Optional expiry. | pantryIngridient.schema.ts:L29-L30 |
-| `location` | `'fridge' \| 'freezer' \| 'pantry'` | Storage location enum. | pantryIngridient.schema.ts:L32-L33 |
-| `createdAt` | `Date` | `@Prop({ default: now })`. | pantryIngridient.schema.ts:L35-L36 |
-| `updatedAt` | `Date` | `@Prop({ default: now })`. | pantryIngridient.schema.ts:L38-L39 |
-| `deletedAt` | `Date?` | Soft-delete marker; nullable (see callout below). | pantryIngridient.schema.ts:L41-L42 |
+| `ingridient` | `ObjectId` (ref `IngridientSchemaClass`) | Reference to the catalogue ingredient. | pantryIngridient.schema.ts:L34-L35 |
+| `quantity` | `number` | Amount on hand. | pantryIngridient.schema.ts:L37-L38 |
+| `userId` | `string` | Owning user — a scalar string, **not** an ObjectId. | pantryIngridient.schema.ts:L40-L41 |
+| `unit` | `string` | Free-text unit for this pantry item. | pantryIngridient.schema.ts:L43-L44 |
+| `expirationDate` | `Date?` | Optional expiry. | pantryIngridient.schema.ts:L46-L47 |
+| `location` | `'fridge' \| 'freezer' \| 'pantry'` | Storage location enum. | pantryIngridient.schema.ts:L49-L50 |
+| `createdAt` | `Date` | `@Prop({ default: now })`. | pantryIngridient.schema.ts:L52-L53 |
+| `updatedAt` | `Date` | `@Prop({ default: now })`. | pantryIngridient.schema.ts:L55-L56 |
+| `deletedAt` | `Date?` | Soft-delete marker; nullable (see callout below). | pantryIngridient.schema.ts:L58-L59 |
 
 Index: `PantryIngridientSchema.index({ userId: 1 })`. Source:
-backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L32-L33,L49.
+backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49-L50,L66.
 
 ### Recipe
 
@@ -289,34 +289,34 @@ array of `IngridientList` (spelling preserved verbatim) entries, and
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
-| `id` | `ObjectId` | Extra `@Prop` ObjectId declared alongside the inherited `_id`; unusual but preserved as-is. | recipe.schema.ts:L58-L59 |
-| `title` | `string` | Required; indexed. | recipe.schema.ts:L61-L62 |
-| `description` | `string` | Free text. | recipe.schema.ts:L64-L65 |
-| `ingridientList` | `IngridientList[]` | Required; embedded sub-schema array (spelling preserved verbatim). | recipe.schema.ts:L67-L68 |
-| `instructions` | `Instruction[]` | Required; embedded sub-schema array. | recipe.schema.ts:L70-L71 |
-| `prepTime` | `number` | Preparation minutes. | recipe.schema.ts:L73-L74 |
-| `cookTime` | `number` | Cooking minutes. | recipe.schema.ts:L76-L77 |
-| `servings` | `number` | Yield. | recipe.schema.ts:L79-L80 |
-| `difficulty` | `'easy' \| 'medium' \| 'hard'` | Required enum. | recipe.schema.ts:L82-L83 |
-| `tags` | `string[]` | Dietary / category tags used by `$all` matching. | recipe.schema.ts:L85-L86 |
-| `imageUrl` | `string` | Recipe image. | recipe.schema.ts:L88-L89 |
-| `matchScore` | `number?` | Computed transiently inside `matches()`; not normally persisted. | recipe.schema.ts:L91-L92 |
-| `createdAt` | `Date` | `@Prop({ default: now })`. | recipe.schema.ts:L94-L95 |
-| `updatedAt` | `Date` | `@Prop({ default: now })`. | recipe.schema.ts:L97-L98 |
-| `deletedAt` | `Date?` | Soft-delete marker; nullable. | recipe.schema.ts:L100-L101 |
+| `id` | `ObjectId` | Extra `@Prop` ObjectId declared alongside the inherited `_id`; unusual but preserved as-is. | recipe.schema.ts:L87-L88 |
+| `title` | `string` | Required; indexed. | recipe.schema.ts:L90-L91 |
+| `description` | `string` | Free text. | recipe.schema.ts:L93-L94 |
+| `ingridientList` | `IngridientList[]` | Required; embedded sub-schema array (spelling preserved verbatim). | recipe.schema.ts:L96-L97 |
+| `instructions` | `Instruction[]` | Required; embedded sub-schema array. | recipe.schema.ts:L99-L100 |
+| `prepTime` | `number` | Preparation minutes. | recipe.schema.ts:L102-L103 |
+| `cookTime` | `number` | Cooking minutes. | recipe.schema.ts:L105-L106 |
+| `servings` | `number` | Yield. | recipe.schema.ts:L108-L109 |
+| `difficulty` | `'easy' \| 'medium' \| 'hard'` | Required enum. | recipe.schema.ts:L111-L112 |
+| `tags` | `string[]` | Dietary / category tags used by `$all` matching. | recipe.schema.ts:L114-L115 |
+| `imageUrl` | `string` | Recipe image. | recipe.schema.ts:L117-L118 |
+| `matchScore` | `number?` | Computed transiently inside `matches()`; not normally persisted. | recipe.schema.ts:L120-L121 |
+| `createdAt` | `Date` | `@Prop({ default: now })`. | recipe.schema.ts:L123-L124 |
+| `updatedAt` | `Date` | `@Prop({ default: now })`. | recipe.schema.ts:L126-L127 |
+| `deletedAt` | `Date?` | Soft-delete marker; nullable. | recipe.schema.ts:L129-L130 |
 
 **Embedded `IngridientList`** (spelling preserved verbatim) entries hold:
 `ingridient` (an `ObjectId` reference, required), `amount` (number, required),
 `unit` (string, required), `required` (boolean, required), and `substitutes`
 (`string[]`, default `[]`). Source:
-backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L7-L26.
+backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L17-L36.
 
 **Embedded `Instruction`** steps hold: `step` (number, required), `description`
 (string, required), and `timer` (number, optional). Source:
-backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L31-L40.
+backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L47-L56.
 
 Index: `RecipeSchema.index({ title: 1 })`. Source:
-backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L82,L106.
+backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L111,L135.
 
 ## Cross-Cutting Schema Conventions
 
@@ -342,9 +342,9 @@ createdAt: Date;
 updatedAt: Date;
 ```
 
-Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L22-L23
+Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L68
 (the `@Schema({ timestamps: true })` declaration) and
-backend/src/users/infrastructure/document/entities/user.schema.ts:L61-L65 (the
+backend/src/users/infrastructure/document/entities/user.schema.ts:L106-L110 (the
 field declarations, shown above).
 
 ### Soft-Delete (deletedAt)
@@ -364,11 +364,11 @@ deleting the document. This preserves history and keeps foreign references intac
 > inline with `// FIXME:` / `// TODO(prod):` when the pantry source is annotated in a
 > later checkpoint, and the production-readiness follow-up is catalogued in
 > [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
-> Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123.
+> Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204.
 
 By contrast, the recipe repository honours the contract, issuing
 `updateOne({ _id: id }, { deletedAt: new Date() })` for its `softDelete()`
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186).
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L288-L290).
 The same contrast is described from the architecture angle in
 [ARCHITECTURE.md → Soft-Delete Contract](ARCHITECTURE.md#soft-delete-contract).
 
@@ -390,10 +390,10 @@ separate `categories` or `units` collection, the schema caches the human-readabl
 `name` alongside the `id`, so an ingredient document is self-describing without a
 join. The reference data itself (the catalogue of valid categories and units, each
 with an integer `id` and a display `name`) is hardcoded and served to clients by
-`GET /api/v1/ingredient/creation-data`
-(Source: backend/src/ingridient/ingridient.controller.ts:L41). Note that although
+`GET /api/ingredient/creation-data`
+(Source: backend/src/ingridient/ingridient.controller.ts:L62). Note that although
 the catalogue ids are integers, the `Reference.id` field is typed as `string`
-(Source: backend/src/common/types.ts:L21-L24).
+(Source: backend/src/common/types.ts:L22-L25).
 
 ---
 

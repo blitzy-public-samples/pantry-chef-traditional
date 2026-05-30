@@ -10,7 +10,7 @@ import {
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
 /**
- * Validation contract for POST /api/v1/pantry — Create a new pantry item.
+ * Validation contract for POST /api/pantry — Create a new pantry item.
  *
  * Requires an `ingridient` reference (spelling preserved verbatim), quantity,
  * unit, and a `location` (one of 'fridge' | 'freezer' | 'pantry'). The

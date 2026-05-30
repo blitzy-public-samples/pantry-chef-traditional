@@ -80,7 +80,7 @@ controllers/services to operate directly on the Mongoose `Model<>` via `@InjectM
   (Source: `backend/src/database/seeds/user/user-seed.service.ts:L57-L84`).
 - **Validate env vars before connecting** — `EnvironmentVariablesValidator` rejects malformed
   `DATABASE_*` config prior to Mongoose init
-  (Source: `backend/src/database/config/database.config.ts:L34-L94`).
+  (Source: `backend/src/database/config/database.config.ts:L54-L141`).
 
 ## API / Endpoint Reference
 
@@ -107,11 +107,11 @@ flowchart TD
 ```
 
 This ordering is required: `PantrySeedService` references john.doe's `userId`
-(Source: `backend/src/database/seeds/pantry/pantry-seed.service.ts:L55`) and `Ingridient`
+(Source: `backend/src/database/seeds/pantry/pantry-seed.service.ts:L86`) and `Ingridient`
 ObjectIds via its `ingridient` field
-(Source: `backend/src/database/seeds/pantry/pantry-seed.service.ts:L53`); `RecipeSeedService`
+(Source: `backend/src/database/seeds/pantry/pantry-seed.service.ts:L84`); `RecipeSeedService`
 references the same in `ingridientList[].ingridient`
-(Source: `backend/src/database/seeds/recipe/recipe-seed.service.ts:L56,L58`).
+(Source: `backend/src/database/seeds/recipe/recipe-seed.service.ts:L87,L89`).
 
 ## Configuration
 
@@ -126,12 +126,12 @@ The module reads `DATABASE_*` env vars, validates them through
 | `DATABASE_USERNAME` | `admin` | `backend/env_example:L8` | DB user — insecure default for production |
 | `DATABASE_PASSWORD` | `123456` | `backend/env_example:L9` | DB password — insecure default for production |
 | `DATABASE_NAME` | `blitzy` | `backend/env_example:L10` | DB name |
-| `DATABASE_URL` | `mongodb://localhost:27017` | `backend/env_example:L11` | Connection URL; when set, the granular `DATABASE_TYPE/HOST/NAME/USERNAME` fields become optional per `@ValidateIf` (Source: `backend/src/database/config/database.config.ts:L35-L65`) |
+| `DATABASE_URL` | `mongodb://localhost:27017` | `backend/env_example:L11` | Connection URL; when set, the granular `DATABASE_TYPE/HOST/NAME/USERNAME` fields become optional per `@ValidateIf` (Source: `backend/src/database/config/database.config.ts:L55-L85`) |
 
 > The validator also recognizes `DATABASE_HOST`, `DATABASE_SYNCHRONIZE`,
 > `DATABASE_MAX_CONNECTIONS`, `DATABASE_SSL_ENABLED`, `DATABASE_REJECT_UNAUTHORIZED`,
 > `DATABASE_CA`, `DATABASE_KEY`, and `DATABASE_CERT`
-> (Source: `backend/src/database/config/database.config.ts:L34-L94`). These are NOT in
+> (Source: `backend/src/database/config/database.config.ts:L54-L141`). These are NOT in
 > `backend/env_example`; set them in `.env` only if needed.
 
 ## Known Limitations and Implementation Gaps
@@ -139,7 +139,7 @@ The module reads `DATABASE_*` env vars, validates them through
 > ⚠️ **Destructive seed pattern** — every seed service calls `this.model.collection.drop()`
 > at the start of `run()`, then re-inserts fixtures. Running `npm run seed:run:document`
 > against a populated database WIPES all data in those collections
-> (Source: `backend/src/database/seeds/user/user-seed.service.ts:L32-L47`; the `ingridient/`,
+> (Source: `backend/src/database/seeds/user/user-seed.service.ts:L60-L75`; the `ingridient/`,
 > `recipe/`, `pantry/` services do the same).
 
 > ⚠️ **No migration versioning** — schema changes apply implicitly via Mongoose's loose mode —

@@ -18,7 +18,7 @@ import { JwtPayloadType } from './types/jwt-payload.type';
  * pipeline raises an `UnauthorizedException` before the route handler runs.
  *
  * Registered via `AuthGuard('jwt')` on `/me` (GET, PATCH, DELETE) and
- * `/logout` (POST). See ../../README.md § API Endpoint Reference.
+ * `/logout` (POST). See ../README.md § API Endpoint Reference.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
