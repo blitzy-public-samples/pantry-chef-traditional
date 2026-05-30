@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pantry_chef/core/constants/common.dart';
 import 'package:pantry_chef/core/presentation/widgets/image_widget.dart';
 import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/recipe/data/dto/index.dart';
@@ -55,17 +56,17 @@ class SuggestionCard extends StatelessWidget {
       child: Column(
         children: [
           ImageWidget(
-            height: 150,
+            height: CommonConstants.cardImageHeight,
             width: double.infinity,
             fit: BoxFit.cover,
             imageUrl: item.recipe.imageUrl,
           ),
           Padding(
             padding: const EdgeInsets.only(
-              left: 8,
-              right: 8,
-              bottom: 12,
-              top: 4,
+              left: CommonConstants.spacingSmall,
+              right: CommonConstants.spacingSmall,
+              bottom: CommonConstants.spacingMedium,
+              top: CommonConstants.spacingXSmall,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,17 +75,17 @@ class SuggestionCard extends StatelessWidget {
                   item.recipe.title,
                   style: context.theme.appTextTheme.semiBold18,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CommonConstants.spacingSmall),
                 LinearProgressIndicator(
-                  minHeight: 10,
+                  minHeight: CommonConstants.progressBarMinHeight,
                   color: _getProgressBarColor(context),
                   backgroundColor: context.theme.appColors.grey,
                   value: item.matchScore,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CommonConstants.spacingSmall),
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: CommonConstants.spacingSmall,
+                  runSpacing: CommonConstants.spacingSmall,
                   children: [
                     Chip(
                       label: Text(
@@ -92,6 +93,7 @@ class SuggestionCard extends StatelessWidget {
                         style: context.theme.appTextTheme.semiBold12,
                       ),
                       backgroundColor: _getStatusColor(context),
+                      side: BorderSide(color: context.theme.appColors.grey),
                     ),
                     if (item.isQuickMake)
                       Chip(
@@ -100,20 +102,25 @@ class SuggestionCard extends StatelessWidget {
                           style: context.theme.appTextTheme.semiBold12,
                         ),
                         backgroundColor: context.theme.appColors.darkBeige,
+                        side: BorderSide(color: context.theme.appColors.grey),
                       ),
                   ],
                 ),
                 if (item.missingIngredients.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: CommonConstants.spacingSmall),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: CommonConstants.spacingSmall,
+                    runSpacing: CommonConstants.spacingSmall,
                     children: item.missingIngredients
                         .map(
                           (m) => Chip(
                             label: Text(
                               m.name,
                               style: context.theme.appTextTheme.regular14,
+                            ),
+                            backgroundColor: context.theme.appColors.darkBeige,
+                            side: BorderSide(
+                              color: context.theme.appColors.grey,
                             ),
                           ),
                         )

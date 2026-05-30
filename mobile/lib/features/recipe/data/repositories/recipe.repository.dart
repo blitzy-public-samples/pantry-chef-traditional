@@ -40,7 +40,8 @@ class RecipeRepositoryImpl implements RecipeRepository {
     int limit = 10,
   }) async {
     RecipeApi api = RecipeApi();
-    final response = await api.getSuggestions(filters, page: page, limit: limit);
+    final response =
+        await api.getSuggestions(filters, page: page, limit: limit);
     return RecipeSuggestionsResponseDto.fromJson(response);
   }
 }

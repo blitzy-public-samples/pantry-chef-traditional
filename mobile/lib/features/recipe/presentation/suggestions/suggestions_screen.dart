@@ -19,8 +19,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 ///
 /// The screen handles four presentation states, evaluated in strict precedence
 /// order inside the [BlocBuilder]:
-///   1. Loading — a shimmer skeleton while a fetch is in flight or before the
-///      first fetch has completed ([SuggestionsState.items] is `null`).
+///   1. Loading — a shimmer skeleton shown only until the first fetch
+///      completes ([SuggestionsState.items] is `null`); a pull-to-refresh or
+///      filter re-fetch keeps the already-loaded list and filter chips visible.
 ///   2. Error — the localized error copy plus a retry affordance that
 ///      re-dispatches the fetch while preserving the active filters.
 ///   3. Empty — the empty-pantry illustration and guidance copy when the fetch
@@ -60,14 +61,19 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
       ),
       body: BlocBuilder<SuggestionsBloc, SuggestionsState>(
         builder: (context, state) {
-          // 1. Loading — a fetch is in flight, or no fetch has completed yet
-          // (items == null). The `error == null` guard lets a fetch that FAILED
-          // on first load fall through to the error branch below instead of
-          // showing the skeleton indefinitely: on failure the bloc leaves items
-          // null and isFetching false while setting error. An in-flight fetch
-          // always clears error first, so loading still takes precedence then.
-          if ((state.isFetching || state.items == null) &&
-              state.error == null) {
+          // 1. Loading — FIRST LOAD ONLY. Show the skeleton only until the
+          // very first fetch resolves, i.e. while no items have been received
+          // yet (items == null) and no error is pending. This intentionally
+          // keys off `items == null` rather than `isFetching`: once items
+          // exist, a pull-to-refresh or filter re-fetch (isFetching == true
+          // with items != null) keeps the already-loaded list and filter chips
+          // on screen instead of replacing them with the skeleton. A first-load
+          // FAILURE (items == null, error != null) falls through to the error
+          // branch below. Note the initial fetch is dispatched asynchronously
+          // from initState, so on the first build items is still null while
+          // isFetching is still false — keying off items (not isFetching) is
+          // what renders the skeleton on that first frame.
+          if (state.items == null && state.error == null) {
             return const ShimmerList(cardHeight: 200);
           }
 
@@ -86,7 +92,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                       color: context.theme.appColors.red,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: CommonConstants.spacingLarge),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: CommonConstants.pagePadding,
@@ -113,9 +119,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                 children: [
                   Image.asset(
                     'assets/images/empty_pantry.webp',
-                    width: 200,
+                    width: CommonConstants.emptyStateImageWidth,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: CommonConstants.spacingXLarge),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: CommonConstants.pagePadding,
@@ -144,20 +150,26 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: CommonConstants.spacingSmall,
+                  ),
                   // Wrap (not Row) so the two chips reflow onto a second line
                   // instead of overflowing on narrow widths or at larger text
                   // scales; `spacing`/`runSpacing` provide the inter-chip gaps.
                   child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: CommonConstants.spacingSmall,
+                    runSpacing: CommonConstants.spacingSmall,
                     children: [
                       FilterChip(
                         label: Text(
                           AppLocalizations.of(context)!.almostThere,
                         ),
+                        labelStyle: context.theme.appTextTheme.semiBold14,
                         selected: state.filters.isAlmostThere,
+                        backgroundColor: context.theme.appColors.darkBeige,
                         selectedColor: context.theme.appColors.green,
+                        checkmarkColor: context.theme.appColors.black,
+                        side: BorderSide(color: context.theme.appColors.grey),
                         // RecipeFiltersDto has no copyWith, so build a fresh
                         // instance carrying the toggled flag plus the other
                         // flag's current value.
@@ -175,8 +187,12 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                         label: Text(
                           AppLocalizations.of(context)!.quickMake,
                         ),
+                        labelStyle: context.theme.appTextTheme.semiBold14,
                         selected: state.filters.isQuickMake,
+                        backgroundColor: context.theme.appColors.darkBeige,
                         selectedColor: context.theme.appColors.green,
+                        checkmarkColor: context.theme.appColors.black,
+                        side: BorderSide(color: context.theme.appColors.grey),
                         onSelected: (value) => context
                             .read<SuggestionsBloc>()
                             .add(
@@ -201,7 +217,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                       itemCount: state.items!.length,
                       itemBuilder: (context, index) {
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(
+                            bottom: CommonConstants.spacingMedium,
+                          ),
                           child: SuggestionCard(item: state.items![index]),
                         );
                       },
