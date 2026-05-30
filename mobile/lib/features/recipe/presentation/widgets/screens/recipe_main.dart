@@ -7,6 +7,10 @@ import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc
 import 'package:pantry_chef/features/recipe/presentation/widgets/recipe_card.dart';
 import 'package:pantry_chef/core/presentation/widgets/shimmer_list.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// Added for "What Can I Make Tonight?" suggestions feature
+import 'package:pantry_chef/core/constants/common.dart';
+import 'package:pantry_chef/core/constants/navigation.dart';
+import 'package:pantry_chef/core/presentation/widgets/action_button.dart';
 
 class RecipeMain extends StatefulWidget {
   const RecipeMain({super.key});
@@ -28,56 +32,70 @@ class _RecipeMainState extends State<RecipeMain> {
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(
-      body: BlocBuilder<ProfileBloc, ProfileState>(
-        buildWhen: (prev, curr) => prev.userProfile != curr.userProfile,
-        builder: (context, profileState) {
-          return BlocBuilder<RecipeBloc, RecipeState>(
-            builder: (context, state) {
-              if (state.isFetching || state.items == null) {
-                return ShimmerList(cardHeight: 200);
-              }
-              if (state.items!.isEmpty) {
-                return SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.list_alt,
-                        size: 100,
-                        color: context.theme.appColors.grey,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        AppLocalizations.of(context)!.recipeEmptyMessage,
-                        style: context.theme.appTextTheme.semiBold14.copyWith(
-                          color: context.theme.appColors.grey,
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              }
-              final favoriteList = profileState.userProfile?.favoriteRecipes ?? [];
-              return RefreshIndicator.adaptive(
-                color: context.theme.appColors.green,
-                onRefresh: () async => context.read<RecipeBloc>().add(RecipeMatching()),
-                child: ListView.builder(
-                    itemCount: state.items!.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final item = state.items![index];
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 12),
-                        child: RecipeCard(
-                          item: state.items![index],
-                          isFavorite: favoriteList.any((el) => el == item.id),
+      body: Column(
+        children: [
+          // Added for "What Can I Make Tonight?" suggestions feature
+          Padding(
+            padding: const EdgeInsets.all(CommonConstants.pagePadding),
+            child: ActionButton(
+              text: AppLocalizations.of(context)!.whatCanIMakeTonight,
+              onPress: () => Navigator.of(context).pushNamed(Navigation.suggestions),
+            ),
+          ),
+          Expanded(
+            child: BlocBuilder<ProfileBloc, ProfileState>(
+              buildWhen: (prev, curr) => prev.userProfile != curr.userProfile,
+              builder: (context, profileState) {
+                return BlocBuilder<RecipeBloc, RecipeState>(
+                  builder: (context, state) {
+                    if (state.isFetching || state.items == null) {
+                      return ShimmerList(cardHeight: 200);
+                    }
+                    if (state.items!.isEmpty) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.list_alt,
+                              size: 100,
+                              color: context.theme.appColors.grey,
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              AppLocalizations.of(context)!.recipeEmptyMessage,
+                              style: context.theme.appTextTheme.semiBold14.copyWith(
+                                color: context.theme.appColors.grey,
+                              ),
+                            )
+                          ],
                         ),
                       );
-                    }),
-              );
-            },
-          );
-        },
+                    }
+                    final favoriteList = profileState.userProfile?.favoriteRecipes ?? [];
+                    return RefreshIndicator.adaptive(
+                      color: context.theme.appColors.green,
+                      onRefresh: () async => context.read<RecipeBloc>().add(RecipeMatching()),
+                      child: ListView.builder(
+                          itemCount: state.items!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final item = state.items![index];
+                            return Container(
+                              margin: EdgeInsets.only(bottom: 12),
+                              child: RecipeCard(
+                                item: state.items![index],
+                                isFavorite: favoriteList.any((el) => el == item.id),
+                              ),
+                            );
+                          }),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
