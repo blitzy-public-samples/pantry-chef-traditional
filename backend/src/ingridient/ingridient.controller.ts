@@ -28,6 +28,18 @@ import { QueryIngridientDto } from './dto/query-ingridient.dto';
 import { UpdateIngridientDto } from './dto/update-ingridient.dto';
 import { CreateIngridientDto } from './dto/create-ingridient.dto';
 
+// NOTE: 'Ingridient' spelling preserved verbatim across the backend codebase. Do not rename.
+
+/**
+ * Controller routing /api/v1/ingredient/* requests to IngridientService.
+ *
+ * Spelling 'Ingridient' (class, module, file names) is preserved verbatim
+ * across the backend codebase. The URL path uses the correct 'ingredient'
+ * spelling.
+ *
+ * Exposes a GET /creation-data endpoint returning the hardcoded category
+ * and unit reference data (5 categories + 9 units; see README § Data Flows).
+ */
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @ApiTags('Ingredient')
@@ -38,6 +50,16 @@ import { CreateIngridientDto } from './dto/create-ingridient.dto';
 export class IngridientController {
   constructor(private readonly ingridientService: IngridientService) {}
 
+  /**
+   * GET /api/v1/ingredient/creation-data — hardcoded reference data.
+   *
+   * Returns the 5 categories (spice, vegetable, fruit, dairy, protein) and
+   * 9 units (kg, g, lb, oz, ml, l, cup, tbsp, tsp) used by ingridient
+   * creation. The reference data is hardcoded in this method
+   * (Source: ingridient.controller.ts:L52-L71).
+   *
+   * @returns Object with `categories: Reference[]` and `units: Reference[]`.
+   */
   @Get('/creation-data')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get data for ingredient creation' })
@@ -71,6 +93,17 @@ export class IngridientController {
     };
   }
 
+  /**
+   * POST /api/v1/ingredient — create a new Ingridient (spelling preserved verbatim).
+   *
+   * Validates `CreateIngridientDto` then delegates to `IngridientService.create()`.
+   * Throws `UNPROCESSABLE_ENTITY` (422) if the name already exists.
+   *
+   * @param createIngridientDto Payload with name, category, optional quantity,
+   *   optional unit, optional expirationDate, optional imageUrl, and confidence.
+   * @returns The persisted `Ingridient` domain entity (spelling preserved verbatim).
+   * @throws HttpException 422 when a duplicate name is detected.
+   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -79,6 +112,16 @@ export class IngridientController {
     return this.ingridientService.create(createIngridientDto);
   }
 
+  /**
+   * GET /api/v1/ingredient — list ingridients with pagination (spelling preserved verbatim).
+   *
+   * Honors optional `query` (name filter), `sort` (orderBy/order), and
+   * pagination (`page` default 1, `limit` default 10). The pagination cap
+   * of 50 is enforced here (Source: ingridient.controller.ts:L89-L91).
+   *
+   * @param query `QueryIngridientDto` from the request querystring.
+   * @returns Paginated result wrapping `Ingridient[]` plus `hasNextPage`.
+   */
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -103,6 +146,14 @@ export class IngridientController {
     );
   }
 
+  /**
+   * GET /api/v1/ingredient/:id — fetch one Ingridient by id (spelling preserved verbatim).
+   *
+   * Returns `null` if the record is not found or has been soft-deleted.
+   *
+   * @param id MongoDB ObjectId string of the target Ingridient.
+   * @returns The matching `Ingridient` or `null` if absent / deleted.
+   */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({
@@ -116,6 +167,19 @@ export class IngridientController {
     return this.ingridientService.findOne({ id });
   }
 
+  /**
+   * PATCH /api/v1/ingredient/:id — partially update an Ingridient
+   * (spelling preserved verbatim).
+   *
+   * Delegates to `IngridientService.update()` which throws
+   * `UNPROCESSABLE_ENTITY` (422) with `ingridientNotExists` if the record
+   * does not exist.
+   *
+   * @param id MongoDB ObjectId string of the target Ingridient.
+   * @param updateIngridientDto Sparse payload of fields to update.
+   * @returns The updated `Ingridient` or `null` if not found.
+   * @throws HttpException 422 when the record does not exist.
+   */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({
@@ -130,6 +194,20 @@ export class IngridientController {
     return this.ingridientService.update(id, updateIngridientDto);
   }
 
+  /**
+   * DELETE /api/v1/ingredient/:id — soft-delete an Ingridient
+   * (spelling preserved verbatim).
+   *
+   * Delegates to `IngridientService.softDelete()` which uses the proper
+   * `updateOne({ deletedAt: new Date() })` pattern in
+   * `IngridientDocumentRepository.softDelete()` (Source:
+   * infrastructure/document/repositories/ingridient.repository.ts:L94-L99).
+   * This contrasts with the destructive pantry softDelete; see
+   * backend/src/pantry/README.md § Known Limitations.
+   *
+   * @param id MongoDB ObjectId string of the target Ingridient.
+   * @returns `void` (HTTP 204 No Content).
+   */
   @Delete(':id')
   @ApiParam({
     name: 'id',
