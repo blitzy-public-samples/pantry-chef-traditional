@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { Recipe } from './domain/recipe';
 import { Ingridient } from '../ingridient/domain/ingrident';
 import { PantryIngridient } from '../pantry/domain/pantryIngridient';
+import { FilterType } from './types/filter.types';
 
 /**
  * Unit spec for RecipeService.getSuggestions() — the "What Can I Make Tonight?"
@@ -290,10 +291,13 @@ describe('RecipeService.getSuggestions', () => {
 
     await service.getSuggestions('u1', filters);
 
+    // getSuggestions() normalizes the filter flags to real booleans before
+    // forwarding them, so the omitted isQuickMake is forwarded as an explicit
+    // false alongside the resolved preferences and pantry.
     expect(recipeRepositoryMock.matches).toHaveBeenCalledWith(
       { dietary: ['vegan'] },
       defaultPantry,
-      filters,
+      { isQuickMake: false, isAlmostThere: true },
     );
   });
 
@@ -323,5 +327,90 @@ describe('RecipeService.getSuggestions', () => {
 
     expect(result.data).toHaveLength(50);
     expect(result.hasMore).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // Contract-path coverage added during code review: the mobile client sends
+  // RecipeFiltersDto flags as HTTP query strings, so @Query() delivers them as
+  // raw strings ('false'/'true') with no DTO transformation. Inside the frozen
+  // matches() pipeline a string 'false' is TRUTHY, so getSuggestions() must
+  // normalize the flags to real booleans before forwarding them; otherwise the
+  // default request is silently filtered. Because matches() is mocked, these
+  // tests assert the ARGUMENTS passed to matches() (the normalized flags) — the
+  // proxy for "the default request stays unfiltered", since real booleans of
+  // false take the pipeline's pass-through branch.
+  // -------------------------------------------------------------------------
+
+  it('normalizes mobile-style false-string filter flags to real booleans before calling matches()', async () => {
+    recipeRepositoryMock.matches.mockResolvedValue([]);
+
+    await service.getSuggestions('u1', {
+      isQuickMake: 'false',
+      isAlmostThere: 'false',
+    } as unknown as FilterType);
+
+    expect(recipeRepositoryMock.matches).toHaveBeenCalledWith(
+      {},
+      defaultPantry,
+      { isQuickMake: false, isAlmostThere: false },
+    );
+  });
+
+  it('normalizes string "true" and boolean true filter flags to real boolean true', async () => {
+    recipeRepositoryMock.matches.mockResolvedValue([]);
+
+    await service.getSuggestions('u1', {
+      isQuickMake: 'true',
+      isAlmostThere: true,
+    } as unknown as FilterType);
+
+    expect(recipeRepositoryMock.matches).toHaveBeenCalledWith(
+      {},
+      defaultPantry,
+      { isQuickMake: true, isAlmostThere: true },
+    );
+  });
+
+  it('normalizes a zero-ingredient recipe to a valid 0..1 matchScore (1) and READY', async () => {
+    // matches() computes matchScore = available / total = 0 / 0 = NaN for a
+    // zero-ingredient recipe; NaN serializes to null and breaks the documented
+    // 0..1 contract (and the mobile non-null double). getSuggestions() must emit
+    // a valid score (1) for both the top-level field and the nested recipe.
+    const emptyRecipe = makeRecipe('Z', [], NaN);
+    recipeRepositoryMock.matches.mockResolvedValue([emptyRecipe]);
+
+    const result = await service.getSuggestions('u1', {});
+
+    expect(result.data[0].status).toBe('READY');
+    expect(result.data[0].matchScore).toBe(1);
+    expect(Number.isNaN(result.data[0].matchScore)).toBe(false);
+    expect(result.data[0].recipe.matchScore).toBe(1);
+    expect(result.data[0].missingIngredients).toEqual([]);
+  });
+
+  it('clamps non-positive / non-finite page and limit so a malformed limit cannot bypass the cap', async () => {
+    const recipes: Recipe[] = [];
+    for (let index = 0; index < 12; index += 1) {
+      recipes.push(makeRecipe(`r${index}`, [['i1', 'Egg']], 1));
+    }
+    recipeRepositoryMock.matches.mockResolvedValue(recipes);
+
+    // limit=-1 must NOT return slice(0, -1) (nearly the whole array) and page=-1
+    // must NOT produce a negative-offset slice; both fall back to the safe
+    // defaults (page=1, limit=10).
+    const negative = await service.getSuggestions('u1', {}, -1, -1);
+    expect(negative.data).toHaveLength(10);
+    expect(negative.data[0].recipe.id).toBe('r0');
+    expect(negative.hasMore).toBe(true);
+
+    // Non-finite (NaN) values fall back to the same defaults.
+    const notFinite = await service.getSuggestions(
+      'u1',
+      {},
+      Number.NaN,
+      Number.NaN,
+    );
+    expect(notFinite.data).toHaveLength(10);
+    expect(notFinite.hasMore).toBe(true);
   });
 });

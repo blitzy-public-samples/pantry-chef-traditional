@@ -92,10 +92,24 @@ export class RecipeService {
     const user = await this.userService.findOne({ id: userId });
     const { preferences } = user;
     const pantry = await this.pantryService.findAllByUserId(userId);
+    // Normalize the incoming filter flags before reusing the frozen matches()
+    // pipeline. RecipeFiltersDto flags arrive from the mobile client as HTTP
+    // query strings with no DTO transformation, and inside matches() a raw
+    // string 'false' is TRUTHY — which would silently filter the default
+    // suggestions request down to quick/almost-there recipes. Treat ONLY a real
+    // boolean true or the string 'true' as enabled; everything else (including
+    // the string 'false') is disabled, so the default request returns the full
+    // ranked list.
+    const isFlagEnabled = (value: unknown): boolean =>
+      value === true || value === 'true';
+    const normalizedFilters: FilterType = {
+      isQuickMake: isFlagEnabled(filters.isQuickMake),
+      isAlmostThere: isFlagEnabled(filters.isAlmostThere),
+    };
     const recipes = await this.recipeRepository.matches(
       preferences,
       pantry,
-      filters,
+      normalizedFilters,
     );
 
     // The domain mapper drops isQuickMake/isAlmostThere/missingIngredientsCount,
@@ -125,20 +139,37 @@ export class RecipeService {
         id: il.ingridient.id,
         name: il.ingridient.name,
       }));
+      // Normalize the zero-ingredient matchScore. matches() computes
+      // matchScore = available / total, so a zero-ingredient recipe yields
+      // 0 / 0 = NaN, which JSON-serializes to null and violates the documented
+      // 0..1 contract (and the mobile non-null double). A recipe that needs
+      // nothing gathered is fully matched, so emit 1; the nested recipe score is
+      // updated too so the embedded object stays consistent with matchScore.
+      const matchScore =
+        recipe.ingridientList.length === 0 ? 1 : recipe.matchScore;
+      recipe.matchScore = matchScore;
       return {
         recipe,
-        matchScore: recipe.matchScore,
+        matchScore,
         status,
         isQuickMake,
         missingIngredients,
       };
     });
 
-    // In-memory pagination over the already-sorted list. Cap the page size at 50
-    // to mirror findAll, and coerce query params (which arrive as strings) with
-    // Number(). The matches() ordering (matchScore DESC) is preserved by map/slice.
-    const pageNum = page ? Number(page) : 1;
-    let limitNum = limit ? Number(limit) : 10;
+    // In-memory pagination over the already-sorted list. Query params arrive as
+    // strings and may be malformed (negative, zero, non-numeric), so sanitize
+    // them: clamp page to a finite positive integer (default 1) and limit to a
+    // finite positive integer in 1..50 (default 10, cap 50 to mirror findAll).
+    // This prevents a value such as limit=-1 from bypassing the 50-item cap via
+    // slice(0, -1). The matches() ordering (matchScore DESC) is preserved by
+    // map/slice.
+    const rawPage = Number(page);
+    const pageNum =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+    const rawLimit = Number(limit);
+    let limitNum =
+      Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 10;
     if (limitNum > 50) {
       limitNum = 50;
     }
