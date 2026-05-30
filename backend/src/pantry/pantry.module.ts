@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-// NOTE: 'PantryIngridient' / 'PantryIngridientSchemaClass' spellings preserved verbatim. Do not rename.
+// NOTE: 'PantryIngridient' / 'PantryIngridientSchemaClass' spellings preserved
+// verbatim. Do not rename.
 import { PantryService } from './pantry.service';
 import { PantryController } from './pantry.controller';
 import { DocumentPantryPersistenceModule } from './infrastructure/document/document-persistence.module';

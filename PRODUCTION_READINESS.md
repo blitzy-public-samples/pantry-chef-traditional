@@ -111,7 +111,7 @@ committed in plaintext. None of them are safe to carry into production.
 > relative to its own directory and degrades gracefully when it is absent
 > (setting `isGoogleVisionEnabled = false`), which is fine for local dev but
 > must be replaced by an explicit, managed credential source for production.
-> *Source: backend/src/ai/ai.service.ts:L52-L56.*
+> *Source: backend/src/ai/ai.service.ts.*
 
 ## Networking & TLS
 
@@ -121,7 +121,7 @@ encryption in front of the Node process.
 > 🚧 The application is created with `{ cors: true }`, which reflects **any**
 > origin. Replace this with an explicit allowlist, e.g.
 > `{ cors: { origin: ['https://app.pantry-chef.com'] } }`, scoped to the real
-> client origins. *Source: backend/src/main.ts:L11.*
+> client origins. *Source: backend/src/main.ts.*
 
 > 🚧 No TLS termination is configured. Place a reverse proxy (NGINX, AWS ALB, or
 > Cloudflare) in front of the NestJS service, terminate TLS there with a valid
@@ -185,7 +185,7 @@ password-reset flow is half-built.
 
 > 🚧 **No Helmet middleware.** The bootstrap sets no security headers. Add
 > `helmet` to the NestJS startup to emit CSP, HSTS, `X-Content-Type-Options`,
-> and related headers. *Source: backend/src/main.ts:L10-L11.*
+> and related headers. *Source: backend/src/main.ts.*
 
 > 🚧 **AI endpoint is unguarded.** `AiController` is declared with
 > `@Controller('ai')` and `@Post('vision')` but carries **no**
@@ -193,12 +193,12 @@ password-reset flow is half-built.
 > (`limits: { fileSize: 10 * 1024 * 1024 }`) from anonymous clients — a clear
 > abuse and cost vector against Google Cloud Vision. Add `@ApiBearerAuth()` and
 > `@UseGuards(AuthGuard('jwt'))` to the controller.
-> *Source: backend/src/ai/ai.controller.ts:L12-L43.*
+> *Source: backend/src/ai/ai.controller.ts.*
 
 > 🚧 **MIME-type filter is commented out.** The `FileInterceptor` contains a
 > disabled `fileFilter` that would reject anything other than JPG/JPEG/PNG.
 > Uncomment it and verify it handles edge cases such as a mismatched extension
-> versus actual content type. *Source: backend/src/ai/ai.controller.ts:L20-L28.*
+> versus actual content type. *Source: backend/src/ai/ai.controller.ts.*
 
 > 🚧 **Password-reset endpoints are unwired.** The DTOs
 > `AuthForgotPasswordDto` and `AuthResetPasswordDto` exist, but `AuthController`
@@ -206,7 +206,7 @@ password-reset flow is half-built.
 > `PATCH me`, `DELETE me`) and **no** `forgot-password` or `reset-password`
 > route. Add the two endpoints plus the matching service methods (token
 > issuance, email delivery, hash verification).
-> *Source: backend/src/auth/dto/auth-forgot-password.dto.ts:L6; backend/src/auth/dto/auth-reset-password.dto.ts:L4; backend/src/auth/auth.controller.ts:L31-L92.*
+> *Source: backend/src/auth/dto/auth-forgot-password.dto.ts; backend/src/auth/dto/auth-reset-password.dto.ts; backend/src/auth/auth.controller.ts.*
 
 > 🚧 **Plaintext-password update path on `PATCH /api/v1/users`.** `UsersService.create`
 > bcrypt-hashes the password, but `UsersService.update` forwards the payload to
@@ -226,9 +226,8 @@ password-reset flow is half-built.
 > [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
 > *Source: backend/src/auth/dto/auth-confirm-email.dto.ts; backend/src/users/infrastructure/document/entities/user.schema.ts.*
 
-Each of these will be flagged at its source location with a `// TODO(prod):`
-marker per the project's tag taxonomy when the AI and auth modules are processed
-in a later checkpoint; the AI gaps will additionally be documented in
+Each of these is now flagged at its source location with a `// TODO(prod):`
+marker per the project's tag taxonomy; the AI gaps are additionally documented in
 [backend/src/ai/README.md](backend/src/ai/README.md) and the auth gap in
 [backend/src/auth/README.md](backend/src/auth/README.md).
 
@@ -282,7 +281,7 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 > of `npm run seed:run:document`; the seed services drop their collections
 > before reseeding. Gate this behind an explicit flag (e.g. `--force-reseed`)
 > so it can never run by accident in production.
-> *Source: backend/src/database/seeds/run-seed.ts:L13-L16.*
+> *Source: backend/src/database/seeds/run-seed.ts.*
 
 > 🚧 **No migration versioning.** There is no `migrate-mongo` or
 > `mongoose-migrate`; schema changes are applied implicitly through Mongoose's
@@ -298,7 +297,7 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 > `tags` with `$all`, neither of which is indexed, so matching will degrade as
 > the recipe corpus grows. Add a compound index covering `(deletedAt, tags)` and
 > consider a text index on `title` for fuzzy search.
-> *Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L28; backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49; backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L106; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L108, L113.*
+> *Source: backend/src/session/infrastructure/document/entities/session.schema.ts; backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts; backend/src/recipe/infrastructure/document/entities/recipe.schema.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts, L113.*
 
 > 🚧 **Destructive `softDelete` in the users repository.** Like the pantry
 > repository, `UsersDocumentRepository.softDelete` calls `deleteOne`, physically
@@ -344,10 +343,9 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 A related correctness issue lives in the pantry repository: `softDelete` calls
 `deleteOne`, physically removing the document instead of setting `deletedAt`,
 which violates the soft-delete contract documented in
-[DATA_MODEL.md](DATA_MODEL.md). It is preserved as-is and will be flagged with
-`// FIXME:` and `// TODO(prod):` at its source when the pantry module is
-processed in a later checkpoint.
-*Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L123.*
+[DATA_MODEL.md](DATA_MODEL.md). It is preserved as-is and is flagged with
+`// FIXME:` and `// TODO(prod):` at its source.
+*Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts.*
 
 This category is ⚠️ rather than ❌ because the database is functional and
 indexed for its current single-index queries; the blockers are operational
@@ -363,7 +361,7 @@ Automated test coverage is thin and concentrated on a single feature.
 > algorithm `RecipeDocumentRepository.matches()`. Add unit tests against an
 > in-memory Mongo server that assert the documented `matchScore`, `isQuickMake`,
 > and `isAlmostThere` derivations.
-> *Source: backend/test/user/auth.e2e-spec.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92-L171.*
+> *Source: backend/test/user/auth.e2e-spec.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts.*
 
 > 🚧 **No integration tests for the AI vision endpoint**, and no tests covering
 > pantry CRUD against the destructive `softDelete` behavior described above.
@@ -420,10 +418,10 @@ this document.
 | Gap | Module README | Planned Inline Annotation |
 |-----|---------------|-------------------|
 | Recipe `_id` matching only / no unit normalization / no quantity check | [backend/src/recipe/README.md](backend/src/recipe/README.md) | `// TODO(prod):` block comment above `matches()` in `recipe.repository.ts` |
-| AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts:L20-L28` |
+| AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts` |
 | AI endpoint no JWT guard | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` above `AiController` class |
-| AI small ingredient dictionary | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.service.ts:L11-L49` |
-| Pantry destructive `softDelete` | [backend/src/pantry/README.md](backend/src/pantry/README.md) | `// FIXME:` + `// TODO(prod):` at `pantryIngridient.repository.ts:L119-L123` |
+| AI small ingredient dictionary | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.service.ts` |
+| Pantry destructive `softDelete` | [backend/src/pantry/README.md](backend/src/pantry/README.md) | `// FIXME:` + `// TODO(prod):` at `pantryIngridient.repository.ts` |
 | Auth password reset unwired | [backend/src/auth/README.md](backend/src/auth/README.md) | (No inline — a missing endpoint cannot be flagged in code) |
 | Seed runner destructive | [backend/src/database/README.md](backend/src/database/README.md) | `// TODO(prod):` at each seed service `run()` method |
 | Preserved spelling variants | [backend/src/ingridient/README.md](backend/src/ingridient/README.md), [backend/src/pantry/README.md](backend/src/pantry/README.md), [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` at first occurrence in each affected file |

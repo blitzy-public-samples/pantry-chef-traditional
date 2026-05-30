@@ -12,11 +12,15 @@ import { Recipe } from '../domain/recipe';
 /**
  * Filter options applied at the persistence layer.
  *
- * `name` becomes a case-insensitive regex against the recipe `name` field
- * (actual schema field used is `title`; the filter is mapped at the
- * repository layer). `ids` becomes a Mongo `$in` clause against `_id`.
+ * `name` becomes a case-insensitive `$regex` query, but the repository writes
+ * it to a `name` field that the Recipe schema does NOT define (the schema
+ * field is `title`; there is no `name`). The filter is NOT remapped to
+ * `title`, so a `name` filter currently matches no documents. `ids` becomes a
+ * Mongo `$in` clause against `_id`.
  */
 export class FilterRecipeDto {
+  // FIXME: repository queries a nonexistent `name` field; schema field is
+  // `title`. Filter matches nothing. Document only; do not fix.
   @IsString()
   @IsOptional()
   name?: string | null;

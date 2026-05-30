@@ -13,11 +13,15 @@ import { PantryIngridient } from '../domain/pantryIngridient';
  * Filter contract for GET /api/v1/pantry list queries (spelling preserved
  * verbatim).
  *
- * Currently only supports filtering by `id`. The controller additionally
- * injects `userId` (from req.user.id) into the filter so list queries are
- * always user-scoped.
+ * Declares an optional `id` field, but the repository's
+ * `findManyWithPagination` applies ONLY user scoping: it reads
+ * `filterOptions.userId` (injected by the controller from `req.user.id`) and
+ * does NOT apply `id`. The `id` field below is accepted on the request but is
+ * ignored by the query, so list results are scoped solely by `userId`.
  */
 export class FilterPantryIngridientDto {
+  // FIXME: `id` is accepted here but ignored by the repository query
+  // (findManyWithPagination applies only userId). Document only; do not fix.
   @ApiProperty()
   @IsString()
   @IsOptional()

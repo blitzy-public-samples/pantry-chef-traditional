@@ -1,3 +1,4 @@
+// NOTE: 'Ingridient' spelling preserved verbatim across the backend. Do not rename.
 import {
   BadRequestException,
   Controller,
@@ -27,15 +28,21 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   /**
-   * Receive a multipart image upload and return one recognized Ingridient.
+   * Receive a multipart image upload and return the object produced by
+   * `AiService.detectIngredientsFromBuffer`.
    *
    * The `FileInterceptor` reads the request field `image` into memory (≤10MB).
-   * Delegates to `AiService.detectIngredientsFromBuffer` for label detection
-   * and ingredient resolution. Returns `null` if no label matched the
-   * hardcoded ingredient dictionary.
+   * Throws `BadRequestException` when no file is provided; otherwise delegates
+   * to the service and returns its result verbatim.
    *
    * @param file Uploaded image file buffer (10MB limit, memoryStorage).
-   * @returns Resolved Ingridient or null. Spelling 'Ingridient' preserved verbatim.
+   * @returns The service result: resolved `Ingridient` (spelling preserved
+   *   verbatim) fields `{ id, name, category, quantity, unit, confidence }`, or
+   *   `{}` when Vision is disabled or returns no labels. It does NOT return
+   *   null; when no dictionary label matches, the service's unfiltered lookup
+   *   returns an unrelated first Ingridient — see ai.service.ts and README
+   *   § Known Limitations.
+   * @throws BadRequestException when the `image` file is missing.
    */
   @Post('vision')
   @UseInterceptors(

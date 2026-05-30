@@ -1,4 +1,5 @@
-// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass' spellings preserved verbatim. Do not rename.
+// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass' spellings preserved
+// verbatim. Do not rename.
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { now, HydratedDocument } from 'mongoose';
 import { EntityDocumentHelper } from 'src/utils/document-entity-helper';

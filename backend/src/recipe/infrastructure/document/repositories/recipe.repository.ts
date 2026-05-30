@@ -1,4 +1,5 @@
-// NOTE: 'IngridientList', 'ingridientList', 'PantryIngridient' spellings preserved verbatim. Do not rename.
+// NOTE: 'IngridientList', 'ingridientList', 'PantryIngridient' spellings
+// preserved verbatim. Do not rename.
 import { Injectable } from '@nestjs/common';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { NullableType } from 'src/utils/types/nullable.type';
@@ -139,7 +140,7 @@ export class RecipeDocumentRepository implements RecipeRepository {
    * Given the authenticated user's Preferences and current pantry contents,
    * return recipes ranked by how well they match available ingredients.
    *
-   * Algorithm overview (Source: this file:L92-L171):
+   * Algorithm overview (Source: this file — the matches() method below):
    *
    * 1. Mongo pre-filter chain — build a query object with:
    *    - deletedAt: null (exclude soft-deleted recipes)
@@ -164,9 +165,9 @@ export class RecipeDocumentRepository implements RecipeRepository {
    * @param filterOptions Optional flags (isQuickMake, isAlmostThere).
    * @returns Array of Recipe domain objects sorted by matchScore (DESC).
    */
-  // TODO(prod): No unit normalization. No quantity sufficiency check.
+  // TODO(prod): No unit normalization.
+  // TODO(prod): No quantity sufficiency check.
   // TODO(prod): Exact _id match only — substitutes and equivalents are ignored.
-  // TODO(prod): No compound index on (deletedAt, tags) — will degrade at scale.
   async matches(
     preferences: Preferences,
     pantryIngredients: PantryIngridient[],
@@ -197,6 +198,7 @@ export class RecipeDocumentRepository implements RecipeRepository {
     }
 
     // Step 3: Retrieve and process recipes
+    // TODO(prod): No compound index on (deletedAt, tags) — will degrade at scale.
     const recipeObjects = await this.recipeModel
       .find(query)
       .populate('ingridientList.ingridient')

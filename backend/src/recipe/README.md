@@ -7,7 +7,7 @@ CRUD endpoints for recipes plus the pantry-aware `GET /api/v1/recipe/matches`
 endpoint that scores recipes based on the authenticated user's current pantry
 contents and `Preferences`. The matching algorithm — a Mongo pre-filter chain
 followed by a per-recipe scoring loop — lives at
-`infrastructure/document/repositories/recipe.repository.ts:L92-L171`. Recipes
+`infrastructure/document/repositories/recipe.repository.ts`. Recipes
 embed an `IngridientList` (spelling preserved verbatim throughout the backend codebase)
 sub-schema describing required ingredients, plus an `Instruction[]` array
 describing cooking steps.
@@ -19,11 +19,11 @@ describing cooking steps.
 | `RecipeController` | `recipe.controller.ts` | Routes under `/api/v1/recipe`, all guarded by `AuthGuard('jwt')` |
 | `RecipeService` | `recipe.service.ts` | Orchestrates CRUD plus `matches(userId, filterOptions)`, delegating to `UsersService`, `PantryService`, and `RecipeRepository` |
 | `RecipeRepository` (abstract) | `infrastructure/recipe.repository.ts` | Abstract repository contract with six methods |
-| `RecipeDocumentRepository` | `infrastructure/document/repositories/recipe.repository.ts` | Mongoose-backed implementation; hosts the `matches()` algorithm at L92-L171 |
+| `RecipeDocumentRepository` | `infrastructure/document/repositories/recipe.repository.ts` | Mongoose-backed implementation; hosts the `matches()` algorithm |
 | `RecipeMapper` | `infrastructure/document/mappers/recipe.mapper.ts` | Maps `RecipeSchemaClass` ↔ `Recipe` domain entity |
 | `RecipeSchemaClass` | `infrastructure/document/entities/recipe.schema.ts` | Mongoose schema; embeds `IngridientList[]` (L7-L26, spelling preserved verbatim) and `Instruction[]` (L31-L40); `difficulty` enum `'easy' \| 'medium' \| 'hard'` (L82); `title` index (L106) |
-| `IngridientList` (sub-schema) | `recipe.schema.ts:L7-L26` | Embedded sub-schema (spelling preserved verbatim). Fields: `ingridient` (Reference), `amount`, `unit`, `required`, `substitutes?` |
-| `Instruction` (sub-schema) | `recipe.schema.ts:L31-L40` | Embedded sub-schema for cooking instructions: `step`, `description`, optional `timer` |
+| `IngridientList` (sub-schema) | `recipe.schema.ts` | Embedded sub-schema (spelling preserved verbatim). Fields: `ingridient` (Reference), `amount`, `unit`, `required`, `substitutes?` |
+| `Instruction` (sub-schema) | `recipe.schema.ts` | Embedded sub-schema for cooking instructions: `step`, `description`, optional `timer` |
 | `Recipe` (domain) | `domain/recipe.ts` | Domain entity returned by service methods |
 | DTOs | `dto/create-recipe.dto.ts`, `dto/update-recipe.dto.ts`, `dto/query-recipe.dto.ts` | class-validator + class-transformer validation contracts |
 | `FilterType` | `types/filter.types.ts` | Post-filter flags `isQuickMake?` and `isAlmostThere?` used by `matches()` |
@@ -79,7 +79,7 @@ Versions pinned exactly per `backend/package.json`:
 - Update a recipe (partial payload validated against the `UpdateRecipeDto`).
 - **Soft-delete a recipe** via the *proper* contract: a Mongoose
   `updateOne({ _id }, { deletedAt: new Date() })` at
-  `recipe.repository.ts:L184-L186`. The document is preserved on disk and the
+  `recipe.repository.ts`. The document is preserved on disk and the
   pagination query filters `deletedAt: null` out of subsequent listings.
 - **Pantry-aware matches** (headline): rank recipes by how well the user's
   current pantry covers the recipe's `ingridientList`, honouring the user's
@@ -134,7 +134,7 @@ controller path `'recipe'`.
 ## Known Limitations and Implementation Gaps
 
 > ⚠️ **Exact `_id` matching only** — the per-recipe scoring loop at
-> `infrastructure/document/repositories/recipe.repository.ts:L128-L150` uses
+> `infrastructure/document/repositories/recipe.repository.ts` uses
 > `il.ingridient._id.toString()` equality against pantry ingredient ids.
 > Substitutes (the `substitutes` array on `IngridientList`) and equivalent
 > ingredients (e.g., fresh vs dried) are not consulted at match time.

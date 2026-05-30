@@ -1,3 +1,4 @@
+// NOTE: 'PantryIngridient' spelling preserved verbatim across the backend. Do not rename.
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { IPaginationOptions } from 'src/utils/types/pagination-options';

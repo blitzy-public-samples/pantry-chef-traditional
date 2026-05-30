@@ -1,4 +1,5 @@
-// NOTE: 'PantryIngridientSchemaClass' / 'PantryIngridientDocumentRepository' spellings preserved verbatim. Do not rename.
+// NOTE: 'PantryIngridientSchemaClass' / 'PantryIngridientDocumentRepository'
+// spellings preserved verbatim. Do not rename.
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {

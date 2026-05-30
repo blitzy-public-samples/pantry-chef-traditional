@@ -1,3 +1,4 @@
+// NOTE: 'ingridientList' / 'PantryIngridient' spellings preserved verbatim. Do not rename.
 import {
   Controller,
   Get,

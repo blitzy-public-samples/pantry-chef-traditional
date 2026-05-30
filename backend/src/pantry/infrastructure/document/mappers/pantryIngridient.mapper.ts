@@ -1,4 +1,5 @@
-// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass' spellings preserved verbatim. Do not rename.
+// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass' spellings preserved
+// verbatim. Do not rename.
 import { IngridientMapper } from 'src/ingridient/infrastructure/document/mappers/ingridient.mapper';
 import { PantryIngridient } from '../../../domain/pantryIngridient';
 import { PantryIngridientSchemaClass } from '../entities/pantryIngridient.schema';

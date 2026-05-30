@@ -1,4 +1,5 @@
-// NOTE: 'IngridientList' embedded sub-schema and 'ingridientList' field name preserved verbatim. Do not rename.
+// NOTE: 'IngridientList' embedded sub-schema and 'ingridientList' field name
+// preserved verbatim. Do not rename.
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { now, HydratedDocument } from 'mongoose';
 import { EntityDocumentHelper } from 'src/utils/document-entity-helper';

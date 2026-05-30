@@ -1,4 +1,5 @@
-// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass', 'PantryIngridientDocumentRepository' spellings preserved verbatim. Do not rename.
+// NOTE: 'PantryIngridient', 'PantryIngridientSchemaClass',
+// 'PantryIngridientDocumentRepository' spellings preserved verbatim. Do not rename.
 import { Injectable } from '@nestjs/common';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { NullableType } from '../../../../utils/types/nullable.type';
@@ -180,7 +181,8 @@ export class PantryIngridientDocumentRepository implements PantryRepository {
       : null;
   }
 
-  // FIXME: softDelete calls deleteOne — physically destructive despite method name. Document only; do not fix.
+  // FIXME: softDelete calls deleteOne — physically destructive despite method
+  // name. Document only; do not fix.
   // TODO(prod): Implement true soft-delete via { deletedAt: new Date() } update before production.
   /**
    * "Soft"-delete a pantry item by id.

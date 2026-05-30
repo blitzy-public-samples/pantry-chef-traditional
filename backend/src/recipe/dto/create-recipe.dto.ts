@@ -1,4 +1,5 @@
-// NOTE: 'IngridientListDto' class and 'ingridientList' field name preserved verbatim. Do not rename.
+// NOTE: 'IngridientListDto' class and 'ingridientList' field name preserved
+// verbatim. Do not rename.
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,

@@ -11,8 +11,9 @@ import { IngridientService } from 'src/ingridient/ingridient.service';
  * detected labels to a domain `Ingridient` (spelling preserved verbatim).
  *
  * Credentials are loaded from `backend/src/config/ai.json` (see README).
- * If the file is missing or malformed, the service degrades gracefully:
- * it logs a warning and continues without vision (returns null on calls).
+ * If the file is missing, the service degrades gracefully: it logs an error
+ * via console.error, sets `isGoogleVisionEnabled = false`, and returns `{}`
+ * (an empty object — not null) from `detectIngredientsFromBuffer` on every call.
  */
 @Injectable()
 export class AiService {
@@ -79,13 +80,26 @@ export class AiService {
   }
 
   /**
-   * Run Google Cloud Vision `LABEL_DETECTION` on an image buffer and resolve
-   * the first label that matches the hardcoded ingredient dictionary to a
-   * domain `Ingridient` (spelling preserved verbatim).
+   * Run Google Cloud Vision `LABEL_DETECTION` on an image buffer and resolve a
+   * matching dictionary label to a domain `Ingridient` (spelling preserved
+   * verbatim).
+   *
+   * Behavior below documents the actual implementation, not intended behavior:
+   * - Returns `{}` when Google Cloud Vision is disabled (`ai.json` missing) or
+   *   when the Vision response contains no labels.
+   * - Otherwise it scans ALL returned labels without breaking, so the LAST
+   *   matching dictionary term wins (not the first).
+   * - The matched term (or `null` when nothing matched) is passed as
+   *   `filterOptions` to `IngridientService.findManyWithPagination`. When the
+   *   filter is `null` the lookup is unfiltered and returns the first
+   *   non-deleted Ingridient — see the FIXME at the lookup call below.
+   * - Maps the resolved record to `{ id, name, category, quantity, unit,
+   *   confidence }`, or returns `{}` when the lookup yields no record.
    *
    * @param imageBuffer Raw image bytes (typically jpg/png from multipart upload).
-   * @returns Resolved `Ingridient` object or `{}` if no label matched.
-   * @throws Returns `{}` and logs warning if GCV client failed to initialize.
+   * @returns A plain object: the resolved `Ingridient` fields, or `{}` when
+   *   Vision is disabled, returns no labels, or the lookup finds no record.
+   *   This method does not throw when the client is disabled — it returns `{}`.
    */
   async detectIngredientsFromBuffer(imageBuffer: Buffer): Promise<any> {
     if (!this.isGoogleVisionEnabled) {
@@ -112,7 +126,8 @@ export class AiService {
       return {};
     }
 
-    // Iterate through labels and find the first match in the dictionary
+    // FIXME: loop does not break, so the LAST matching dictionary term wins
+    // (despite the legacy "first match" intent). Document only; do not fix.
     let recognizedIngridient: string = null;
     for (const label of labels) {
       const labelDescription = label.description.toLowerCase();
@@ -130,6 +145,9 @@ export class AiService {
       }
     }
 
+    // FIXME: when no label matched, recognizedIngridient is null and this
+    // lookup is unfiltered — it returns the first non-deleted Ingridient, not
+    // {}. Document only; do not fix.
     const ingridients: any =
       await this.ingirdientService.findManyWithPagination({
         filterOptions: recognizedIngridient,
