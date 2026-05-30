@@ -4,8 +4,18 @@ import { Exclude } from 'class-transformer';
 import { EntityDocumentHelper } from 'src/utils/document-entity-helper';
 import { Reference } from 'src/common/types';
 
+// NOTE: 'Ingridient', 'IngridientSchemaClass' spellings preserved verbatim. Do not rename.
+
 export type IngridientSchemaDocument = HydratedDocument<IngridientSchemaClass>;
 
+/**
+ * Mongoose schema class for ingridients (spelling preserved verbatim).
+ *
+ * References the shared common/types.ts `Reference` type for `category`
+ * and `unit` fields. Soft-delete via deletedAt (proper).
+ *
+ * See ../../../../../DATA_MODEL.md § Ingridient for the full field reference.
+ */
 @Schema({
   timestamps: true,
   toJSON: {
