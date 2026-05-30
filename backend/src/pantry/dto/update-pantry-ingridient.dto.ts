@@ -1,9 +1,20 @@
+// NOTE: 'PantryIngridient' / 'pantry-ingridient' spellings preserved verbatim. Do not rename.
 import { PartialType } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
 import { CreatePantryIngridientDto } from './create-pantry-ingridient.dto';
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
+/**
+ * Validation contract for PATCH /api/v1/pantry/:id — Partially update a
+ * pantry item (spelling preserved verbatim).
+ *
+ * Extends PartialType(CreatePantryIngridientDto) and additionally declares
+ * every field as optional with explicit @IsOptional + type validators so
+ * Swagger documents the schema correctly. Field semantics match
+ * CreatePantryIngridientDto; see ../README.md § Known Limitations for the
+ * `location` enum validation gap that affects both DTOs.
+ */
 export class UpdatePantryIngridientDto extends PartialType(
   CreatePantryIngridientDto,
 ) {
