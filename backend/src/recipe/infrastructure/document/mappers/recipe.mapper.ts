@@ -1,9 +1,25 @@
+// NOTE: 'ingridientList' field name preserved verbatim across the mapper. Do not rename.
 import { Recipe } from '../../../domain/recipe';
 import { RecipeSchemaClass } from '../entities/recipe.schema';
 import { IngridientMapper } from 'src/ingridient/infrastructure/document/mappers/ingridient.mapper';
 import { IngridientSchemaClass } from 'src/ingridient/infrastructure/document/entities/ingridient.schema';
 
+/**
+ * Maps RecipeSchemaClass (Mongoose document) to the Recipe domain entity
+ * and back. Preserves the IngridientList sub-array (spelling preserved
+ * verbatim) and the optional matchScore populated only by matches().
+ */
 export class RecipeMapper {
+  /**
+   * Convert a Mongoose RecipeSchemaClass document into the Recipe domain entity.
+   *
+   * Walks the embedded `ingridientList` (spelling preserved verbatim) array and
+   * delegates ingredient mapping to `IngridientMapper.toDomain`. Copies through
+   * all primitive fields plus `matchScore`, `createdAt`, `updatedAt`, `deletedAt`.
+   *
+   * @param raw Mongoose hydrated document.
+   * @returns Recipe domain entity ready to be returned by the service layer.
+   */
   static toDomain(raw: RecipeSchemaClass): Recipe {
     const recipe = new Recipe();
     recipe.id = raw._id.toString();
@@ -46,6 +62,17 @@ export class RecipeMapper {
     return recipe;
   }
 
+  /**
+   * Convert a Recipe domain entity into a `Partial<RecipeSchemaClass>` payload
+   * suitable for `new this.recipeModel(persistenceModel)` construction.
+   *
+   * Delegates per-ingredient mapping to `IngridientMapper.toPersistence` and
+   * preserves the `ingridientList` field name verbatim across the sub-schema.
+   *
+   * @param recipe Recipe domain entity (typically the CreateRecipeDto payload
+   *   spread into a Recipe-shaped object by the service layer).
+   * @returns Partial<RecipeSchemaClass> ready for Mongoose persistence.
+   */
   static toPersistence(recipe: Recipe): Partial<RecipeSchemaClass> {
     const recipeEntity: Partial<RecipeSchemaClass> = {};
 
