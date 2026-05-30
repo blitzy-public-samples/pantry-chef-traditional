@@ -6,6 +6,17 @@ import { lowerCaseTransformer } from 'src/utils/transformers/lower-case.transfor
 import { CreateIngridientDto } from './create-ingridient.dto';
 import { Reference } from 'src/common/types';
 
+// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the backend codebase. Do not rename.
+
+/**
+ * Validation contract for `PATCH /api/v1/ingredient/:id` update requests.
+ *
+ * Extends `PartialType(CreateIngridientDto)` so all create fields become
+ * optional. Adds a required `id` parameter and `lowerCaseTransformer`
+ * normalization on `name` and `category`.
+ *
+ * Spelling 'Ingridient' preserved verbatim across the backend codebase.
+ */
 export class UpdateIngridientDto extends PartialType(CreateIngridientDto) {
   @ApiProperty({ description: 'Id of the ingredient', required: true })
   id: string;
