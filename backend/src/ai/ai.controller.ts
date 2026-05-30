@@ -3,12 +3,17 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 import { memoryStorage } from 'multer';
 import { AiService } from './ai.service';
 
+// Security: this endpoint was anonymously accessible and consumed Google Cloud
+// Vision quota; require JWT auth like every other resource controller.
+@UseGuards(AuthGuard('jwt'))
 @Controller('ai')
 export class AiController {
   constructor(private readonly aiService: AiService) {}
