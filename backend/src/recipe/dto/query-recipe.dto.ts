@@ -9,6 +9,13 @@ import {
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { Recipe } from '../domain/recipe';
 
+/**
+ * Filter options applied at the persistence layer.
+ *
+ * `name` becomes a case-insensitive regex against the recipe `name` field
+ * (actual schema field used is `title`; the filter is mapped at the
+ * repository layer). `ids` becomes a Mongo `$in` clause against `_id`.
+ */
 export class FilterRecipeDto {
   @IsString()
   @IsOptional()
@@ -18,6 +25,13 @@ export class FilterRecipeDto {
   ids?: string[] | null;
 }
 
+/**
+ * A single sort directive for the recipe listing endpoint.
+ *
+ * `orderBy` is a Recipe field key (the special value `'id'` is mapped to
+ * Mongo's `_id` by the repository). `order` is `'ASC'` or `'DESC'`
+ * (case-insensitive).
+ */
 export class SortRecipeDto {
   @ApiProperty()
   @IsString()
@@ -28,6 +42,15 @@ export class SortRecipeDto {
   order: string;
 }
 
+/**
+ * Query string contract for GET /api/v1/recipe (the paginated list endpoint).
+ *
+ * Carries pagination (`page`, `limit`), free-text search (`query` → name regex),
+ * id whitelist (`ids`), and optional `sort` directives. The controller enforces
+ * a maximum `limit` of 50 — values above are clamped. The `sort` field accepts
+ * a JSON-encoded array of `SortRecipeDto` entries, decoded via
+ * `class-transformer`'s `plainToInstance`.
+ */
 export class QueryRecipeDto {
   @ApiProperty({
     required: false,
