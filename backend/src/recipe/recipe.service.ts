@@ -157,7 +157,23 @@ export class RecipeService {
       };
     });
 
-    // In-memory pagination over the already-sorted list. Query params arrive as
+    // QA finding (CP-1 Issue #1): re-sort the mapped list by the NORMALIZED
+    // matchScore before paginating, to restore the AAP F1 #1 strict-DESC
+    // ranking contract for zero-ingredient recipes. The frozen matches()
+    // pipeline sorts by matchScore DESC, but a zero-ingredient recipe scores
+    // available / total = 0 / 0 = NaN there, so its comparator result is NaN and
+    // JS leaves it in its DB-scan position (it can land below lower-scored
+    // recipes). We normalize that NaN to 1 above (a recipe that needs nothing
+    // gathered is READY / fully matched), so an explicit re-sort here lifts those
+    // normalized-1.0 recipes into their correct ranked position. The sort is
+    // stable on V8 / Node 20, so recipes with equal scores keep the exact order
+    // matches() produced — preserving /matches parity (R2) for the normal,
+    // non-degenerate case. This re-orders by the already-computed matchScore
+    // only: it does NOT touch the frozen matches() pipeline and introduces no new
+    // scoring logic.
+    mapped.sort((a, b) => b.matchScore - a.matchScore);
+
+    // In-memory pagination over the re-sorted list. Query params arrive as
     // strings and may be malformed (negative, zero, fractional, non-numeric), so
     // sanitize them: clamp page to a finite integer >= 1 (default 1) and limit to
     // a finite integer in 1..50 (default 10, cap 50 to mirror findAll).
@@ -168,8 +184,8 @@ export class RecipeService {
     // with hasMore=true and empty data. Flooring up front means those values are
     // compared as 0, fail the >= 1 test, and fall back to the safe defaults. The
     // >= 1 floor also stops limit=-1 from bypassing the 50-item cap via
-    // slice(0, -1). The matches() ordering (matchScore DESC) is preserved by
-    // map/slice.
+    // slice(0, -1). The matchScore DESC ordering is established by the explicit
+    // re-sort above and preserved by the slice.
     const flooredPage = Math.floor(Number(page));
     const pageNum =
       Number.isFinite(flooredPage) && flooredPage >= 1 ? flooredPage : 1;

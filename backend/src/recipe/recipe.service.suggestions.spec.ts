@@ -11,12 +11,15 @@ import { FilterType } from './types/filter.types';
 /**
  * Unit spec for RecipeService.getSuggestions() — the "What Can I Make Tonight?"
  * post-processing layer. The matching pipeline (recipeRepository.matches) is
- * fully mocked to return a PRE-SORTED Recipe[] (matchScore DESC), so these
- * tests isolate getSuggestions()'s own behavior: order pass-through (the
- * service must NOT re-sort), the three derived fields (status / isQuickMake /
- * missingIngredients computed from the domain `ingridient.id` and `.name`), and
- * the { data, hasMore } pagination envelope (default page=1/limit=10, limit
- * capped at 50).
+ * fully mocked to return a pre-sorted Recipe[] (matchScore DESC), so these
+ * tests isolate getSuggestions()'s own behavior: DESC matchScore ordering (the
+ * service re-sorts the mapped list by the NORMALIZED matchScore so a
+ * zero-ingredient recipe — normalized from NaN to 1.0 — is ranked among the top
+ * rather than stranded in the frozen pipeline's DB-scan position; see CP-1
+ * Issue #1), the three derived fields (status / isQuickMake / missingIngredients
+ * computed from the domain `ingridient.id` and `.name`), and the
+ * { data, hasMore } pagination envelope (default page=1/limit=10, limit capped
+ * at 50).
  *
  * Spelling note: the backend deliberately uses the (sic) `ingridient`,
  * `ingridientList`, and `PantryIngridient` spellings; the fixtures below
@@ -386,6 +389,49 @@ describe('RecipeService.getSuggestions', () => {
     expect(Number.isNaN(result.data[0].matchScore)).toBe(false);
     expect(result.data[0].recipe.matchScore).toBe(1);
     expect(result.data[0].missingIngredients).toEqual([]);
+  });
+
+  it('re-sorts a zero-ingredient recipe (normalized to 1.0) into its correct DESC position', async () => {
+    // QA CP-1 Issue #1 regression guard. The frozen matches() pipeline computes
+    // matchScore = available / total = 0 / 0 = NaN for a zero-ingredient recipe,
+    // and its `b.matchScore - a.matchScore` comparator returns NaN for any
+    // comparison involving it — so JS leaves such a recipe in its DB-scan
+    // position rather than at the top. matches() is mocked here to return that
+    // degenerate order: a fully-matched recipe (1.0), then a low-score recipe
+    // (0.25), then a zero-ingredient recipe stranded LAST. getSuggestions()
+    // normalizes the zero-ingredient score to 1.0 and MUST re-sort so the
+    // normalized-1.0 recipe is ranked among the top, restoring the strict-DESC
+    // contract. Without the re-sort the result would be ['HIGH', 'LOW', 'ZERO']
+    // with scores [1, 0.25, 1] — not descending.
+    const high = makeRecipe('HIGH', [['i1', 'Egg']], 1);
+    const low = makeRecipe(
+      'LOW',
+      [
+        ['i1', 'Egg'],
+        ['i4', 'Butter'],
+        ['i5', 'Sugar'],
+        ['i6', 'Salt'],
+      ],
+      0.25,
+    );
+    const zero = makeRecipe('ZERO', [], NaN);
+    recipeRepositoryMock.matches.mockResolvedValue([high, low, zero]);
+
+    const result = await service.getSuggestions('u1', {});
+
+    // The whole result is strictly non-increasing (DESC) by matchScore.
+    const scores = result.data.map((suggestion) => suggestion.matchScore);
+    for (let index = 1; index < scores.length; index += 1) {
+      expect(scores[index]).toBeLessThanOrEqual(scores[index - 1]);
+    }
+    // The zero-ingredient recipe (normalized 1.0) is lifted above the 0.25
+    // recipe; with the stable sort the two 1.0 recipes keep their input order.
+    expect(result.data.map((suggestion) => suggestion.recipe.id)).toEqual([
+      'HIGH',
+      'ZERO',
+      'LOW',
+    ]);
+    expect(result.data[result.data.length - 1].recipe.id).toBe('LOW');
   });
 
   it('clamps non-positive / non-finite page and limit so a malformed limit cannot bypass the cap', async () => {
