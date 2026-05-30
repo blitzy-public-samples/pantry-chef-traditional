@@ -11,4 +11,6 @@ class Navigation {
   static const String pantryItemEdit = '/pantryItemEdit';
   static const String preferences = '/preferences';
   static const String favoriteRecipes = '/favoriteRecipes';
+  // Added for "What Can I Make Tonight?" suggestions feature
+  static const String suggestions = '/suggestions';
 }
