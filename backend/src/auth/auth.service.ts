@@ -21,6 +21,20 @@ import { Session } from 'src/session/domain/session';
 import { UsersService } from 'src/users/users.service';
 import { SessionService } from 'src/session/session.service';
 
+/**
+ * Service orchestrating authentication and session lifecycle for the auth module.
+ *
+ * Responsibilities:
+ * - Validate email/password credentials with bcrypt.compare.
+ * - Register new users via UsersService and create the initial session.
+ * - Issue JWT access + refresh token pairs via JwtService.signAsync.
+ * - Re-issue token pairs on refresh, gated by an existing session record.
+ * - Update authenticated user profiles (oldPassword required for password changes).
+ * - Soft-delete the authenticated user account and session.
+ *
+ * Throws HttpException (HTTP 422) on credential and validation failures and
+ * UnauthorizedException on refresh when the session has been soft-deleted.
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,6 +44,18 @@ export class AuthService {
     private configService: ConfigService<AllConfigType>,
   ) {}
 
+  /**
+   * Validate email + password credentials and issue an access + refresh token pair.
+   *
+   * Looks up the user by email, asserts the bcrypt hash matches the supplied
+   * password, creates a new Session, and signs a token pair via getTokensData.
+   *
+   * @param loginDto AuthEmailLoginDto with `email` and `password`.
+   * @returns Object containing { token, refreshToken, tokenExpires } (the User
+   *   payload is intentionally omitted from this response shape).
+   * @throws HttpException 422 if the email is not found, the user has no
+   *   stored password hash, or the bcrypt comparison fails.
+   */
   async validateLogin(
     loginDto: AuthEmailLoginDto,
   ): Promise<Omit<LoginResponseType, 'user'>> {
@@ -94,6 +120,16 @@ export class AuthService {
     };
   }
 
+  /**
+   * Create a new user via UsersService, open a session, and issue tokens.
+   *
+   * Rejects if a user with the same email already exists. On success, returns
+   * the same token bundle shape as validateLogin.
+   *
+   * @param dto AuthRegisterLoginDto with `email` and `password` (min length 6).
+   * @returns Object containing { token, refreshToken, tokenExpires }.
+   * @throws HttpException 422 if a user with the supplied email already exists.
+   */
   async register(
     dto: AuthRegisterLoginDto,
   ): Promise<Omit<LoginResponseType, 'user'>> {
@@ -134,12 +170,34 @@ export class AuthService {
     };
   }
 
+  /**
+   * Fetch the authenticated user record by id from the JWT payload.
+   *
+   * @param userJwtPayload Decoded JWT payload carrying the user `id`.
+   * @returns Promise resolving to the User entity or null if not found.
+   */
   async me(userJwtPayload: JwtPayloadType): Promise<NullableType<User>> {
     return this.usersService.findOne({
       id: userJwtPayload.id,
     });
   }
 
+  /**
+   * Update the authenticated user's profile.
+   *
+   * If `password` is being changed, `oldPassword` must also be supplied and
+   * must match the user's current bcrypt hash. On a successful password
+   * change, this method soft-deletes all OTHER sessions belonging to the user
+   * (preserving the current session id) so that previously-issued tokens
+   * are invalidated.
+   *
+   * @param userJwtPayload Decoded JWT payload carrying `id` and `sessionId`.
+   * @param userDto AuthUpdateDto with optional firstName, lastName, password, oldPassword.
+   * @returns Promise resolving to the refreshed User entity or null.
+   * @throws HttpException 422 if `password` is supplied without `oldPassword`,
+   *   the current user is not found, the stored password hash is missing, or
+   *   bcrypt comparison fails.
+   */
   async update(
     userJwtPayload: JwtPayloadType,
     userDto: AuthUpdateDto,
@@ -217,6 +275,17 @@ export class AuthService {
     });
   }
 
+  /**
+   * Re-issue a new access + refresh token pair for the given session id.
+   *
+   * Looks up the session by id; if it has been soft-deleted (or never existed),
+   * throws UnauthorizedException. Otherwise re-signs a fresh token pair via
+   * getTokensData using the session's user id.
+   *
+   * @param data Object containing the `sessionId` claim from the refresh JWT payload.
+   * @returns Object containing { token, refreshToken, tokenExpires }.
+   * @throws UnauthorizedException if the session is missing or soft-deleted.
+   */
   async refreshToken(
     data: Pick<JwtRefreshPayloadType, 'sessionId'>,
   ): Promise<Omit<LoginResponseType, 'user'>> {
@@ -240,16 +309,50 @@ export class AuthService {
     };
   }
 
+  /**
+   * Soft-delete the user account via UsersService.softDelete.
+   *
+   * Sets the `deletedAt` timestamp on the user document per the soft-delete
+   * contract documented in DATA_MODEL.md. Does not cascade to sessions; the
+   * caller (DELETE /me handler) typically invokes logout separately.
+   *
+   * @param user The authenticated User entity.
+   * @returns Promise<void>.
+   */
   async softDelete(user: User): Promise<void> {
     await this.usersService.softDelete(user.id);
   }
 
+  /**
+   * Invalidate a session by id via SessionService.softDelete.
+   *
+   * Subsequent refreshToken calls carrying the same `sessionId` will fail with
+   * UnauthorizedException because the soft-deleted session no longer matches
+   * the `findOne` lookup.
+   *
+   * @param data Object containing the `sessionId` claim from the JWT payload.
+   * @returns Promise resolving when the session has been soft-deleted.
+   */
   async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>) {
     return this.sessionService.softDelete({
       id: data.sessionId,
     });
   }
 
+  /**
+   * Sign and return a JWT access + refresh token pair plus an absolute
+   * expiry timestamp for the access token.
+   *
+   * The access token carries `{ id, sessionId }` signed with `auth.secret`
+   * and `auth.expires` TTL. The refresh token carries `{ sessionId }` signed
+   * with `auth.refreshSecret` and `auth.refreshExpires` TTL — see
+   * backend/env_example:L20-L23 for the default values and the module README
+   * § Configuration for the env var table.
+   *
+   * @param data Object with `id` (User id) and `sessionId` (Session id).
+   * @returns Object containing { token, refreshToken, tokenExpires } where
+   *   `tokenExpires` is an absolute Unix epoch milliseconds timestamp.
+   */
   private async getTokensData(data: {
     id: User['id'];
     sessionId: Session['id'];
