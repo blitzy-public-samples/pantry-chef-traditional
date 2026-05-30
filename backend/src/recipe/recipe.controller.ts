@@ -12,7 +12,12 @@ import {
   HttpCode,
   Request,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { infinityPagination } from 'src/utils/infinity-pagination';
 import { InfinityPaginationResultType } from '../utils/types/infinity-pagination-result.type';
@@ -22,6 +27,8 @@ import { RecipeService } from './recipe.service';
 import { QueryRecipeDto } from './dto/query-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
+// Added for "What Can I Make Tonight?" suggestions feature
+import { RecipeSuggestionsResponseDto } from './dto/recipe-suggestion.dto';
 import { FilterType } from './types/filter.types';
 
 @ApiBearerAuth()
@@ -45,6 +52,20 @@ export class RecipeController {
   async matches(@Request() req, @Query() filterQuery: FilterType) {
     const id = req.user?.id;
     return this.recipeService.matches(id, filterQuery);
+  }
+
+  // Added for "What Can I Make Tonight?" suggestions feature
+  @Get('suggestions')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: RecipeSuggestionsResponseDto })
+  async getSuggestions(
+    @Request() req,
+    @Query() filters: FilterType,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ): Promise<RecipeSuggestionsResponseDto> {
+    const id = req.user?.id;
+    return this.recipeService.getSuggestions(id, filters, page, limit);
   }
 
   @Get()
