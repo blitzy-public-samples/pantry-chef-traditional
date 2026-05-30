@@ -2,12 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import * as path from 'path';
 import { existsSync } from 'fs';
+// NOTE: 'IngridientService' spelling is preserved verbatim across the backend
+// codebase. Do not rename.
 import { IngridientService } from 'src/ingridient/ingridient.service';
 
+/**
+ * Service performing Google Cloud Vision label detection and resolving
+ * detected labels to a domain `Ingridient` (spelling preserved verbatim).
+ *
+ * Credentials are loaded from `backend/src/config/ai.json` (see README).
+ * If the file is missing or malformed, the service degrades gracefully:
+ * it logs a warning and continues without vision (returns null on calls).
+ */
 @Injectable()
 export class AiService {
   private client: ImageAnnotatorClient;
   private isGoogleVisionEnabled = true;
+  // TODO(prod): Hardcoded ingredient dictionary (~36 terms).
+  // Replace with database-backed lookup before production.
   private ingredientDictionary: string[] = [
     'tomato',
     'onion',
@@ -48,6 +60,12 @@ export class AiService {
     // Add more ingredients as needed
   ];
 
+  /**
+   * @param ingirdientService Resolves detected labels to Ingridient records
+   *   via `findManyWithPagination`. Property name typo preserved verbatim.
+   */
+  // NOTE: Property name 'ingirdientService' is an additional preserved typo
+  // (distinct from 'Ingridient'). Do not rename.
   constructor(private readonly ingirdientService: IngridientService) {
     const keyPath = path.join(__dirname, '../config/ai.json');
     if (!existsSync(keyPath)) {
@@ -60,6 +78,15 @@ export class AiService {
     });
   }
 
+  /**
+   * Run Google Cloud Vision `LABEL_DETECTION` on an image buffer and resolve
+   * the first label that matches the hardcoded ingredient dictionary to a
+   * domain `Ingridient` (spelling preserved verbatim).
+   *
+   * @param imageBuffer Raw image bytes (typically jpg/png from multipart upload).
+   * @returns Resolved `Ingridient` object or `{}` if no label matched.
+   * @throws Returns `{}` and logs warning if GCV client failed to initialize.
+   */
   async detectIngredientsFromBuffer(imageBuffer: Buffer): Promise<any> {
     if (!this.isGoogleVisionEnabled) {
       console.error('Google cloud vision disabled');
