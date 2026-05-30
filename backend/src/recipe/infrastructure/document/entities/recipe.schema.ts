@@ -1,8 +1,17 @@
+// NOTE: 'IngridientList' embedded sub-schema and 'ingridientList' field name preserved verbatim. Do not rename.
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { now, HydratedDocument } from 'mongoose';
 import { EntityDocumentHelper } from 'src/utils/document-entity-helper';
 import { IngridientSchemaClass } from 'src/ingridient/infrastructure/document/entities/ingridient.schema';
 
+/**
+ * Embedded sub-schema describing a single required ingredient on a Recipe.
+ *
+ * Spelling `IngridientList` is preserved verbatim throughout the backend codebase.
+ * Fields: `ingridient` (ObjectId reference to IngridientSchemaClass), `amount`,
+ * `unit` (free-form string), `required` (whether the ingredient is mandatory),
+ * and optional `substitutes` (string list of substitute ingredient names).
+ */
 @Schema()
 export class IngridientList {
   @Prop({
@@ -28,6 +37,12 @@ export class IngridientList {
 export const IngridientListSchema =
   SchemaFactory.createForClass(IngridientList);
 
+/**
+ * Embedded sub-schema describing a single cooking instruction step.
+ *
+ * Fields: `step` (1-indexed step number), `description` (step text), and
+ * optional `timer` (minutes — used by the mobile client to surface a timer UI).
+ */
 export class Instruction {
   @Prop({ type: Number, required: true })
   step: number;
@@ -43,6 +58,19 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export type RecipeDocument = HydratedDocument<RecipeSchemaClass>;
 
+/**
+ * Mongoose schema class for the recipes collection.
+ *
+ * Embeds an `ingridientList: IngridientList[]` (spelling preserved verbatim)
+ * for required ingredients and `instructions: Instruction[]` for cooking steps.
+ * Soft-delete is supported via the optional `deletedAt: Date` field (proper
+ * soft-delete — the document is retained on disk). Timestamps `createdAt` and
+ * `updatedAt` are managed by `@Schema({ timestamps: true })`. A secondary
+ * index on `title` is declared at the bottom of the file
+ * (`RecipeSchema.index({ title: 1 })`).
+ *
+ * See ../../../../../../DATA_MODEL.md § Recipe for the canonical field reference.
+ */
 @Schema({
   timestamps: true,
   toJSON: {
