@@ -18,6 +18,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pantry_chef/features/pantry/presentation/bloc/pantry/pantry_bloc.dart';
 import 'package:pantry_chef/features/profile/presentation/bloc/profile/profile_bloc.dart';
 import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc.dart';
+import 'package:pantry_chef/features/recipe/presentation/suggestions/bloc/suggestions_bloc.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -51,6 +52,10 @@ class _AppState extends State<App> {
         BlocProvider(
           create: (context) => ProfileBloc(),
           lazy: false,
+        ),
+        // Added for "What Can I Make Tonight?" suggestions feature
+        BlocProvider(
+          create: (context) => SuggestionsBloc(),
         ),
       ],
       child: PlatformProvider(
