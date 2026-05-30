@@ -1,19 +1,31 @@
 import {
   BadRequestException,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 import { memoryStorage } from 'multer';
 import { AiService } from './ai.service';
 
+// Security: this endpoint was anonymously accessible and consumed Google Cloud
+// Vision quota; require JWT auth like every other resource controller.
+@UseGuards(AuthGuard('jwt'))
 @Controller('ai')
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('vision')
+  // Contract: respond 200 OK (overriding Nest's default 201 for POST) per the
+  // AAP's POST /api/ai/vision spec, matching the explicit @HttpCode used by
+  // every sibling controller; auth, multipart field, size limit and body shape
+  // are unchanged.
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: memoryStorage(),
