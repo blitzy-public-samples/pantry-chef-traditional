@@ -3,6 +3,8 @@
 /node_modules
 /build
 /data
+# Google Cloud Vision service-account key (never commit)
+src/config/ai.json
 
 # Logs
 logs
