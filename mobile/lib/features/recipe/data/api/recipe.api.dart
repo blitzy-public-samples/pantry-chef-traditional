@@ -37,4 +37,17 @@ class RecipeApi {
     );
     return response.data['data'];
   }
+
+  // Added for "What Can I Make Tonight?" suggestions feature
+  Future<Map<String, dynamic>> getSuggestions(
+    RecipeFiltersDto filters, {
+    int page = 1,
+    int limit = 10,
+  }) async {
+    Response<dynamic> response = await _dio.get(
+      '${Endpoints.recipe}/suggestions',
+      queryParameters: {...filters.toJson(), 'page': page, 'limit': limit},
+    );
+    return response.data; // {data, hasMore}
+  }
 }
