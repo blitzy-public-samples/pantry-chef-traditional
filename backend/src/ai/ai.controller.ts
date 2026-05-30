@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   UploadedFile,
   UseGuards,
@@ -19,6 +21,11 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('vision')
+  // Contract: respond 200 OK (overriding Nest's default 201 for POST) per the
+  // AAP's POST /api/ai/vision spec, matching the explicit @HttpCode used by
+  // every sibling controller; auth, multipart field, size limit and body shape
+  // are unchanged.
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: memoryStorage(),

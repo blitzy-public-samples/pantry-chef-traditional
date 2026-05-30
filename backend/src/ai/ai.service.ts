@@ -82,8 +82,21 @@ export class AiService {
       ],
     };
 
-    const [response] = await this.client.annotateImage(request);
-    const labels = response.labelAnnotations;
+    // Security/resilience: the Vision client throws at call time when the
+    // supplied credentials are well-formed JSON but cryptographically unusable
+    // (e.g. a dummy service-account key triggers a gRPC/DECODER auth error).
+    // Catch here to honor the graceful-degradation contract: return {} instead
+    // of surfacing a 500, and log only a sanitized one-line reason (not a
+    // stack trace that could expose credential material).
+    let labels;
+    try {
+      const [response] = await this.client.annotateImage(request);
+      labels = response.labelAnnotations;
+    } catch (error) {
+      const reason = error?.message ?? 'unknown error';
+      console.error(`Vision request failed; returning {}: ${reason}`);
+      return {};
+    }
 
     if (!labels) {
       return {};
