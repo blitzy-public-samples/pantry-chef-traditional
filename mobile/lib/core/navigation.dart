@@ -13,6 +13,7 @@ import 'package:pantry_chef/features/pantry/presentation/widgets/screens/pantry_
 import 'package:pantry_chef/features/profile/presentation/widgets/screens/favorite_recipes.dart';
 import 'package:pantry_chef/features/profile/presentation/widgets/screens/preferences.dart';
 import 'package:pantry_chef/features/recipe/presentation/widgets/screens/recipe_detailed.dart';
+import 'package:pantry_chef/features/recipe/presentation/suggestions/suggestions_screen.dart';
 
 Route<dynamic> onGenerateRoute(BuildContext context, RouteSettings settings) {
   T getArguments<T>() {
@@ -42,6 +43,9 @@ Route<dynamic> onGenerateRoute(BuildContext context, RouteSettings settings) {
       return createPageRoute(builder: (_) => PreferencesScreen());
     case Navigation.favoriteRecipes:
       return createPageRoute(builder: (_) => FavoriteRecipes());
+    // Added for "What Can I Make Tonight?" suggestions feature
+    case Navigation.suggestions:
+      return createPageRoute(builder: (_) => const SuggestionsScreen());
     default:
       return createPageRoute(builder: (_) => const AuthenticationStart());
   }
