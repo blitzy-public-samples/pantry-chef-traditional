@@ -11,6 +11,17 @@ import {
 } from 'class-validator';
 import { Reference } from 'src/common/types';
 
+// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the backend codebase. Do not rename.
+
+/**
+ * Validation contract for `POST /api/v1/ingredient` create requests.
+ *
+ * Spelling 'Ingridient' preserved verbatim across the backend codebase
+ * (the URL path uses correct 'ingredient' spelling).
+ *
+ * Required fields: `name`, `category` (Reference shape), `confidence` (0..1).
+ * Optional: `quantity`, `unit` (Reference), `expirationDate`, `imageUrl`.
+ */
 export class CreateIngridientDto {
   @ApiProperty({ description: 'Name of the ingredient' })
   @IsNotEmpty()
