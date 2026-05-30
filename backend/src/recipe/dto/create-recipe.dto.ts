@@ -1,3 +1,4 @@
+// NOTE: 'IngridientListDto' class and 'ingridientList' field name preserved verbatim. Do not rename.
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -13,6 +14,14 @@ import {
 import { Type } from 'class-transformer';
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
+/**
+ * Validation contract for a single ingredient row inside a recipe's
+ * `ingridientList` (spelling preserved verbatim throughout the backend
+ * codebase). Validates the reference to the `Ingridient` domain entity,
+ * the amount, the unit string, and the required/substitutes metadata.
+ *
+ * Used by both `CreateRecipeDto` and `UpdateRecipeDto` (via `PartialType`).
+ */
 export class IngridientListDto {
   @ApiProperty({ description: 'Ingredient reference' })
   @IsNotEmpty()
@@ -43,6 +52,12 @@ export class IngridientListDto {
   substitutes?: string[];
 }
 
+/**
+ * Validation contract for a single cooking instruction step.
+ *
+ * Fields: `step` (1-indexed step number), `description` (step text), and
+ * optional `timer` (minutes for an optional client-side timer UI).
+ */
 export class InstructionDto {
   @ApiProperty({ description: 'Step number in the instructions' })
   @IsNotEmpty()
@@ -60,6 +75,16 @@ export class InstructionDto {
   timer?: number;
 }
 
+/**
+ * Validation contract for POST /api/v1/recipe.
+ *
+ * Validates required fields and the embedded `ingridientList` array
+ * (spelling preserved verbatim throughout the backend codebase). Nested
+ * arrays (`ingridientList` and `instructions`) are validated via
+ * `@ValidateNested({ each: true })` and `@Type(() => ...)` to drive
+ * class-transformer hydration. The `difficulty` field is constrained to
+ * the union `'easy' | 'medium' | 'hard'`.
+ */
 export class CreateRecipeDto {
   @ApiProperty({ description: 'Title of the recipe' })
   @IsNotEmpty()
