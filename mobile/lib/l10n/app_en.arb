@@ -51,5 +51,12 @@
   "instructions": "Instractions",
   "preferences": "Preferences",
   "recipeFavorite": "Favorite recipes",
-  "favoriteRecipesEmptyMessage": "Your favorite recipes will be displayed here"
+  "favoriteRecipesEmptyMessage": "Your favorite recipes will be displayed here",
+  "whatCanIMakeTonight": "What Can I Make Tonight?",
+  "suggestionsEmptyMessage": "Add items to your pantry to get suggestions.",
+  "suggestionsErrorMessage": "Something went wrong. Please try again.",
+  "retry": "Retry",
+  "almostThere": "ALMOST THERE",
+  "quickMake": "QUICK MAKE",
+  "missing": "Missing"
 }
