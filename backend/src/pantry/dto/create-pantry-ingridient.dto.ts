@@ -1,3 +1,4 @@
+// NOTE: 'PantryIngridient' / 'pantry-ingridient' spellings preserved verbatim. Do not rename.
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -8,6 +9,19 @@ import {
 } from 'class-validator';
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
+/**
+ * Validation contract for POST /api/v1/pantry — Create a new pantry item.
+ *
+ * Requires an `ingridient` reference (spelling preserved verbatim), quantity,
+ * unit, and a `location` (one of 'fridge' | 'freezer' | 'pantry'). The
+ * `expirationDate` is optional. `userId` is NOT in this DTO — it is injected
+ * by PantryController.create from req.user.id (populated by JwtStrategy).
+ *
+ * NOTE: The `location` field uses @IsString() but no @IsEnum, so invalid
+ * enum values are rejected by Mongoose schema validation at write time
+ * rather than by ValidationPipe at the request layer. See ../README.md
+ * § Known Limitations.
+ */
 export class CreatePantryIngridientDto {
   @ApiProperty({ description: 'Ingredient details' })
   @IsNotEmpty()
