@@ -310,11 +310,12 @@ export class AuthService {
   }
 
   /**
-   * Soft-delete the user account via UsersService.softDelete.
+   * Delete the user account by delegating to UsersService.softDelete.
    *
-   * Sets the `deletedAt` timestamp on the user document per the soft-delete
-   * contract documented in DATA_MODEL.md. Does not cascade to sessions; the
-   * caller (DELETE /me handler) typically invokes logout separately.
+   * Despite the method name, UsersService.softDelete calls deleteOne and
+   * PHYSICALLY removes the user document — no `deletedAt` timestamp is set.
+   * Session documents are not cascaded or removed, and the DELETE /me handler
+   * does not invoke logout. See the users module README § Known Limitations.
    *
    * @param user The authenticated User entity.
    * @returns Promise<void>.

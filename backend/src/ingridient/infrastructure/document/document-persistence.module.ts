@@ -1,3 +1,5 @@
+// NOTE: 'Ingridient', 'IngridientSchemaClass', 'IngridientRepository',
+// 'IngridientDocumentRepository' spellings preserved verbatim. Do not rename.
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
@@ -6,8 +8,6 @@ import {
 } from './entities/ingridient.schema';
 import { IngridientRepository } from '../ingridient.repository';
 import { IngridientDocumentRepository } from './repositories/ingridient.repository';
-
-// NOTE: 'Ingridient', 'IngridientSchemaClass', 'IngridientRepository', 'IngridientDocumentRepository' spellings preserved verbatim. Do not rename.
 
 /**
  * NestJS module wiring the Mongoose-backed persistence implementation

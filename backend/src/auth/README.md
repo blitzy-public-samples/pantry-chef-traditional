@@ -2,18 +2,18 @@
 
 ## Module Purpose
 
-The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/v1/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts:L31-L92). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and soft-delete of the authenticated account (`DELETE /me`). Note that the password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no controller endpoints consume them — see Known Limitations below.
+The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/v1/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and soft-delete of the authenticated account (`DELETE /me`). Note that the password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no controller endpoints consume them — see Known Limitations below.
 
 ## Key Components
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `AuthController` | `auth.controller.ts` | 7 routes under `/api/v1/auth` (Source: auth.controller.ts:L23-L92) |
-| `AuthService` | `auth.service.ts` | Login validation, session creation, JWT issuance via JwtService, token re-issuance, profile update with `oldPassword` check, soft-delete delegation (Source: auth.service.ts:L25-L290) |
-| `AuthModule` | `auth.module.ts` | Composition root — imports UsersModule, SessionModule, PassportModule, JwtModule (Source: auth.module.ts:L12-L23) |
-| `JwtStrategy` | `strategies/jwt.strategy.ts` | Passport 'jwt' access-token strategy; secret from `configService.get('auth').secret` (Source: jwt.strategy.ts:L10-L25) |
-| `JwtRefreshStrategy` | `strategies/jwt-refresh.strategy.ts` | Passport 'jwt-refresh' refresh-token strategy; separate secret (Source: jwt-refresh.strategy.ts:L10-L30) |
-| `AnonymousStrategy` | `strategies/anonymous.strategy.ts` | Passport anonymous strategy for unauthenticated routes (Source: anonymous.strategy.ts:L5-L14) |
+| `AuthController` | `auth.controller.ts` | 7 routes under `/api/v1/auth` (Source: auth.controller.ts) |
+| `AuthService` | `auth.service.ts` | Login validation, session creation, JWT issuance via JwtService, token re-issuance, profile update with `oldPassword` check, soft-delete delegation (Source: auth.service.ts) |
+| `AuthModule` | `auth.module.ts` | Composition root — imports UsersModule, SessionModule, PassportModule, JwtModule (Source: auth.module.ts) |
+| `JwtStrategy` | `strategies/jwt.strategy.ts` | Passport 'jwt' access-token strategy; secret from `configService.get('auth').secret` (Source: jwt.strategy.ts) |
+| `JwtRefreshStrategy` | `strategies/jwt-refresh.strategy.ts` | Passport 'jwt-refresh' refresh-token strategy; separate secret (Source: jwt-refresh.strategy.ts) |
+| `AnonymousStrategy` | `strategies/anonymous.strategy.ts` | Passport anonymous strategy for unauthenticated routes (Source: anonymous.strategy.ts) |
 | `JwtPayloadType` | `strategies/types/jwt-payload.type.ts` | Type alias `Pick<User, 'id'> & { sessionId, iat, exp }` |
 | `JwtRefreshPayloadType` | `strategies/types/jwt-refresh-payload.type.ts` | Type alias `{ sessionId, iat, exp }` |
 | `AuthEmailLoginDto` | `dto/auth-email-login.dto.ts` | Login request contract: `{ email, password }` |
@@ -28,7 +28,7 @@ The Auth module owns email-and-password authentication for PantryChef. `AuthCont
 
 ## Architecture Fit
 
-`AuthController` is a thin HTTP adapter that delegates every route to `AuthService`. `AuthService` coordinates `JwtService` (token signing), `UsersService` (user CRUD), `SessionService` (session lifecycle), and `ConfigService<AllConfigType>` for typed config access (Source: auth.service.ts:L26-L31). This follows the backend's controller → service → repository → domain layering, except that persistence is reached indirectly through `UsersService` and `SessionService` rather than a repository owned by this module. The three Passport strategies are registered as providers in `AuthModule` and applied to routes via `AuthGuard('jwt')` / `AuthGuard('jwt-refresh')`; the anonymous strategy applies implicitly when no guard is declared. See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) §"JWT Authentication Flow" for the end-to-end client → backend sequence. `AuthModule` also carries a commented `// MailModule,` import at line 17 (Source: auth.module.ts:L17) that would presumably back the unwired password reset endpoints; it is preserved verbatim.
+`AuthController` is a thin HTTP adapter that delegates every route to `AuthService`. `AuthService` coordinates `JwtService` (token signing), `UsersService` (user CRUD), `SessionService` (session lifecycle), and `ConfigService<AllConfigType>` for typed config access (Source: auth.service.ts). This follows the backend's controller → service → repository → domain layering, except that persistence is reached indirectly through `UsersService` and `SessionService` rather than a repository owned by this module. The `jwt` and `jwt-refresh` strategies are registered as providers in `AuthModule` and applied to routes via `AuthGuard('jwt')` / `AuthGuard('jwt-refresh')`. `AnonymousStrategy` is also registered as a provider but is **not** currently applied to any route — `POST /email/login` and `POST /email/register` simply declare no `@UseGuards`, so they are unguarded rather than running through an anonymous guard. See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) §"JWT Authentication Flow" for the end-to-end client → backend sequence. `AuthModule` also carries a commented `// MailModule,` import (Source: auth.module.ts) that would presumably back the unwired password reset endpoints; it is preserved verbatim.
 
 ## Dependencies
 
@@ -38,7 +38,7 @@ The Auth module owns email-and-password authentication for PantryChef. `AuthCont
 - `SessionModule` — session create/find/soft-delete for token rotation and logout.
 - `PassportModule` — Passport.js wrapper for strategy registration.
 - `JwtModule.register({})` — JWT signing, with per-call options supplied at `signAsync` time.
-- ~~`MailModule`~~ — commented out at `auth.module.ts:L17` (intentional; required only if the password reset endpoints were wired).
+- ~~`MailModule`~~ — commented out at `auth.module.ts` (intentional; required only if the password reset endpoints were wired).
 
 ### External
 
@@ -72,15 +72,15 @@ Exact versions from `backend/package.json:L24-L75`:
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/email/login` | none (anonymous) | Email + password login (Source: auth.controller.ts:L31-L37) |
-| `POST` | `/api/v1/auth/email/register` | none (anonymous) | Email + password registration (Source: auth.controller.ts:L39-L45) |
-| `GET` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Get current authenticated user (Source: auth.controller.ts:L47-L53) |
-| `POST` | `/api/v1/auth/refresh` | `AuthGuard('jwt-refresh')` | Re-issue access + refresh tokens (Source: auth.controller.ts:L55-L63) |
-| `POST` | `/api/v1/auth/logout` | `AuthGuard('jwt')` | Invalidate the current session (Source: auth.controller.ts:L65-L73) |
-| `PATCH` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Update profile; `oldPassword` required for password change (Source: auth.controller.ts:L75-L84) |
-| `DELETE` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Soft-delete authenticated user account (Source: auth.controller.ts:L86-L92) |
+| `POST` | `/api/v1/auth/email/login` | none (unguarded) | Email + password login (Source: auth.controller.ts) |
+| `POST` | `/api/v1/auth/email/register` | none (unguarded) | Email + password registration (Source: auth.controller.ts) |
+| `GET` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Get current authenticated user (Source: auth.controller.ts) |
+| `POST` | `/api/v1/auth/refresh` | `AuthGuard('jwt-refresh')` | Re-issue access + refresh tokens (Source: auth.controller.ts) |
+| `POST` | `/api/v1/auth/logout` | `AuthGuard('jwt')` | Invalidate the current session (Source: auth.controller.ts) |
+| `PATCH` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Update profile; `oldPassword` required for password change (Source: auth.controller.ts) |
+| `DELETE` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Soft-delete authenticated user account (Source: auth.controller.ts) |
 
-Routes are derived from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts:L23-L27) combined with the global `app.setGlobalPrefix(...)` (default `api`, with `/` excluded) in `backend/src/main.ts:L14-L19`, yielding `/api/v1/auth/<route>`. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object is absent from those responses and must be fetched separately via `GET /me`.
+Routes are derived from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts) combined with the global `app.setGlobalPrefix(...)` (default `api`, with `/` excluded) in `backend/src/main.ts`, yielding `/api/v1/auth/<route>`. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object is absent from those responses and must be fetched separately via `GET /me`.
 
 ## Data Flows
 
@@ -91,21 +91,33 @@ sequenceDiagram
     participant C as Client (Flutter)
     participant A as AuthController
     participant S as AuthService
-    participant U as UsersService
+    participant U as UsersService (bcrypt)
+    participant SS as SessionService
     participant J as JwtService
-    participant DB as MongoDB
-    C->>A: POST /api/v1/auth/email/login {email, password}
+    participant R as JwtRefreshStrategy
+    C->>A: POST /auth/email/login {email, password}
     A->>S: validateLogin(loginDto)
-    S->>U: findOne({ email })
-    U->>DB: query users
-    DB-->>S: User + bcrypt hash
-    S->>J: signAsync({id, sessionId}) x2
+    S->>U: findOne({email}) + bcrypt.compare
+    S->>SS: create({ user })
+    S->>J: getTokensData → sign token + refreshToken
     J-->>C: {token, refreshToken, tokenExpires}
-    C->>A: GET /me (Authorization: Bearer ...)
-    A-->>C: User (HTTP 200)
+    Note over C: a later protected request returns HTTP 401
+    C->>A: POST /auth/refresh (Bearer refreshToken)
+    A->>R: AuthGuard('jwt-refresh') validates token
+    R->>S: refreshToken({ sessionId })
+    S->>SS: findOne({ id: sessionId })
+    S->>J: getTokensData → re-issue token pair
+    J-->>C: {token, refreshToken, tokenExpires}
 ```
 
-On expiry the client posts to `POST /api/v1/auth/refresh` carrying the refresh token; `JwtRefreshStrategy` verifies it with `AUTH_REFRESH_SECRET`, `AuthService` confirms the session is not soft-deleted, and a new token pair is returned (Source: auth.service.ts:L220-L241).
+The refresh route is the second half of that cycle: `JwtRefreshStrategy` verifies the refresh token with `AUTH_REFRESH_SECRET`, then `AuthService.refreshToken` looks up the session via `SessionService.findOne` and throws `UnauthorizedException` (HTTP 401) when the session is absent before re-issuing a token pair (Source: auth.service.ts). The route handler is small and delegates straight to the service:
+
+```typescript
+@Post('refresh')
+@UseGuards(AuthGuard('jwt-refresh'))
+@HttpCode(HttpStatus.OK)
+public refresh(@Request() request): Promise<Omit<LoginResponseType, 'user'>> {
+```
 
 ## Configuration
 
@@ -116,11 +128,11 @@ On expiry the client posts to `POST /api/v1/auth/refresh` carrying the refresh t
 | `AUTH_REFRESH_SECRET` | `secret_for_refresh` | backend/env_example:L22 | Refresh-token signing secret |
 | `AUTH_REFRESH_TOKEN_EXPIRES_IN` | `3650d` (~10 years) | backend/env_example:L23 | Refresh-token lifetime — **unsafe default; see Limitations** |
 
-The `authConfig` factory at `config/auth.config.ts:L20-L29` calls `validateConfig(process.env, EnvironmentVariablesValidator)` (Source: auth.config.ts:L21) to enforce that all four variables are present at boot, and the typed `AuthConfig` is consumed via `configService.getOrThrow('auth')` (Source: auth.service.ts:L257,L269,L278,L279).
+The `authConfig` factory at `config/auth.config.ts` calls `validateConfig(process.env, EnvironmentVariablesValidator)` (Source: auth.config.ts) to enforce that all four variables are present at boot, and the typed `AuthConfig` is consumed via `configService.getOrThrow('auth')` (Source: auth.service.ts).
 
 ## Known Limitations and Implementation Gaps
 
-> ⚠️ **Unwired password reset DTOs** — `dto/auth-forgot-password.dto.ts` exports `AuthForgotPasswordDto { email: string }` and `dto/auth-reset-password.dto.ts` exports `AuthResetPasswordDto { password: string; hash: string }`, but `auth.controller.ts:L31-L92` declares no `forgot-password` or `reset-password` endpoint. The corresponding `MailModule` import is commented at `auth.module.ts:L17`.
+> ⚠️ **Unwired password reset DTOs** — `dto/auth-forgot-password.dto.ts` exports `AuthForgotPasswordDto { email: string }` and `dto/auth-reset-password.dto.ts` exports `AuthResetPasswordDto { password: string; hash: string }`, but `auth.controller.ts` declares no `forgot-password` or `reset-password` endpoint. The corresponding `MailModule` import is commented at `auth.module.ts`.
 
 > ⚠️ **Refresh token TTL is `3650d` (~10 years)** — Source: `backend/env_example:L23`. This is unsafe for production: a stolen refresh token effectively grants permanent access until the session is explicitly soft-deleted via logout.
 
@@ -136,8 +148,8 @@ See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) for t
 
 > 🚧 **Security Hardening** — add rate limiting on `/email/login`, `/email/register`, and `/refresh` via `@nestjs/throttler`. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Security Hardening.
 
-> 🚧 **Wire password reset endpoints** — implement `POST /api/v1/auth/forgot-password` (consumes `AuthForgotPasswordDto`) and `POST /api/v1/auth/reset-password` (consumes `AuthResetPasswordDto`). Uncomment `MailModule` at `auth.module.ts:L17` and implement the email-delivery integration.
+> 🚧 **Wire password reset endpoints** — implement `POST /api/v1/auth/forgot-password` (consumes `AuthForgotPasswordDto`) and `POST /api/v1/auth/reset-password` (consumes `AuthResetPasswordDto`). Uncomment `MailModule` at `auth.module.ts` and implement the email-delivery integration.
 
 > 🚧 **Secrets Management** — rotate `AUTH_JWT_SECRET` and `AUTH_REFRESH_SECRET` to high-entropy values stored in a secrets manager (AWS Secrets Manager, HashiCorp Vault, Kubernetes Secrets). Reduce `AUTH_REFRESH_TOKEN_EXPIRES_IN` from `3650d` to a sensible window (e.g., `7d` – `30d`) with a documented rotation policy. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Secrets Management.
 
-> 🚧 **Cookie-based refresh tokens** — consider migrating refresh tokens to `httpOnly` cookies to reduce the XSS theft surface. Currently the refresh token is returned in the JSON response body via `LoginResponseType.refreshToken` (Source: types/login-response.type.ts:L5).
+> 🚧 **Cookie-based refresh tokens** — consider migrating refresh tokens to `httpOnly` cookies to reduce the XSS theft surface. Currently the refresh token is returned in the JSON response body via `LoginResponseType.refreshToken` (Source: types/login-response.type.ts).

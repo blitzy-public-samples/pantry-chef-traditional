@@ -51,11 +51,13 @@ export default registerAs<AuthConfig>('auth', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
   return {
-    // TODO(prod): Default AUTH_JWT_SECRET is the literal string `secret`. Rotate to high-entropy value before production.
+    // TODO(prod): Default AUTH_JWT_SECRET is the literal string `secret`.
+    // TODO(prod): Rotate to high-entropy value before production.
     secret: process.env.AUTH_JWT_SECRET,
     expires: process.env.AUTH_JWT_TOKEN_EXPIRES_IN,
     refreshSecret: process.env.AUTH_REFRESH_SECRET,
-    // TODO(prod): Default AUTH_REFRESH_TOKEN_EXPIRES_IN is 3650d (~10 years). Reduce substantially before production.
+    // TODO(prod): Default AUTH_REFRESH_TOKEN_EXPIRES_IN is 3650d (~10 years).
+    // TODO(prod): Reduce substantially before production.
     refreshExpires: process.env.AUTH_REFRESH_TOKEN_EXPIRES_IN,
   };
 });

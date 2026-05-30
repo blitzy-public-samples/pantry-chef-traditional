@@ -1,3 +1,4 @@
+// NOTE: 'Ingridient' spelling preserved verbatim across the backend codebase. Do not rename.
 import {
   Controller,
   Get,
@@ -28,8 +29,6 @@ import { QueryIngridientDto } from './dto/query-ingridient.dto';
 import { UpdateIngridientDto } from './dto/update-ingridient.dto';
 import { CreateIngridientDto } from './dto/create-ingridient.dto';
 
-// NOTE: 'Ingridient' spelling preserved verbatim across the backend codebase. Do not rename.
-
 /**
  * Controller routing /api/v1/ingredient/* requests to IngridientService.
  *
@@ -56,7 +55,7 @@ export class IngridientController {
    * Returns the 5 categories (spice, vegetable, fruit, dairy, protein) and
    * 9 units (kg, g, lb, oz, ml, l, cup, tbsp, tsp) used by ingridient
    * creation. The reference data is hardcoded in this method
-   * (Source: ingridient.controller.ts:L52-L71).
+   * (Source: ingridient.controller.ts).
    *
    * @returns Object with `categories: Reference[]` and `units: Reference[]`.
    */
@@ -117,7 +116,7 @@ export class IngridientController {
    *
    * Honors optional `query` (name filter), `sort` (orderBy/order), and
    * pagination (`page` default 1, `limit` default 10). The pagination cap
-   * of 50 is enforced here (Source: ingridient.controller.ts:L89-L91).
+   * of 50 is enforced here (Source: ingridient.controller.ts).
    *
    * @param query `QueryIngridientDto` from the request querystring.
    * @returns Paginated result wrapping `Ingridient[]` plus `hasNextPage`.
@@ -201,7 +200,7 @@ export class IngridientController {
    * Delegates to `IngridientService.softDelete()` which uses the proper
    * `updateOne({ deletedAt: new Date() })` pattern in
    * `IngridientDocumentRepository.softDelete()` (Source:
-   * infrastructure/document/repositories/ingridient.repository.ts:L94-L99).
+   * infrastructure/document/repositories/ingridient.repository.ts).
    * This contrasts with the destructive pantry softDelete; see
    * backend/src/pantry/README.md § Known Limitations.
    *

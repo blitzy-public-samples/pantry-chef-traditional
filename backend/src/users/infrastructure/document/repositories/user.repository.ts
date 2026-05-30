@@ -61,7 +61,7 @@ export class UsersDocumentRepository implements UserRepository {
    * domain `User` via `UserMapper.toDomain`. The caller is
    * responsible for ensuring `data.password` is already bcrypt-hashed
    * — `UsersService.create` performs the hash before invoking this
-   * method (see `../../../users.service.ts:L21-L24`).
+   * method (see `../../../users.service.ts`).
    *
    * @param data Domain `User` to persist (the caller passes a
    *   payload with `id` / `createdAt` / `updatedAt` / `deletedAt`

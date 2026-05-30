@@ -3,17 +3,18 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 
 /**
- * Passport `anonymous` strategy enabling unauthenticated route handlers.
+ * Passport `anonymous` strategy that allows a route to proceed without
+ * validating credentials.
  *
- * Used implicitly for endpoints such as POST /api/v1/auth/email/login and
- * POST /api/v1/auth/email/register that must accept requests from
- * unauthenticated clients. Unlike `jwt` and `jwt-refresh` strategies, this
- * one does not validate any credentials — `validate()` returns the request
- * unchanged so the Passport pipeline proceeds without raising
- * `UnauthorizedException`.
+ * Registered as a provider in AuthModule but NOT currently applied to any
+ * route via @UseGuards. The unauthenticated routes (POST /email/login and
+ * POST /email/register) simply declare no guard rather than using this
+ * strategy. Unlike `jwt` and `jwt-refresh`, this strategy validates nothing —
+ * `validate()` returns the request unchanged so the Passport pipeline proceeds
+ * without raising `UnauthorizedException`.
  *
- * Without this strategy, routes that should accept anonymous traffic would
- * still trigger Passport's default rejection on missing credentials.
+ * If applied via AuthGuard('anonymous'), it would let a route accept anonymous
+ * traffic without Passport's default rejection on missing credentials.
  */
 @Injectable()
 export class AnonymousStrategy extends PassportStrategy(Strategy) {

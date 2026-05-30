@@ -6,6 +6,10 @@ import { Reference } from 'src/common/types';
 
 // NOTE: 'Ingridient', 'IngridientSchemaClass' spellings preserved verbatim. Do not rename.
 
+/**
+ * Hydrated Mongoose document type for IngridientSchemaClass
+ * (spelling preserved verbatim across the backend codebase).
+ */
 export type IngridientSchemaDocument = HydratedDocument<IngridientSchemaClass>;
 
 /**
@@ -59,6 +63,11 @@ export class IngridientSchemaClass extends EntityDocumentHelper {
   deletedAt?: Date;
 }
 
+/**
+ * Compiled Mongoose schema for IngridientSchemaClass, produced by
+ * SchemaFactory and registered with MongooseModule.forFeature
+ * (spelling preserved verbatim).
+ */
 export const IngridientSchema = SchemaFactory.createForClass(
   IngridientSchemaClass,
 );

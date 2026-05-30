@@ -8,7 +8,7 @@ filter the recipe matching pipeline. It exposes a JWT-protected CRUD API under
 `/api/v1/users` plus a `/me` route for the authenticated principal, and is consumed by
 `AuthModule` for register/login/me flows and by `RecipeService.matches` to fetch the
 current user's `Preferences`. Password hashing with `bcryptjs` is performed inside
-`UsersService.create` (`users.service.ts:L21-L24`); `AuthService.update` verifies the
+`UsersService.create` (`users.service.ts`); `AuthService.update` verifies the
 old password upstream and forwards the new value to this module without re-hashing.
 
 ## Key Components
@@ -20,7 +20,7 @@ old password upstream and forwards the new value to this module without re-hashi
 | `UserRepository` (abstract) | `infrastructure/user.repository.ts` | Abstract persistence contract for the User aggregate. |
 | `UsersDocumentRepository` | `infrastructure/document/repositories/user.repository.ts` | Mongoose-backed implementation. **`softDelete` currently calls `deleteOne`** — physically destructive (see § Known Limitations). |
 | `UserSchemaClass` | `infrastructure/document/entities/user.schema.ts` | Mongoose schema: `email` (unique), `password` (`@Exclude` `toPlainOnly`), embedded `Preferences`, `favoriteRecipes[]`, `recentSearches[]`, `deletedAt`. |
-| `Preferences` (embedded) | `user.schema.ts:L8-L20` | Subdocument: `dietary[]`, `allergies[]`, `dislikedIngredients[]`, `cookingTime`. |
+| `Preferences` (embedded) | `user.schema.ts` | Subdocument: `dietary[]`, `allergies[]`, `dislikedIngredients[]`, `cookingTime`. |
 | `UserMapper` | `infrastructure/document/mappers/user.mapper.ts` | Schema ↔ domain mapping (preserves the embedded `Preferences`). |
 | `User` (domain) | `domain/user.ts` | Domain entity returned by the service. |
 | DTOs | `dto/create-user.dto.ts`, `dto/update-user.dto.ts`, `dto/query-user.dto.ts` | Validation contracts; `email` is normalized via the lower-case transformer. |
@@ -30,7 +30,7 @@ old password upstream and forwards the new value to this module without re-hashi
 The module follows the standard backend layering — controller → service → abstract
 repository → document repository — with `DocumentUserPersistenceModule` binding the
 `UserRepository` token to `UsersDocumentRepository` at composition time
-(`document-persistence.module.ts:L13-L18`). `UsersModule` re-exports `UsersService` and
+(`document-persistence.module.ts`). `UsersModule` re-exports `UsersService` and
 the persistence module; `AuthModule` consumes `UsersService` for
 login/register/me/refresh/update flows, and `RecipeService.matches` loads the
 authenticated user's `Preferences` to drive its pre-filter chain. See
@@ -58,8 +58,14 @@ Versions pinned exactly as declared in `backend/package.json`:
 - `bcryptjs` `^2.4.3` (used in `UsersService.create`)
 - `class-validator` `^0.14.1`
 - `class-transformer` `^0.5.1`
-- `@nestjs/mapped-types` `2.0.5` (transitive via `@nestjs/swagger`; consumed by
-  `UpdateUserDto extends PartialType(CreateUserDto)`)
+
+The following package is **not** declared in `backend/package.json` but is imported
+directly by this module's `update-user.dto.ts`; it is resolved transitively and its
+version is pinned in `package-lock.json` rather than `package.json`:
+
+- `@nestjs/mapped-types` `2.0.5` — sourced from `package-lock.json` (transitive,
+  via `@nestjs/swagger`); imported by `update-user.dto.ts` for `PartialType` in
+  `UpdateUserDto extends PartialType(CreateUserDto)`.
 
 ## Primary Use Cases
 
@@ -84,7 +90,7 @@ Versions pinned exactly as declared in `backend/package.json`:
 | `DELETE` | `/api/v1/users/:id` | `AuthGuard('jwt')` | "Soft"-delete a user (currently physically destructive — see § Known Limitations). Returns `204 No Content`. |
 
 Paths derive from `@Controller({ path: 'users', version: '1' })`
-(`users.controller.ts:L29-L32`) combined with the global `/api` prefix in `main.ts`. The
+(`users.controller.ts`) combined with the global `/api` prefix in `main.ts`. The
 Swagger surface is published at `/docs`.
 
 ## Data Flows
@@ -107,7 +113,13 @@ flowchart TD
 `UsersService.create` hashes the password before delegating to
 `UsersDocumentRepository.create`; the persisted document carries the default
 `Preferences` (`dietary: []`, `allergies: []`, `dislikedIngredients: []`,
-`cookingTime: 0`) defined at `user.schema.ts:L41-L49`.
+`cookingTime: 0`) defined in `user.schema.ts`. The hashing step is performed
+inline in `UsersService.create` (Source: `users.service.ts`):
+
+```typescript
+const salt = await bcrypt.genSalt(10);
+clonedPayload.password = await bcrypt.hash(clonedPayload.password, salt);
+```
 
 ## Configuration
 
@@ -121,19 +133,20 @@ authentication is configured by upstream `AuthModule` via `AUTH_JWT_SECRET` and
 ## Known Limitations and Implementation Gaps
 
 > ⚠️ **`UsersDocumentRepository.softDelete` uses destructive `deleteOne`** — Source:
-> `infrastructure/document/repositories/user.repository.ts:L80-L84`. Despite the method
+> `infrastructure/document/repositories/user.repository.ts`. Despite the method
 > name, the document is physically removed rather than marked with a `deletedAt`
-> timestamp. This mirrors the destructive `softDelete` in
-> [`backend/src/pantry/`](../pantry/README.md) § Known Limitations.
+> timestamp. This mirrors the destructive `softDelete` in the pantry module
+> (`backend/src/pantry/`); both occurrences are tracked centrally in
+> [`PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Database.
 
 > ⚠️ **Password hashing is asymmetric across write paths** — `UsersService.create`
-> hashes via `bcryptjs` (`users.service.ts:L21-L24`), but `UsersService.update`
-> (`users.service.ts:L66-L91`) forwards the payload verbatim without re-hashing. The
+> hashes via `bcryptjs` (`users.service.ts`), but `UsersService.update`
+> (`users.service.ts`) forwards the payload verbatim without re-hashing. The
 > intended path is `AuthService.update`, which verifies the old password upstream;
 > direct callers of `PATCH /api/v1/users` with a `password` field will persist plaintext.
 
 > ⚠️ **`findManyWithPagination` ignores `filterOptions`** —
-> `infrastructure/document/repositories/user.repository.ts:L27-L53`. The Mongo `where`
+> `infrastructure/document/repositories/user.repository.ts`. The Mongo `where`
 > clause is always `{}`.
 
 > ⚠️ **No profile picture or avatar field** — the schema has no image column. Adding

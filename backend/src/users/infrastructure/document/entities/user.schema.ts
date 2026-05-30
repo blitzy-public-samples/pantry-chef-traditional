@@ -3,6 +3,9 @@ import { now, HydratedDocument } from 'mongoose';
 import { Exclude, Expose } from 'class-transformer';
 import { EntityDocumentHelper } from 'src/utils/document-entity-helper';
 
+/**
+ * Hydrated Mongoose document type for UserSchemaClass.
+ */
 export type UserSchemaDocument = HydratedDocument<UserSchemaClass>;
 
 /**
@@ -110,4 +113,8 @@ export class UserSchemaClass extends EntityDocumentHelper {
   deletedAt?: Date;
 }
 
+/**
+ * Compiled Mongoose schema for UserSchemaClass, produced by SchemaFactory
+ * and registered with MongooseModule.forFeature.
+ */
 export const UserSchema = SchemaFactory.createForClass(UserSchemaClass);

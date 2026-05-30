@@ -1,11 +1,10 @@
+// NOTE: 'Ingridient', 'IngridientRepository' spellings preserved verbatim. Do not rename.
 import { Ingridient } from '../domain/ingrident';
 import { NullableType } from 'src/utils/types/nullable.type';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { DeepPartial } from 'src/utils/types/deep-partial.type';
 import { IPaginationOptions } from 'src/utils/types/pagination-options';
 import { SortIngridientDto } from '../dto/query-ingridient.dto';
-
-// NOTE: 'Ingridient', 'IngridientRepository' spellings preserved verbatim. Do not rename.
 
 /**
  * Abstract repository contract for the Ingridient aggregate
@@ -74,7 +73,7 @@ export abstract class IngridientRepository {
    * Soft-delete by id (spelling preserved verbatim).
    *
    * Concrete implementation sets `deletedAt: new Date()` rather than
-   * physically removing the document (Source: document/repositories/ingridient.repository.ts:L94-L99).
+   * physically removing the document (Source: document/repositories/ingridient.repository.ts).
    */
   abstract softDelete(id: Ingridient['id']): Promise<void>;
 }

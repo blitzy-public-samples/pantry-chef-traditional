@@ -1,3 +1,4 @@
+// NOTE: 'Ingridient' spelling preserved verbatim across the backend codebase. Do not rename.
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { IPaginationOptions } from 'src/utils/types/pagination-options';
@@ -7,8 +8,6 @@ import { DeepPartial } from 'src/utils/types/deep-partial.type';
 import { Ingridient } from './domain/ingrident';
 import { CreateIngridientDto } from './dto/create-ingridient.dto';
 import { SortIngridientDto } from './dto/query-ingridient.dto';
-
-// NOTE: 'Ingridient' spelling preserved verbatim across the backend codebase. Do not rename.
 
 /**
  * Service orchestrating Ingridient CRUD (spelling preserved verbatim).
@@ -139,7 +138,7 @@ export class IngridientService {
    *
    * Delegates to the repository; the document implementation uses the
    * proper `updateOne({ deletedAt: new Date() })` pattern (Source:
-   * infrastructure/document/repositories/ingridient.repository.ts:L94-L99).
+   * infrastructure/document/repositories/ingridient.repository.ts).
    *
    * @param id MongoDB ObjectId string of the target Ingridient.
    */

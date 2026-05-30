@@ -8,7 +8,7 @@ import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transf
  *
  * WARNING — this DTO is currently UNWIRED. No `POST /api/v1/auth/forgot-password`
  * endpoint exists in AuthController; the matching `MailModule` import in
- * AuthModule is commented out (see auth.module.ts:L17). The forgot-password
+ * AuthModule is commented out (see auth.module.ts). The forgot-password
  * flow is therefore non-functional in the current codebase.
  *
  * Production gap callouts:

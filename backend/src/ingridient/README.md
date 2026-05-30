@@ -2,7 +2,24 @@
 
 ## Module Purpose
 
-The `Ingridient` module (spelling preserved verbatim throughout the backend codebase — note the URL path uses correct `ingredient` spelling at `/api/v1/ingredient/*`) manages the catalog of base ingredients used by both the `PantryIngridient` (spelling preserved verbatim) and `Recipe` modules. The controller exposes six routes — five CRUD endpoints plus a `GET /creation-data` route that returns hardcoded reference data (5 categories, 9 units) used by the mobile client to populate ingredient-creation forms. Persistence runs through `IngridientService` (spelling preserved verbatim) to the abstract `IngridientRepository` (spelling preserved verbatim), with `IngridientDocumentRepository` (spelling preserved verbatim) providing the Mongoose backing; soft-delete is implemented properly via `updateOne({ deletedAt: new Date() })` (Source: `infrastructure/document/repositories/ingridient.repository.ts:L94-L99`), in contrast to the destructive `softDelete` documented in `backend/src/pantry/README.md`. The domain entity lives at `domain/ingrident.ts` — note the **filename** carries an additional typo distinct from the `Ingridient` class spelling; both are preserved verbatim.
+The `Ingridient` module (spelling preserved verbatim throughout the backend
+codebase — note the URL path uses the correct `ingredient` spelling at
+`/api/v1/ingredient/*`) manages the catalog of base ingredients used by both the
+`PantryIngridient` (spelling preserved verbatim) and `Recipe` modules. The
+controller exposes six routes — five CRUD endpoints plus a `GET /creation-data`
+route that returns hardcoded reference data (5 categories, 9 units) used by the
+mobile client to populate ingredient-creation forms. Persistence runs through
+`IngridientService` (spelling preserved verbatim) to the abstract
+`IngridientRepository` (spelling preserved verbatim), with
+`IngridientDocumentRepository` (spelling preserved verbatim) providing the
+Mongoose backing; soft-delete is implemented properly via
+`updateOne({ deletedAt: new Date() })` (Source:
+`infrastructure/document/repositories/ingridient.repository.ts`), in contrast to
+the destructive `softDelete` in the pantry module — both tracked in
+[`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Database.
+The domain entity lives at `domain/ingrident.ts` — note the **filename** carries
+an additional typo distinct from the `Ingridient` class spelling; both are
+preserved verbatim.
 
 ## Key Components
 
@@ -19,7 +36,14 @@ The `Ingridient` module (spelling preserved verbatim throughout the backend code
 
 ## Architecture Fit
 
-Requests enter through `IngridientController` (spelling preserved verbatim) and flow controller → service → abstract repository → document repository → MongoDB: the controller delegates to `IngridientService` for business orchestration, which calls the abstract `IngridientRepository` contract, bound at composition time to `IngridientDocumentRepository` for Mongoose persistence. The one deviation from this layering is the `GET /creation-data` endpoint, which returns hardcoded category and unit data directly from the controller method without any database lookup (Source: `ingridient.controller.ts:L52-L71`).
+Requests enter through `IngridientController` (spelling preserved verbatim) and
+flow controller → service → abstract repository → document repository → MongoDB:
+the controller delegates to `IngridientService` for business orchestration, which
+calls the abstract `IngridientRepository` contract, bound at composition time to
+`IngridientDocumentRepository` for Mongoose persistence. The one deviation from
+this layering is the `GET /creation-data` endpoint, which returns hardcoded
+category and unit data directly from the controller method without any database
+lookup (Source: `ingridient.controller.ts`).
 
 This module is consumed by:
 
@@ -33,8 +57,8 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) for the full system c
 
 ### Internal
 
-- `MongooseModule.forFeature([{ name: IngridientSchemaClass.name, schema: IngridientSchema }])` — registered inside `DocumentIngridientPersistenceModule` (Source: `infrastructure/document/document-persistence.module.ts:L12-L14`).
-- `DocumentIngridientPersistenceModule` — bound to provide `IngridientRepository` via `useClass: IngridientDocumentRepository` (Source: `infrastructure/document/document-persistence.module.ts:L16-L21`).
+- `MongooseModule.forFeature([{ name: IngridientSchemaClass.name, schema: IngridientSchema }])` — registered inside `DocumentIngridientPersistenceModule` (Source: `infrastructure/document/document-persistence.module.ts`).
+- `DocumentIngridientPersistenceModule` — bound to provide `IngridientRepository` via `useClass: IngridientDocumentRepository` (Source: `infrastructure/document/document-persistence.module.ts`).
 
 ### External
 
@@ -59,16 +83,28 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) for the full system c
 
 ## API / Endpoint Reference
 
-The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller declares `@Controller({ path: 'ingredient', version: '1' })` (Source: `ingridient.controller.ts:L34-L37`) so all routes live at `/api/v1/ingredient/*`. The URL spelling is the **correct** `ingredient` (English); only the class/module/file identifiers carry the `Ingridient` variant spelling.
+The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller
+declares `@Controller({ path: 'ingredient', version: '1' })` (Source:
+`ingridient.controller.ts`) so all routes live at `/api/v1/ingredient/*`. The URL
+spelling is the **correct** `ingredient` (English); only the class/module/file
+identifiers carry the `Ingridient` variant spelling. The decorator is verbatim
+from source (Source: `ingridient.controller.ts`):
+
+```typescript
+@Controller({
+  path: 'ingredient',
+  version: '1',
+})
+```
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| GET | `/api/v1/ingredient/creation-data` | `AuthGuard('jwt')` | Hardcoded categories + units reference data (Source: `ingridient.controller.ts:L52-L71`) |
-| POST | `/api/v1/ingredient` | `AuthGuard('jwt')` | Create an Ingridient (Source: `ingridient.controller.ts:L74-L80`) |
-| GET | `/api/v1/ingredient` | `AuthGuard('jwt')` | List/search with pagination (cap 50, Source: `ingridient.controller.ts:L89-L91`) |
-| GET | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Get an Ingridient by id (Source: `ingridient.controller.ts:L106-L117`) |
-| PATCH | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Update an Ingridient (Source: `ingridient.controller.ts:L119-L131`) |
-| DELETE | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Soft-delete (proper `updateOne({ deletedAt })`, Source: `ingridient.controller.ts:L133-L142`) |
+| GET | `/api/v1/ingredient/creation-data` | `AuthGuard('jwt')` | Hardcoded categories + units reference data (Source: `ingridient.controller.ts`) |
+| POST | `/api/v1/ingredient` | `AuthGuard('jwt')` | Create an Ingridient (Source: `ingridient.controller.ts`) |
+| GET | `/api/v1/ingredient` | `AuthGuard('jwt')` | List/search with pagination (cap 50, Source: `ingridient.controller.ts`) |
+| GET | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Get an Ingridient by id (Source: `ingridient.controller.ts`) |
+| PATCH | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Update an Ingridient (Source: `ingridient.controller.ts`) |
+| DELETE | `/api/v1/ingredient/:id` | `AuthGuard('jwt')` | Soft-delete (proper `updateOne({ deletedAt })`, Source: `ingridient.controller.ts`) |
 
 ## Data Flows
 
@@ -86,8 +122,8 @@ flowchart TD
     G --> H[201 Created with Ingridient]
 ```
 
-- **Categories** (5): `spice`, `vegetable`, `fruit`, `dairy`, `protein` (Source: `ingridient.controller.ts:L52-L71`)
-- **Units** (9): `kg`, `g`, `lb`, `oz`, `ml`, `l`, `cup`, `tbsp`, `tsp` (Source: `ingridient.controller.ts:L52-L71`)
+- **Categories** (5): `spice`, `vegetable`, `fruit`, `dairy`, `protein` (Source: `ingridient.controller.ts`)
+- **Units** (9): `kg`, `g`, `lb`, `oz`, `ml`, `l`, `cup`, `tbsp`, `tsp` (Source: `ingridient.controller.ts`)
 
 The Reference type used for `category` and `unit` fields is defined at `backend/src/common/types.ts` as `{ id: string; name: string }` — see [`../../../DATA_MODEL.md`](../../../DATA_MODEL.md) § Reference Type.
 
@@ -104,14 +140,33 @@ There are no module-specific environment variables; the `Ingridient` module reli
 
 > ⚠️ **Additional filename typo `ingrident.ts`** — the domain entity file at `backend/src/ingridient/domain/ingrident.ts` carries an additional typo distinct from the `Ingridient` class spelling. The class is `Ingridient`; the filename drops the second `i`. Preserved verbatim.
 
-> ⚠️ **Hardcoded category/unit reference data** — Source: `ingridient.controller.ts:L52-L71`. The 5 categories and 9 units are hardcoded inside the controller method; they are not seedable, not configurable, and not localized. Adding a new category requires a code deployment and full release cycle. No i18n support.
+> ⚠️ **Hardcoded category/unit reference data** — Source:
+> `ingridient.controller.ts`. The 5 categories and 9 units are hardcoded inside
+> the controller method; they are not seedable, not configurable, and not
+> localized. Adding a new category requires a code deployment and full release
+> cycle. No i18n support.
 
-> ⚠️ **`Reference.id` typed as `string` but populated with integer** — the `Reference` type at `backend/src/common/types.ts:L1-L4` declares `id: string`, but the hardcoded reference data at `ingridient.controller.ts:L52-L71` emits integer ids (e.g., `{ id: 1, name: 'spice' }`). Downstream code coerces as needed. See [`../../../DATA_MODEL.md`](../../../DATA_MODEL.md) § Reference Type for context.
+> ⚠️ **`Reference.id` typed as `string` but populated with integer** — the
+> `Reference` type at `backend/src/common/types.ts` declares `id: string`, but the
+> hardcoded reference data at `ingridient.controller.ts` emits integer ids (e.g.,
+> `{ id: 1, name: 'spice' }`). Downstream code coerces as needed. See
+> [`../../../DATA_MODEL.md`](../../../DATA_MODEL.md) § Reference Type for context.
 
 ## Production Readiness Status
 
-> 🚧 **Data Model** — move the category and unit reference data out of the controller into a dedicated MongoDB collection or a configuration file. This enables i18n, operator-controlled extension, and decoupling reference data churn from code deploys. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Database.
+> 🚧 **Data Model** — move the category and unit reference data out of the
+> controller into a dedicated MongoDB collection or a configuration file. This
+> enables i18n, operator-controlled extension, and decoupling reference data
+> churn from code deploys. See
+> [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Database.
 
 > 🚧 **Validation** — consider replacing the free-text `category` and `unit` fields with strong enums or branded types. The current schema accepts any `Reference` payload, which permits arbitrary client-side category strings that diverge from the server-side hardcoded list.
 
-> 🚧 **Migration** — the spelling `Ingridient` is a stable contract embedded in MongoDB collection names, TypeScript identifiers, and any external API consumers that depend on the JSON envelope. A future rename to the correct `Ingredient` spelling would require a coordinated migration of: collection rename (or alias), every backend identifier and file rename, mobile DTO updates, and (optionally) the URL path if API consumers depend on the verbatim spelling elsewhere. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) for migration considerations.
+> 🚧 **Migration** — the spelling `Ingridient` is a stable contract embedded in
+> MongoDB collection names, TypeScript identifiers, and any external API consumers
+> that depend on the JSON envelope. A future rename to the correct `Ingredient`
+> spelling would require a coordinated migration of: collection rename (or alias),
+> every backend identifier and file rename, mobile DTO updates, and (optionally)
+> the URL path if API consumers depend on the verbatim spelling elsewhere. See
+> [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) for
+> migration considerations.

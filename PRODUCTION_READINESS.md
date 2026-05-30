@@ -47,10 +47,10 @@ soft-delete (`deletedAt`) contract referenced repeatedly below, see
 | Networking & TLS | Open CORS (`cors: true`); no reverse proxy / TLS termination | ❌ |
 | Infrastructure & Orchestration | Docker Compose for dev only; no Kubernetes / managed service; no DB backup | ❌ |
 | File Storage | `FILE_DRIVER=local` placeholder; AWS_* env vars empty; S3 driver not implemented | ⚠️ |
-| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired | ❌ |
+| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired; plaintext-password update path on `PATCH /users`; no email verification | ❌ |
 | Observability | No structured logging; no `/metrics`; no tracing; no alerting | ❌ |
 | CI/CD | No pipeline configured (no GitHub Actions, GitLab CI, etc.) | ❌ |
-| Database | Seed runner runs unconditionally; no migration versioning; only one collection index on each schema | ⚠️ |
+| Database | Seed runner runs unconditionally; no migration versioning; only one collection index on each schema; destructive users `softDelete`; ignored list filters; unbounded user arrays; hardcoded ingredient reference data | ⚠️ |
 | Testing | Limited E2E coverage (auth specs only); no unit tests for `matches()` | ⚠️ |
 | Mobile Release | No App Store / Play Store signing configs; no release pipeline; baseUrl is local IP `192.168.2.20` | ❌ |
 
@@ -208,6 +208,24 @@ password-reset flow is half-built.
 > issuance, email delivery, hash verification).
 > *Source: backend/src/auth/dto/auth-forgot-password.dto.ts:L6; backend/src/auth/dto/auth-reset-password.dto.ts:L4; backend/src/auth/auth.controller.ts:L31-L92.*
 
+> 🚧 **Plaintext-password update path on `PATCH /api/v1/users`.** `UsersService.create`
+> bcrypt-hashes the password, but `UsersService.update` forwards the payload to
+> `UsersDocumentRepository.update` without re-hashing. The intended password-change
+> flow runs through `AuthService.update` (which verifies the old password upstream),
+> but a direct authenticated call to `PATCH /api/v1/users` carrying a `password`
+> field would persist that value in plaintext. Either add a re-hash step in
+> `UsersService.update` or drop the `password` field from `UpdateUserDto`. Surfaced
+> locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
+> Limitations. *Source: backend/src/users/users.service.ts; backend/src/users/dto/update-user.dto.ts.*
+
+> 🚧 **No email-verification flow.** `AuthConfirmEmailDto` exists under
+> `backend/src/auth/dto/` but no controller endpoint consumes it, and
+> `UserSchemaClass` carries no `emailConfirmed` flag — accounts are usable
+> immediately after registration. Wire a confirmation endpoint and add the flag
+> before production. Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/auth/dto/auth-confirm-email.dto.ts; backend/src/users/infrastructure/document/entities/user.schema.ts.*
+
 Each of these will be flagged at its source location with a `// TODO(prod):`
 marker per the project's tag taxonomy when the AI and auth modules are processed
 in a later checkpoint; the AI gaps will additionally be documented in
@@ -281,6 +299,47 @@ soft-delete (`deletedAt`) contract that the items below relate to.
 > the recipe corpus grows. Add a compound index covering `(deletedAt, tags)` and
 > consider a text index on `title` for fuzzy search.
 > *Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L28; backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49; backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L106; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L108, L113.*
+
+> 🚧 **Destructive `softDelete` in the users repository.** Like the pantry
+> repository, `UsersDocumentRepository.softDelete` calls `deleteOne`, physically
+> removing the user document rather than writing a `deletedAt` timestamp — a
+> violation of the soft-delete contract in [DATA_MODEL.md](DATA_MODEL.md).
+> Implement a true soft-delete (`updateOne({ deletedAt: new Date() })`). Per the
+> AAP minimal-change clause this is preserved as-is and documented in prose only
+> (no inline `// FIXME:` in the users folder). Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/users/infrastructure/document/repositories/user.repository.ts.*
+
+> 🚧 **`findManyWithPagination` ignores `filterOptions`.** The users document
+> repository destructures the query input but hardcodes the Mongo `where` clause
+> to `{}`, so user-list filtering silently has no effect. Honor `filterOptions`
+> in the query (or remove it from the contract) before production. Surfaced
+> locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
+> Limitations. *Source: backend/src/users/infrastructure/document/repositories/user.repository.ts.*
+
+> 🚧 **Unbounded `favoriteRecipes[]` and `recentSearches[]` arrays.**
+> `UserSchemaClass` stores these as arrays with no server-side cap or rotation,
+> so documents can grow without bound over a user's lifetime. Add a cap or
+> rotation policy. Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/users/infrastructure/document/entities/user.schema.ts.*
+
+> 🚧 **Hardcoded ingredient reference data (`/creation-data`).** The `Ingridient`
+> (spelling preserved verbatim) controller returns its 5 categories and 9 units
+> from a hardcoded array inside the controller method — not seedable, not
+> configurable, and not localizable; adding a category requires a code deploy.
+> Move the reference data into a dedicated collection or config to enable i18n
+> and operator-controlled extension. Surfaced locally in
+> [backend/src/ingridient/README.md](backend/src/ingridient/README.md) § Known
+> Limitations. *Source: backend/src/ingridient/ingridient.controller.ts.*
+
+> 🚧 **`Reference.id` type/value mismatch.** The shared `Reference` type declares
+> `id: string`, but the hardcoded ingredient reference data emits integer ids
+> (e.g. `{ id: 1, name: 'spice' }`), and downstream code coerces as needed.
+> Reconcile the type with the emitted values (or normalize the data) before
+> production. Surfaced locally in
+> [backend/src/ingridient/README.md](backend/src/ingridient/README.md) § Known
+> Limitations. *Source: backend/src/common/types.ts; backend/src/ingridient/ingridient.controller.ts.*
 
 A related correctness issue lives in the pantry repository: `softDelete` calls
 `deleteOne`, physically removing the document instead of setting `deletedAt`,
@@ -369,6 +428,13 @@ this document.
 | Seed runner destructive | [backend/src/database/README.md](backend/src/database/README.md) | `// TODO(prod):` at each seed service `run()` method |
 | Preserved spelling variants | [backend/src/ingridient/README.md](backend/src/ingridient/README.md), [backend/src/pantry/README.md](backend/src/pantry/README.md), [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` at first occurrence in each affected file |
 | `Recipe.copyWith` no-op on `inFavorite` | [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` + `// FIXME:` at `recipe.dart:L37-L53` |
+| Destructive users `softDelete` (`deleteOne`) | [backend/src/users/README.md](backend/src/users/README.md) | Prose only in users folder per AAP §0.8.1 (no inline `// FIXME:`) |
+| Plaintext-password update path on `PATCH /users` | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose; flagged under Security Hardening above |
+| `findManyWithPagination` ignores `filterOptions` | [backend/src/users/README.md](backend/src/users/README.md) | JSDoc note on the repository method |
+| Unbounded `favoriteRecipes[]` / `recentSearches[]` | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose (schema fields exempt from inline JSDoc) |
+| No email-verification flow | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose; flagged under Security Hardening above |
+| Hardcoded ingredient reference data (`/creation-data`) | [backend/src/ingridient/README.md](backend/src/ingridient/README.md) | Documented in prose; JSDoc note on the controller method |
+| `Reference.id` string-vs-integer mismatch | [backend/src/ingridient/README.md](backend/src/ingridient/README.md) | Documented in prose; see [DATA_MODEL.md](DATA_MODEL.md) § Reference Type |
 
 > **Note on preserved spellings.** The identifiers `Ingridient`,
 > `InstractionItem`, and the `singup` route are intentional, stable contracts

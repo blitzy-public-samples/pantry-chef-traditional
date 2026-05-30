@@ -23,9 +23,12 @@ import { User } from 'src/users/domain/user';
 /**
  * Controller routing /api/v1/auth/* requests to AuthService.
  *
- * Six endpoints are guarded by AuthGuard('jwt') or AuthGuard('jwt-refresh');
- * /email/login and /email/register accept unauthenticated requests via
- * the anonymous strategy. The controller is tagged for Swagger as 'Auth'.
+ * The controller exposes seven routes. Five are guarded by AuthGuard('jwt')
+ * or AuthGuard('jwt-refresh') (GET /me, POST /refresh, POST /logout,
+ * PATCH /me, DELETE /me); /email/login and /email/register declare no
+ * @UseGuards and are therefore unguarded. AnonymousStrategy is registered
+ * in AuthModule but is not currently applied to any route. The controller is
+ * tagged for Swagger as 'Auth'.
  *
  * Password reset DTOs (AuthForgotPasswordDto, AuthResetPasswordDto) exist
  * under ./dto/ but no corresponding endpoints are wired — see the module
@@ -42,9 +45,9 @@ export class AuthController {
   /**
    * POST /api/v1/auth/email/login — email + password login.
    *
-   * Anonymous endpoint; no guard. Returns the access + refresh token pair
-   * plus a token expiry timestamp. The authenticated user payload is fetched
-   * separately via GET /me.
+   * Unguarded endpoint; declares no @UseGuards. Returns the access + refresh
+   * token pair plus a token expiry timestamp. The authenticated user payload
+   * is fetched separately via GET /me.
    *
    * @param loginDto Validated AuthEmailLoginDto with `email` and `password`.
    * @returns Promise resolving to { token, refreshToken, tokenExpires }.
@@ -61,8 +64,8 @@ export class AuthController {
   /**
    * POST /api/v1/auth/email/register — email + password registration.
    *
-   * Anonymous endpoint; no guard. Creates a new user via UsersService and
-   * issues an initial access + refresh token pair.
+   * Unguarded endpoint; declares no @UseGuards. Creates a new user via
+   * UsersService and issues an initial access + refresh token pair.
    *
    * @param createUserDto Validated AuthRegisterLoginDto with `email` and `password`.
    * @returns Promise resolving to { token, refreshToken, tokenExpires }.
@@ -160,11 +163,13 @@ export class AuthController {
   }
 
   /**
-   * DELETE /api/v1/auth/me — soft-delete the authenticated user account.
+   * DELETE /api/v1/auth/me — delete the authenticated user account.
    *
    * Requires a valid access token via AuthGuard('jwt'). Delegates to
-   * UsersService.softDelete, which sets the `deletedAt` timestamp on the
-   * user document per the soft-delete contract documented in DATA_MODEL.md.
+   * UsersService.softDelete which, despite its name, calls deleteOne and
+   * PHYSICALLY removes the user document (no `deletedAt` timestamp is set).
+   * Existing Session documents are left untouched; this route does not invoke
+   * logout. See the users module README § Known Limitations for this gap.
    *
    * @param request Authenticated Express request; `request.user` carries the JWT payload.
    * @returns Promise<void>; responds with HTTP 204 No Content.

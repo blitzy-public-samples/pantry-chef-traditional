@@ -1,4 +1,5 @@
-// NOTE: Filename 'ingrident.ts' carries an additional typo (distinct from the 'Ingridient' class spelling). Preserved verbatim. Do not rename.
+// NOTE: Filename 'ingrident.ts' carries an additional typo (distinct from the
+// 'Ingridient' class spelling). Preserved verbatim. Do not rename.
 // NOTE: 'Ingridient' class spelling preserved verbatim across the backend codebase. Do not rename.
 
 import { Reference } from 'src/common/types';

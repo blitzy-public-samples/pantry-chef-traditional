@@ -1,7 +1,7 @@
+// NOTE: 'Ingridient', 'IngridientMapper', 'IngridientSchemaClass' spellings
+// preserved verbatim across the backend codebase. Do not rename.
 import { Ingridient } from '../../../domain/ingrident';
 import { IngridientSchemaClass } from '../entities/ingridient.schema';
-
-// NOTE: 'Ingridient', 'IngridientMapper', 'IngridientSchemaClass' spellings preserved verbatim. Do not rename.
 
 /**
  * Maps IngridientSchemaClass (Mongoose document) to the Ingridient

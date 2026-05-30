@@ -1,9 +1,9 @@
+// NOTE: 'Ingridient', 'IngridientModule', 'IngridientService' spellings
+// preserved verbatim across the backend codebase. Do not rename.
 import { Module } from '@nestjs/common';
 import { IngridientService } from './ingridient.service';
 import { IngridientController } from './ingridient.controller';
 import { DocumentIngridientPersistenceModule } from './infrastructure/document/document-persistence.module';
-
-// NOTE: 'Ingridient', 'IngridientModule', 'IngridientService' spellings preserved verbatim. Do not rename.
 
 /**
  * NestJS module wiring the Ingridient feature (spelling preserved verbatim).

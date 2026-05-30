@@ -32,7 +32,7 @@ export abstract class UserRepository {
    *
    * The caller is responsible for ensuring `data.password` is already
    * bcrypt-hashed. `UsersService.create` performs the bcrypt salt and
-   * hash (`backend/src/users/users.service.ts:L21-L24`) before invoking
+   * hash (`backend/src/users/users.service.ts`) before invoking
    * this method, so the abstract contract treats `password` as opaque.
    *
    * @param data Domain `User` with `id`, `createdAt`, `updatedAt`, and

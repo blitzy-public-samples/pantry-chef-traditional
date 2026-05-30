@@ -19,11 +19,11 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
  *
  * Registers AuthController as the HTTP entry point and provides AuthService
  * plus three Passport strategies: JwtStrategy (access tokens),
- * JwtRefreshStrategy (refresh tokens), and AnonymousStrategy (unauthenticated
- * routes such as /email/login and /email/register).
+ * JwtRefreshStrategy (refresh tokens), and AnonymousStrategy (registered as a
+ * provider but not currently applied to any route).
  *
- * The MailModule import is commented out (line 17) because password reset
- * endpoints are not wired — see README § Known Limitations and
+ * The MailModule import is commented out in the imports array because
+ * password reset endpoints are not wired — see README § Known Limitations and
  * ../../../PRODUCTION_READINESS.md § Security Hardening for the documented gap.
  */
 @Module({

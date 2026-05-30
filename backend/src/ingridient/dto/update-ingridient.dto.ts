@@ -1,3 +1,5 @@
+// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the
+// backend codebase. Do not rename.
 import { PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -5,8 +7,6 @@ import { IsOptional } from 'class-validator';
 import { lowerCaseTransformer } from 'src/utils/transformers/lower-case.transformer';
 import { CreateIngridientDto } from './create-ingridient.dto';
 import { Reference } from 'src/common/types';
-
-// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the backend codebase. Do not rename.
 
 /**
  * Validation contract for `PATCH /api/v1/ingredient/:id` update requests.

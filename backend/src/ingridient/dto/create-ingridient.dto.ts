@@ -1,3 +1,5 @@
+// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the
+// backend codebase. Do not rename.
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -10,8 +12,6 @@ import {
   Max,
 } from 'class-validator';
 import { Reference } from 'src/common/types';
-
-// NOTE: 'Ingridient' / 'ingridient' spellings preserved verbatim across the backend codebase. Do not rename.
 
 /**
  * Validation contract for `POST /api/v1/ingredient` create requests.

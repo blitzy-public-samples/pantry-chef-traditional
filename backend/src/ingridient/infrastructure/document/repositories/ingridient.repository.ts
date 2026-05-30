@@ -1,3 +1,5 @@
+// NOTE: 'Ingridient', 'IngridientDocumentRepository', 'IngridientSchemaClass'
+// spellings preserved verbatim across the backend codebase. Do not rename.
 import { Injectable } from '@nestjs/common';
 import { EntityCondition } from 'src/utils/types/entity-condition.type';
 import { NullableType } from 'src/utils/types/nullable.type';
@@ -9,8 +11,6 @@ import { Model } from 'mongoose';
 import { IngridientMapper } from '../mappers/ingridient.mapper';
 import { SortIngridientDto } from '../../../dto/query-ingridient.dto';
 import { IPaginationOptions } from 'src/utils/types/pagination-options';
-
-// NOTE: 'Ingridient', 'IngridientDocumentRepository', 'IngridientSchemaClass' spellings preserved verbatim. Do not rename.
 
 /**
  * Mongoose-backed concrete implementation of IngridientRepository
