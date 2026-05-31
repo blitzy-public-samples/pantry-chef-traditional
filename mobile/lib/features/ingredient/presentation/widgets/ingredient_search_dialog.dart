@@ -8,6 +8,12 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pantry_chef/features/ingredient/presentation/bloc/ingredient_add/ingredient_add_bloc.dart';
 import 'package:pantry_chef/features/ingredient/presentation/widgets/ingredient_search_result_item.dart';
 
+/// Modal ingredient-search UI rendered as a bottom sheet.
+///
+/// Shows a search field and a paginated, scrollable result list so
+/// the user can pick an existing ingredient or reuse the typed name.
+/// The [bloc] is the [IngredientAddBloc] that drives the search
+/// query, pagination, and result state this widget renders.
 class SearchDialog extends StatefulWidget {
   final IngredientAddBloc bloc;
 
@@ -20,12 +26,21 @@ class SearchDialog extends StatefulWidget {
   State<SearchDialog> createState() => _SearchDialogState();
 }
 
+/// State for [SearchDialog]: seeds the initial search, paginates
+/// on scroll, and rebuilds the result list from the bloc.
 class _SearchDialogState extends State<SearchDialog> {
+  // Controls the result list and drives infinite-scroll pagination.
+  // KNOWN ISSUE: this ScrollController is never disposed; no
+  // dispose() override exists on _SearchDialogState.
   ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
+    // Seed the first page of results with an empty query (page 1).
     widget.bloc.add(IngredientSearch(query: '', page: 1));
+    // Request the next page when the scroll position passes within
+    // CommonConstants.fetchScrollOffset of the bottom, while the
+    // bloc reports isNextPageAvailable and is not already fetching.
     _scrollController.addListener(() {
       final state = widget.bloc.state;
       if (_scrollController.position.pixels >
@@ -43,6 +58,16 @@ class _SearchDialogState extends State<SearchDialog> {
     super.initState();
   }
 
+  /// Builds the bottom-sheet UI for [SearchDialog].
+  ///
+  /// Renders a themed, rounded beige [Container] containing a
+  /// [TextFieldInput] search box and a [BlocBuilder] that switches
+  /// between three states: (a) a no-results message plus a
+  /// "use this name" [ActionButton] that pops the typed query;
+  /// (b) a scrollable [CustomScrollView] / [SliverList] of
+  /// [IngredientSearchResultItem] rows; and (c) an empty
+  /// [SizedBox] placeholder shown before any query runs.
+  /// [context] supplies theme and localization lookups.
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (_, constraints) {
@@ -74,15 +99,19 @@ class _SearchDialogState extends State<SearchDialog> {
                     child: TextFieldInput(
                       label: AppLocalizations.of(context)!.search,
                       onChanged: (value) {
+                        // Re-query from page 1 on each keystroke.
                         widget.bloc.add(IngredientSearch(query: value, page: 1));
                       },
                     ),
                   ),
                   const SizedBox(height: 24),
                   BlocBuilder<IngredientAddBloc, IngredientAddState>(
+                    // Rebuild only when the search results change.
                     buildWhen: (prev, curr) => prev.searchResult != curr.searchResult,
                     bloc: widget.bloc,
                     builder: (context, state) {
+                      // (a) No matches: show a no-results message
+                      // and an ActionButton that pops the query.
                       if (state.query != '' && state.searchResult != null && state.searchResult!.isEmpty) {
                         return Padding(
                           padding: EdgeInsets.symmetric(horizontal: CommonConstants.pagePadding),
@@ -101,6 +130,7 @@ class _SearchDialogState extends State<SearchDialog> {
                           ),
                         );
                       }
+                      // (b) Results: show the scrollable list.
                       if (state.searchResult != null && state.searchResult!.isNotEmpty) {
                         return ConstrainedBox(
                           constraints: BoxConstraints(
@@ -121,6 +151,7 @@ class _SearchDialogState extends State<SearchDialog> {
                           ),
                         );
                       }
+                      // (c) No query yet (or null result): nothing.
                       return const SizedBox();
                     },
                   ),
