@@ -6,11 +6,54 @@ import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/pantry/domain/models/pantry_item.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// Reusable, stateless Material card widget rendering a single [PantryItem].
+///
+/// Formats `expirationDate` via `intl.DateFormat('dd.MM.yyyy')` and shows the
+/// quantity with the ingredient's unit name. The card embeds an edit
+/// [AppIconButton] (Source:
+/// `mobile/lib/core/presentation/widgets/app_icon_button.dart`) that navigates
+/// to [Navigation.pantryItemEdit] (Source:
+/// `mobile/lib/core/constants/navigation.dart:L11`) and passes the current
+/// item as the route `arguments`.
+///
+/// Note: `item.ingridient.name` and `item.ingridient.unit.name` use the
+/// preserved-verbatim `ingridient` spelling that mirrors the backend
+/// `PantryIngridient` schema (spelling preserved verbatim).
 class PantryItemCard extends StatelessWidget {
+  /// The [PantryItem] rendered by this card.
+  ///
+  /// Provides:
+  /// * `item.ingridient.name` — ingredient display name (spelling preserved).
+  /// * `item.ingridient.unit.name` — unit display name (spelling preserved).
+  /// * `item.quantity` — numeric quantity shown next to the unit.
+  /// * `item.expirationDate` — ISO-8601 string parsed via `DateTime.parse`
+  ///   and formatted with `DateFormat('dd.MM.yyyy')`.
+  /// * `item.id` — passed as `arguments` to [Navigation.pantryItemEdit] when
+  ///   the user taps the edit affordance.
   final PantryItem item;
 
+  /// Const constructor.
+  ///
+  /// Requires the [PantryItem] to render via the [item] field.
   const PantryItemCard({super.key, required this.item});
 
+  /// Builds the Material card layout.
+  ///
+  /// The widget tree consists of a transparent [Material] wrapper around an
+  /// elevated [Card], with a padded [Column] containing:
+  ///
+  /// 1. A header [Row] holding the ingredient name (`item.ingridient.name`,
+  ///    spelling preserved) on the left and an edit [AppIconButton] on the
+  ///    right. The button calls
+  ///    `Navigator.of(context).pushNamed(Navigation.pantryItemEdit,`
+  ///    `arguments: item)` to open the per-item edit screen.
+  /// 2. An expiration-date row formatted via `DateFormat('dd.MM.yyyy')`.
+  /// 3. A quantity row showing `item.quantity` followed by
+  ///    `item.ingridient.unit.name` (spelling preserved).
+  ///
+  /// Localized labels are read from [AppLocalizations] and theme tokens are
+  /// resolved through the `context.theme.appColors` / `appTextTheme`
+  /// extensions defined in `mobile/lib/core/styles/app_theme.dart`.
   @override
   Widget build(BuildContext context) {
     return Material(
