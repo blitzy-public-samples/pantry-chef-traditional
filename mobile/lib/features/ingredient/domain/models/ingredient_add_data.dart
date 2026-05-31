@@ -7,7 +7,7 @@ part 'ingredient_add_data.g.dart';
 /// Immutable aggregate of the selectable reference data used to populate the
 /// add-ingredient form: the available [Category] and [Unit] options.
 ///
-/// Fetched from the backend `GET /v1/ingredient/creation-data` endpoint and
+/// Fetched from the backend `GET /api/ingredient/creation-data` endpoint and
 /// modeled as a `@JsonSerializable()` value object deserialized from JSON.
 ///
 /// Source:
