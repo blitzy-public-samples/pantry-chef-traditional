@@ -12,9 +12,18 @@ import 'package:pantry_chef/core/presentation/widgets/text_field_input.dart';
 import 'package:pantry_chef/core/utils/get_email_error_text.dart';
 import 'package:pantry_chef/features/authentication/presentation/bloc/auth/auth_bloc.dart';
 
+/// Login screen: email + password form backed by AuthBloc.
+///
+/// Wraps a fresh BlocProvider(create: AuthBloc()) so the bloc lifecycle is
+/// scoped to this screen. MultiBlocListener navigates to Navigation.home on
+/// state.success and toggles context.loaderOverlay on state.isFetching
+/// transitions. Two TextFieldInputs dispatch AuthFormValueChanged events;
+/// the submit button dispatches LoginActionSent.
 class Login extends StatelessWidget {
+  /// Creates an immutable Login screen.
   const Login({super.key});
 
+  /// Builds the BlocProvider + MultiBlocListener tree wrapping the PlatformScaffold form.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
