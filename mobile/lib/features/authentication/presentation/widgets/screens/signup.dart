@@ -11,9 +11,19 @@ import 'package:pantry_chef/core/utils/get_email_error_text.dart';
 import 'package:pantry_chef/features/authentication/presentation/bloc/auth/auth_bloc.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
+/// Signup screen: email + password registration form backed by AuthBloc.
+///
+/// Structurally mirrors the Login screen. Wraps a fresh BlocProvider(create:
+/// AuthBloc()) so the bloc lifecycle is scoped to this screen.
+/// MultiBlocListener navigates to Navigation.home on state.success and
+/// toggles context.loaderOverlay on state.isFetching transitions. Two
+/// TextFieldInputs dispatch AuthFormValueChanged events; the submit button
+/// dispatches SignupActionSend (verb tense preserved as in source).
 class Signup extends StatelessWidget {
+  /// Creates an immutable Signup screen.
   const Signup({super.key});
 
+  /// Builds the BlocProvider + MultiBlocListener tree wrapping the PlatformScaffold form.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
