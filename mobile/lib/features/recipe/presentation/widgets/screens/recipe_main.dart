@@ -8,14 +8,28 @@ import 'package:pantry_chef/features/recipe/presentation/widgets/recipe_card.dar
 import 'package:pantry_chef/core/presentation/widgets/shimmer_list.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// `StatefulWidget` rendering the main recipe list / matches screen.
+///
+/// Wraps the body in a `PlatformScaffold`, dispatches `RecipeMatching()` on
+/// `initState` when `RecipeBloc.state.items` is null (the matches-first UX
+/// entry point), and exposes a `RefreshIndicator.adaptive` that re-dispatches
+/// `RecipeMatching` on pull-to-refresh. Nested `BlocBuilder`s observe
+/// `ProfileBloc` (filtered on `userProfile` changes) and `RecipeBloc` to drive
+/// the loading, empty, and populated state branches that render `ShimmerList`,
+/// a localized empty message, or a list of `RecipeCard` widgets.
 class RecipeMain extends StatefulWidget {
+  /// Creates the main recipe screen widget.
   const RecipeMain({super.key});
 
+  /// Creates the mutable state object that drives this widget.
   @override
   State<RecipeMain> createState() => _RecipeMainState();
 }
 
 class _RecipeMainState extends State<RecipeMain> {
+  /// Dispatches `RecipeMatching()` the first time the screen mounts when
+  /// `RecipeBloc.state.items` is null; this establishes the matches view as
+  /// the default UX entry point for the recipe feature.
   @override
   void initState() {
     RecipeBloc bloc = context.read<RecipeBloc>();
@@ -25,6 +39,10 @@ class _RecipeMainState extends State<RecipeMain> {
     super.initState();
   }
 
+  /// Composes the `PlatformScaffold`, nested `BlocBuilder<ProfileBloc>`
+  /// (filtered on `userProfile`), `BlocBuilder<RecipeBloc>`, loading / empty /
+  /// list state branches, and the adaptive `RefreshIndicator` that
+  /// re-dispatches `RecipeMatching` on pull-to-refresh.
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(
