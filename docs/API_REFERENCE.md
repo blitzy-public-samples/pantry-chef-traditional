@@ -68,23 +68,23 @@ example `POST /api/auth/email/login`, `GET /api/recipe/matches`,
 > The mobile client confirms the real paths: every endpoint is built as
 > `"$apiBaseUrl/<resource>"` with no `/v1/` — for example the login route is
 > `"$apiBaseUrl/auth/email/login"`
-> (`Source: mobile/lib/core/constants/endpoints.dart:L12`), the recipe route is
-> `"$apiBaseUrl/recipe"` (`Source: mobile/lib/core/constants/endpoints.dart:L19`),
+> (`Source: mobile/lib/core/constants/endpoints.dart:L35`), the recipe route is
+> `"$apiBaseUrl/recipe"` (`Source: mobile/lib/core/constants/endpoints.dart:L55`),
 > and the ingredient creation-data route is `"$ingredient/creation-data"`
-> (`Source: mobile/lib/core/constants/endpoints.dart:L23`), where `apiBaseUrl`
+> (`Source: mobile/lib/core/constants/endpoints.dart:L64`), where `apiBaseUrl`
 > defaults to `http://192.168.2.20:3000/api`
-> (`Source: mobile/lib/env_config.dart:L2`).
+> (`Source: mobile/lib/env_config.dart:L23`).
 >
 > The canonical documented path is `/api/<resource>`. Some project planning
 > material refers to `/api/v1/*`; that form is **not** served by the code.
 
 | Property | Value | Source |
 |----------|-------|--------|
-| Protocol | HTTP/JSON | `Source: mobile/lib/core/utils/dio_client.dart:L19-L26` |
+| Protocol | HTTP/JSON | `Source: mobile/lib/core/utils/dio_client.dart:L40-L47` |
 | Global prefix | `api` | `Source: backend/src/main.ts:L14-L19`, `backend/env_example:L4` |
 | Port | `3000` (configurable) | `Source: backend/env_example:L2`, `backend/src/main.ts:L33` |
 | URI version segment | none (versioning not enabled) | `Source: backend/src/main.ts:L10-L34` |
-| Effective base URL | `http://<host>:3000/api` | `Source: mobile/lib/env_config.dart:L2` |
+| Effective base URL | `http://<host>:3000/api` | `Source: mobile/lib/env_config.dart:L23` |
 
 ## 2. Authentication
 
@@ -126,16 +126,25 @@ The backend registers three Passport strategies that back the guards above:
 
 For the end-to-end authentication design and the login/refresh sequence
 diagram, see [11. Diagrams](#11-diagrams),
-[./ARCHITECTURE.md](./ARCHITECTURE.md), and the auth module README
-[../backend/src/auth/README.md](../backend/src/auth/README.md).
+[./ARCHITECTURE.md](./ARCHITECTURE.md), and the auth module source at
+[`backend/src/auth/`](../backend/src/auth/).
 
 ## 3. Auth Endpoints
 
 The auth controller is tagged `@ApiTags('Auth')` and mounted at base `auth`
 (`Source: backend/src/auth/auth.controller.ts:L23-L27`). The login and register
-routes are public; the remaining routes require a Bearer token. All routes
-return tokens that **omit** the `user` object from the response payload
-(`Source: backend/src/auth/auth.controller.ts:L33-L35`).
+routes are public; the remaining routes require a Bearer token. The login,
+register, and refresh routes return token payloads that **omit** the `user`
+object (typed `Omit<LoginResponseType, 'user'>`)
+(`Source: backend/src/auth/auth.controller.ts:L33-L35`,
+`Source: backend/src/auth/auth.controller.ts:L41-L45`,
+`Source: backend/src/auth/auth.controller.ts:L55-L63`). The protected `GET` and
+`PATCH /api/auth/me` routes return the user object
+(`Source: backend/src/auth/auth.controller.ts:L47-L53`,
+`Source: backend/src/auth/auth.controller.ts:L75-L84`), while `POST
+/api/auth/logout` and `DELETE /api/auth/me` return `204 No Content`
+(`Source: backend/src/auth/auth.controller.ts:L65-L73`,
+`Source: backend/src/auth/auth.controller.ts:L86-L92`).
 
 | Method | Path | Auth | Success | Source |
 |--------|------|------|---------|--------|
@@ -389,9 +398,17 @@ POST /api/pantry HTTP/1.1
 Authorization: Bearer <access_token>
 Content-Type: application/json
 
-{ "ingridient": "<ingredientId>", "quantity": 2, "unit": "kg",
-  "location": "fridge" }
+{
+  "ingridient": { "id": "<ingredientId>", "name": "Tomato",
+    "category": { "id": "1", "name": "Vegetable" }, "confidence": 1 },
+  "quantity": 2, "unit": "kg", "location": "fridge"
+}
 ```
+
+The `ingridient` field is an `Ingridient` object, not a bare id string: the DTO
+declares `ingridient: Ingridient`, so the client serializes the full ingredient
+reference (`Source: backend/src/pantry/dto/create-pantry-ingridient.dto.ts:L11-L14`,
+`Source: backend/src/ingridient/domain/ingrident.ts:L2-L14`).
 
 ### 5.2 `GET /api/pantry`
 
@@ -492,13 +509,20 @@ Content-Type: application/json
 {
   "title": "Tomato Pasta",
   "description": "Simple pasta",
-  "ingridientList": [{ "ingridient": "<id>", "amount": 2, "unit": "cup",
-    "required": true }],
+  "ingridientList": [{
+    "ingridient": { "id": "<id>", "name": "Pasta",
+      "category": { "id": "1", "name": "Grains" }, "confidence": 1 },
+    "amount": 2, "unit": "cup", "required": true }],
   "instructions": [{ "step": 1, "description": "Boil pasta" }],
   "prepTime": 5, "cookTime": 15, "servings": 2, "difficulty": "easy",
   "tags": ["dinner"]
 }
 ```
+
+Each `ingridientList` entry's `ingridient` field is an `Ingridient` object, not
+a bare id string: `IngridientListDto` declares `ingridient: Ingridient`
+(`Source: backend/src/recipe/dto/create-recipe.dto.ts:L16-L19`,
+`Source: backend/src/ingridient/domain/ingrident.ts:L2-L14`).
 
 > **KNOWN ISSUE — duplicate `title` returns `422`.** Creating a recipe whose
 > `title` already exists throws `422 Unprocessable Entity`
@@ -937,9 +961,9 @@ these sibling references and package READMEs:
 - [../backend/README.md](../backend/README.md) — backend project overview and
   local development.
 
-Per-module READMEs provide the deepest detail, for example
-[../backend/src/auth/README.md](../backend/src/auth/README.md),
-[../backend/src/recipe/README.md](../backend/src/recipe/README.md),
-[../backend/src/ingridient/README.md](../backend/src/ingridient/README.md), and
-[../backend/src/ai/README.md](../backend/src/ai/README.md).
+Per-module source directories provide the deepest detail, for example
+[`backend/src/auth/`](../backend/src/auth/),
+[`backend/src/recipe/`](../backend/src/recipe/),
+[`backend/src/ingridient/`](../backend/src/ingridient/), and
+[`backend/src/ai/`](../backend/src/ai/).
 

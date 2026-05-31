@@ -98,9 +98,10 @@ class DioClient {
       ..options.headers = {'Content-Type': 'application/json; charset=utf-8'}
       ..interceptors.add(
         // SECURITY NOTE: This `LogInterceptor` is also added
-        // unconditionally with `requestHeader: true`, so the bearer
-        // token is logged by the refresh client in ALL builds too.
-        // Documented here, NOT fixed (additive-only task).
+        // unconditionally with `requestHeader: true` on the refresh
+        // client, so the `Authorization: Bearer <token>` header is
+        // written to logs in ALL builds, including release. Documented
+        // here, NOT fixed (additive-only task).
         // Source: mobile/lib/core/utils/dio_client.dart:L61-L68
         LogInterceptor(
           request: true,

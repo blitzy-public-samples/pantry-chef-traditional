@@ -2,13 +2,13 @@
 
 PantryChef is a **monorepo** that pairs a server-rendered REST backend with a
 native mobile client over a shared MongoDB data store. The backend is built on
-NestJS 10 running on Express (`Source: backend/package.json:dependencies`), the
+NestJS 10 running on Express (`Source: backend/package.json:L26-L28`), the
 mobile client is a Flutter / Dart 3.5 application that manages state with the
-BLoC pattern (`Source: mobile/pubspec.yaml:environment`), and persistence is
+BLoC pattern (`Source: mobile/pubspec.yaml:L22`), and persistence is
 handled by MongoDB accessed through Mongoose 8
-(`Source: backend/package.json:dependencies`). An optional Google Cloud Vision
+(`Source: backend/package.json:L30,L37`). An optional Google Cloud Vision
 integration adds image-based ingredient recognition
-(`Source: backend/package.json:dependencies`).
+(`Source: backend/package.json:L25`).
 
 This document is **orientation / explanation** material. It explains how the
 pieces fit together and how a request flows through each side, moving from a
@@ -36,7 +36,7 @@ client, the NestJS REST API, the MongoDB database, and the optional Google Cloud
 Vision service.
 
 The mobile client talks to the backend exclusively over HTTP/JSON using a Dio
-HTTP client (`Source: mobile/lib/core/utils/dio_client.dart:L19-L26`). The
+HTTP client (`Source: mobile/lib/core/utils/dio_client.dart:L40-L47`). The
 backend exposes its routes under a configurable global prefix — `api` by default
 (`Source: backend/src/main.ts:L14-L19`, `Source: backend/env_example:L4`) — and
 listens on the port supplied by configuration, `3000` by default
@@ -75,8 +75,8 @@ independent projects that share only the HTTP contract and the data model.
 
 | Path | Role |
 |------|------|
-| `backend/` | NestJS 10 + Express REST API and Mongoose persistence (`Source: backend/package.json:dependencies`) |
-| `mobile/` | Flutter / Dart 3.5 BLoC client (`Source: mobile/pubspec.yaml:environment`) |
+| `backend/` | NestJS 10 + Express REST API and Mongoose persistence (`Source: backend/package.json:L26-L28,L37`) |
+| `mobile/` | Flutter / Dart 3.5 BLoC client (`Source: mobile/pubspec.yaml:L22`) |
 | `docs/` | This cross-cutting knowledge base (architecture, API, data models, deployment) |
 
 The two packages organize their code on different but complementary principles:
@@ -158,11 +158,11 @@ Each module repeats the same internal folders: `dto/` for request/response
 shapes, `domain/` for the domain entity, and
 `infrastructure/document/{entities,mappers,repositories}` for the persistence
 implementation
-(`Source: backend/src/recipe/infrastructure/recipe.repository.ts`,
-`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts`).
+(`Source: backend/src/recipe/infrastructure/recipe.repository.ts:L1-L42`,
+`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L20-L30`).
 Note the preserved backend misspelling here: the ingredient module directory is
 `ingridient/` and its domain entity file is `ingrident.ts`
-(`Source: backend/src/ingridient/domain/ingrident.ts`).
+(`Source: backend/src/ingridient/domain/ingrident.ts:L2`).
 
 ### Module wiring
 
@@ -170,10 +170,15 @@ All feature modules are assembled in the root `AppModule`. It imports the global
 `ConfigModule`, wires Mongoose asynchronously through `MongooseConfigService`,
 and registers the feature modules `AuthModule`, `SessionModule`, `UsersModule`,
 `IngridientModule`, `PantryModule`, `RecipeModule`, and `AiModule`
-(`Source: backend/src/app.module.ts:L18-L35`). The only direct module-to-module
-import among the features is `AiModule`, which imports `IngridientModule` so the
-vision service can resolve recognized labels to stored ingredients
-(`Source: backend/src/ai/ai.module.ts:L4-L9`).
+(`Source: backend/src/app.module.ts:L18-L35`). Several feature modules import
+one another directly. `AiModule` imports `IngridientModule` so the vision
+service can resolve recognized labels to stored ingredients
+(`Source: backend/src/ai/ai.module.ts:L4,L7`); `AuthModule` imports both
+`UsersModule` and `SessionModule` to validate credentials and manage refresh
+sessions (`Source: backend/src/auth/auth.module.ts:L6-L7,L14-L15`); and
+`RecipeModule` imports `UsersModule` and `PantryModule` to read user data and
+pantry contents during recipe matching
+(`Source: backend/src/recipe/recipe.module.ts:L5-L6,L9`).
 
 ```mermaid
 graph TD
@@ -200,6 +205,10 @@ graph TD
     AppModule --> Recipe
     AppModule --> Ai
     Ai -->|"imports"| Ingridient
+    Auth -->|"imports"| Users
+    Auth -->|"imports"| Session
+    Recipe -->|"imports"| Users
+    Recipe -->|"imports"| Pantry
     Users -.->|"uses jwt strategy"| Auth
     Pantry -.->|"uses jwt strategy"| Auth
     Recipe -.->|"uses jwt strategy"| Auth
@@ -207,7 +216,9 @@ graph TD
 ```
 
 *Diagram: backend module dependencies. Caption sources —
-`backend/src/app.module.ts:L18-L35`, `backend/src/ai/ai.module.ts:L4-L9`.* Solid
+`backend/src/app.module.ts:L18-L35`, `backend/src/ai/ai.module.ts:L4,L7`,
+`backend/src/auth/auth.module.ts:L6-L7,L14-L15`,
+`backend/src/recipe/recipe.module.ts:L5-L6,L9`.* Solid
 edges are NestJS module imports; the dotted edges indicate that the guarded
 controllers in those modules depend at runtime on the `jwt` Passport strategy
 that `AuthModule` registers — they apply `@UseGuards(AuthGuard('jwt'))` rather
@@ -230,7 +241,7 @@ sequenceDiagram
     participant Model as Mongoose Model
     participant DB as MongoDB
 
-    Client->>Controller: HTTP request (GET /api/v1/recipe)
+    Client->>Controller: HTTP request (GET /api/recipe)
     Controller->>Service: delegate (findManyWithPagination)
     Service->>Repo: call RecipeRepository method
     Repo->>Model: query injected Model&lt;RecipeSchemaClass&gt;
@@ -243,8 +254,13 @@ sequenceDiagram
 ```
 
 *Diagram: request lifecycle. Caption sources —
-`backend/src/recipe/recipe.controller.ts`, `backend/src/recipe/recipe.service.ts`,
-`backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts`.*
+`backend/src/recipe/recipe.controller.ts:L50-L72`, `backend/src/recipe/recipe.service.ts:L47-L61`,
+`backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L48-L90`.*
+The served path is `/api/recipe` with no `/v1/` segment: although
+`RecipeController` declares `version: '1'`
+(`Source: backend/src/recipe/recipe.controller.ts:L31-L33`), `main.ts` never
+calls `app.enableVersioning()`, so the version property is not URI-effective and
+no version segment is added (`Source: backend/src/main.ts:L10-L34`).
 The controller delegates to the service
 (`Source: backend/src/recipe/recipe.controller.ts:L50-L72`), the service forwards
 to the repository contract (`Source: backend/src/recipe/recipe.service.ts:L47-L61`),
@@ -252,8 +268,8 @@ and the document repository runs the query through the injected model and maps
 the results back to the domain type
 (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L48-L90`).
 The most intricate variant of this flow — the `GET /matches` scoring pipeline — is
-explained in detail in [./API_REFERENCE.md](./API_REFERENCE.md) and
-[../backend/src/recipe/README.md](../backend/src/recipe/README.md).
+explained in detail in [./API_REFERENCE.md](./API_REFERENCE.md) and the recipe
+module source at [`backend/src/recipe/`](../backend/src/recipe/).
 
 
 ## 4. Mobile Clean Architecture
@@ -266,30 +282,30 @@ into three clean-architecture layers. The five features are `authentication/`,
   *interfaces*, and use cases that express a single application action. The
   ingredient search use case lives here, under the preserved misspelled filename
   `search_ingredietn.usecase.dart`
-  (`Source: mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart`).
+  (`Source: mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart:L7`).
 - **`data/`** — the outward-facing implementation: `api/` clients, `dto/`
   data-transfer objects, and concrete `repositories/` that implement the domain
   interfaces. The profile feature's implementation carries the preserved
   misspelled filename `profile.repositiry.dart`
-  (`Source: mobile/lib/features/profile/data/repositories/profile.repositiry.dart`).
+  (`Source: mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L6`).
 - **`presentation/`** — the UI and its state: `bloc/` (events, states, and the
   BLoC itself) plus `widgets/screens/`. The pantry main screen carries the
   preserved misspelled filename `patry_main.dart`
-  (`Source: mobile/lib/features/pantry/presentation/widgets/screens/patry_main.dart`).
+  (`Source: mobile/lib/features/pantry/presentation/widgets/screens/patry_main.dart:L12`).
 
 State is managed with the BLoC pattern via the `bloc` and `flutter_bloc`
 packages, and persisted state (such as profile preferences) uses `hydrated_bloc`
-(`Source: mobile/pubspec.yaml:dependencies`). The persisted-state storage is
+(`Source: mobile/pubspec.yaml:L39,L43`). The persisted-state storage is
 initialized once at startup — see [Bootstrap Sequence](#7-bootstrap-sequence).
 
 ### Dependency injection
 
 Cross-cutting singletons are resolved through the `get_it` service locator. A
 single `getIt = GetIt.instance` is exposed
-(`Source: mobile/lib/core/utils/service_locator.dart:L6`) and `setupLocator()`
+(`Source: mobile/lib/core/utils/service_locator.dart:L10`) and `setupLocator()`
 registers the shared services at startup: `SharedPreferences` (registered as an
 async singleton), a `SharedPreferencesHelper` wrapper, and the `DioClient`
-(`Source: mobile/lib/core/utils/service_locator.dart:L8-L15`). Features obtain
+(`Source: mobile/lib/core/utils/service_locator.dart:L34-L40`). Features obtain
 these dependencies by resolving them from `getIt` rather than constructing them
 directly, which keeps the HTTP client and persistence helpers as process-wide
 singletons.
@@ -298,10 +314,9 @@ The client's navigation routes are defined as constants in
 `mobile/lib/core/constants/navigation.dart`, including the preserved misspelled
 route `singup` (`Source: mobile/lib/core/constants/navigation.dart:L6`). The
 flow inside each feature — UI event → BLoC → use case → repository →
-`DioClient` → API — is described per feature in the feature READMEs, for example
-[../mobile/lib/features/ingredient/README.md](../mobile/lib/features/ingredient/README.md)
-and
-[../mobile/lib/features/recipe/README.md](../mobile/lib/features/recipe/README.md).
+`DioClient` → API — is described per feature in each feature's source, for
+example [`mobile/lib/features/ingredient/`](../mobile/lib/features/ingredient/)
+and [`mobile/lib/features/recipe/`](../mobile/lib/features/recipe/).
 
 
 ## 5. Cross-Cutting Concerns
@@ -328,28 +343,28 @@ configured once during bootstrap and then implicitly affect every request.
   (`Source: backend/src/recipe/recipe.controller.ts:L27-L28`). The guard resolves
   one of three Passport strategies that live in `backend/src/auth/strategies/` —
   `jwt.strategy.ts`, `jwt-refresh.strategy.ts`, and `anonymous.strategy.ts`.
-  Strategy details are deferred to
-  [../backend/src/auth/README.md](../backend/src/auth/README.md) and
+  Strategy details are documented in the auth module source at
+  [`backend/src/auth/`](../backend/src/auth/) and
   [./API_REFERENCE.md](./API_REFERENCE.md).
 
 ### Mobile HTTP client and interceptors
 
 On the mobile side the cross-cutting HTTP concern is the `DioClient`, which
 configures a base URL, connect/receive timeouts, and JSON headers
-(`Source: mobile/lib/core/utils/dio_client.dart:L19-L26`). It installs an
+(`Source: mobile/lib/core/utils/dio_client.dart:L40-L47`). It installs an
 `InterceptorsWrapper` that attaches `Authorization: Bearer <token>` to outgoing
 requests when an access token is present
-(`Source: mobile/lib/core/utils/dio_client.dart:L35-L41`) and, on a
+(`Source: mobile/lib/core/utils/dio_client.dart:L66-L69`) and, on a
 `tokenExpired` or `unauthorized` response, transparently refreshes the token and
 retries the original request
-(`Source: mobile/lib/core/utils/dio_client.dart:L44-L51`,
-`Source: mobile/lib/core/utils/dio_client.dart:L71-L97`).
+(`Source: mobile/lib/core/utils/dio_client.dart:L73-L84`,
+`Source: mobile/lib/core/utils/dio_client.dart:L129-L155`).
 
 > **SECURITY NOTE:** A `LogInterceptor` is added **unconditionally** to both the
 > main Dio instance and the dedicated refresh instance, in each case with
 > `requestHeader: true`
-> (`Source: mobile/lib/core/utils/dio_client.dart:L27-L34`,
-> `Source: mobile/lib/core/utils/dio_client.dart:L61-L68`). Because the
+> (`Source: mobile/lib/core/utils/dio_client.dart:L48-L60`,
+> `Source: mobile/lib/core/utils/dio_client.dart:L99-L111`). Because the
 > request-attaching interceptor sets the `Authorization: Bearer <token>` header,
 > these bearer tokens are written to the logs in **all** builds, including
 > release builds. This behavior is documented here as it exists in the codebase;
@@ -390,10 +405,10 @@ ten results (`Source: backend/src/ai/ai.service.ts:L73-L78`), then matches the
 returned labels against an internal in-memory ingredient dictionary and resolves
 the recognized label to a stored ingredient through `IngridientService`
 (`Source: backend/src/ai/ai.service.ts:L88-L113`). This is why `AiModule`
-imports `IngridientModule` (`Source: backend/src/ai/ai.module.ts:L4-L9`). The
+imports `IngridientModule` (`Source: backend/src/ai/ai.module.ts:L4,L7`). The
 key-provisioning workflow for `ai.json` is described in
-[./DEPLOYMENT.md](./DEPLOYMENT.md) and
-[../backend/src/ai/README.md](../backend/src/ai/README.md).
+[./DEPLOYMENT.md](./DEPLOYMENT.md) and the AI module source at
+[`backend/src/ai/`](../backend/src/ai/).
 
 
 ## 7. Bootstrap Sequence
@@ -429,27 +444,27 @@ route (`Source: backend/src/main.ts:L31`).
 ### Mobile — `mobile/lib/main.dart`
 
 `main()` runs the entire startup inside `runZonedGuarded` so uncaught errors are
-funneled to a single handler (`Source: mobile/lib/main.dart:L11-L23`). Inside the
+funneled to a single handler (`Source: mobile/lib/main.dart:L31-L48`). Inside the
 guarded zone it:
 
 1. Ensures the Flutter binding is initialized
-   (`Source: mobile/lib/main.dart:L12`).
+   (`Source: mobile/lib/main.dart:L33`).
 2. Preserves the native splash screen during initialization
-   (`Source: mobile/lib/main.dart:L13`).
+   (`Source: mobile/lib/main.dart:L34`).
 3. Initializes `HydratedBloc.storage` from a temporary directory so persisted
-   BLoC state survives restarts (`Source: mobile/lib/main.dart:L14-L16`).
+   BLoC state survives restarts (`Source: mobile/lib/main.dart:L35-L37`).
 4. Locks the app to portrait orientation
-   (`Source: mobile/lib/main.dart:L17`, `Source: mobile/lib/main.dart:L25-L30`).
+   (`Source: mobile/lib/main.dart:L38`, `Source: mobile/lib/main.dart:L57-L61`).
 5. Runs the `get_it` service-locator setup
-   (`Source: mobile/lib/main.dart:L18`).
+   (`Source: mobile/lib/main.dart:L39`).
 6. Launches the widget tree with `runApp(const App())`
-   (`Source: mobile/lib/main.dart:L19`).
+   (`Source: mobile/lib/main.dart:L40`).
 
 The zone's error handler prints uncaught errors
-(`Source: mobile/lib/main.dart:L20-L22`). The compile-time API base URL the
+(`Source: mobile/lib/main.dart:L41-L48`). The compile-time API base URL the
 client connects to is resolved from `EnvConfig.apiBaseUrl`, an environment value
 read with `String.fromEnvironment('API_BASE_URL', ...)` whose default targets a
-LAN address (`Source: mobile/lib/env_config.dart:L2`); overriding it at build
+LAN address (`Source: mobile/lib/env_config.dart:L23`); overriding it at build
 time is covered in [./DEPLOYMENT.md](./DEPLOYMENT.md) and
 [../mobile/README.md](../mobile/README.md).
 
@@ -469,8 +484,8 @@ these sibling references and package READMEs:
 - [../mobile/README.md](../mobile/README.md) — mobile project overview, run
   steps, and the `--dart-define API_BASE_URL` override.
 
-Per-module and per-feature READMEs provide the deepest detail, for example
-[../backend/src/recipe/README.md](../backend/src/recipe/README.md),
-[../backend/src/ai/README.md](../backend/src/ai/README.md), and
-[../mobile/lib/features/ingredient/README.md](../mobile/lib/features/ingredient/README.md).
+Per-module and per-feature source directories provide the deepest detail, for
+example [`backend/src/recipe/`](../backend/src/recipe/),
+[`backend/src/ai/`](../backend/src/ai/), and
+[`mobile/lib/features/ingredient/`](../mobile/lib/features/ingredient/).
 

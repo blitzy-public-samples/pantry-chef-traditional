@@ -7,8 +7,8 @@ container — after which you seed the database, optionally wire up Google Cloud
 Vision, and build the Flutter client against your chosen API base URL.
 
 PantryChef is a monorepo with a `backend/` NestJS 10 service and a `mobile/`
-Flutter client (`Source: backend/package.json:dependencies`,
-`Source: mobile/pubspec.yaml:environment`). This document is **additive** — it
+Flutter client (`Source: backend/package.json:L26-L28`,
+`Source: mobile/pubspec.yaml:L22`). This document is **additive** — it
 records the system exactly as built, including insecure defaults that ship in
 the repository. Those defaults are flagged with `SECURITY NOTE:` callouts and
 are **documented, not changed**. For the system design behind these steps, see
@@ -36,12 +36,12 @@ are required for local non-Docker runs and for building the mobile client.
 |------|-----------------|------------------|
 | Docker Engine + Docker Compose | Any recent release supporting Compose file `version: '3.8'` (`Source: backend/docker-compose.yml:L1`) | Brings up the MongoDB + NestJS stack with a single command |
 | Node.js | `node:20-alpine` is what the backend container builds on (`Source: backend/Dockerfile:L1`) | Required only for local, non-Docker backend runs |
-| NestJS toolchain | NestJS 10 with `@nestjs/cli` ^10.0.0; build via `nest build`, run via `nest start` (`Source: backend/package.json:scripts`, `Source: backend/package.json:devDependencies`) | Compiles and runs the API outside Docker |
-| Flutter / Dart SDK | Dart SDK constraint `^3.5.1` (`Source: mobile/pubspec.yaml:environment`) | Builds and runs the mobile client |
+| NestJS toolchain | NestJS 10 with `@nestjs/cli` ^10.0.0; build via `nest build`, run via `nest start` (`Source: backend/package.json:L9,L11`, `Source: backend/package.json:L47`) | Compiles and runs the API outside Docker |
+| Flutter / Dart SDK | Dart SDK constraint `^3.5.1` (`Source: mobile/pubspec.yaml:L22`) | Builds and runs the mobile client |
 
 The backend image is a development-style container: it runs `npm i && npm run
 dev` on startup, where `dev` is `nest start --watch`
-(`Source: backend/Dockerfile:L13`, `Source: backend/package.json:scripts`). It is
+(`Source: backend/Dockerfile:L13`, `Source: backend/package.json:L12`). It is
 intended for local development, not as a hardened production image.
 
 > SECURITY NOTE: The shipped configuration uses development defaults throughout
@@ -61,7 +61,7 @@ in the repository (`Source: backend/env_example:L1-L23`).
 | `NODE_ENV` | `development` | Node runtime environment (`Source: backend/env_example:L1`) |
 | `APP_PORT` | `3000` | Port the NestJS app listens on; matches the published container port `3000:3000` (`Source: backend/env_example:L2`, `Source: backend/docker-compose.yml:L24-L25`) |
 | `APP_NAME` | `"NestJS API"` | Application name used in bootstrap/metadata (`Source: backend/env_example:L3`) |
-| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/v1/*` (`Source: backend/env_example:L4`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
+| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/*` with no `/v1/` segment because `enableVersioning()` is never called (`Source: backend/env_example:L4`, `Source: backend/src/main.ts:L10-L34`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
 | `DATABASE_TYPE` | `mongodb` | Persistence engine selector (`Source: backend/env_example:L6`) |
 | `DATABASE_PORT` | `27017` | MongoDB port; matches the published container port `27017:27017` (`Source: backend/env_example:L7`, `Source: backend/docker-compose.yml:L11-L12`) |
 | `DATABASE_USERNAME` | `admin` | MongoDB username — default credential (`Source: backend/env_example:L8`) |
@@ -113,7 +113,7 @@ The `nestjs` container is built from `backend/Dockerfile`: `FROM node:20-alpine`
 runs as `USER node`, `WORKDIR /home/node/app`, sets `ENV HOST=0.0.0.0 PORT=3000`,
 `EXPOSE ${PORT}`, and finally `CMD npm i && npm run dev` — installing
 dependencies and launching `nest start --watch` on every start
-(`Source: backend/Dockerfile:L1-L13`, `Source: backend/package.json:scripts`).
+(`Source: backend/Dockerfile:L1-L13`, `Source: backend/package.json:L12`).
 Because of the `./:/home/node/app` bind mount, the container runs against your
 working-tree source (`Source: backend/docker-compose.yml:L26-L27`).
 
@@ -161,7 +161,7 @@ location.
 
 If you prefer a local Node run instead of the container, ensure a MongoDB
 instance is reachable at your `.env` `DATABASE_URL`, then use the NestJS scripts
-(`Source: backend/package.json:scripts`):
+(`Source: backend/package.json:L9-L14`):
 
 ```bash
 npm install
@@ -179,7 +179,7 @@ overview.
 ## 4. Database Seeding
 
 Seed reference data with the document seeder
-(`Source: backend/README.md:L9`, `Source: backend/package.json:scripts`):
+(`Source: backend/README.md:L9`, `Source: backend/package.json:L16`):
 
 ```bash
 npm run seed:run:document
@@ -187,7 +187,7 @@ npm run seed:run:document
 
 This script resolves to `ts-node -r tsconfig-paths/register
 ./src/database/seeds/run-seed.ts`, so it runs the TypeScript seeder directly via
-`ts-node` (`Source: backend/package.json:scripts`). It connects using the
+`ts-node` (`Source: backend/package.json:L16`). It connects using the
 `.env` `DATABASE_URL`, so make sure MongoDB is reachable before running it:
 bring up only the database first with `docker-compose up mongodb`, or run the
 seeder against a local Mongo whose URL matches `.env`
@@ -220,8 +220,8 @@ crashing — it simply returns no detected ingredients
 
 Because the key is optional, you can defer this step entirely for a local stack
 that does not need image recognition. For the endpoint contract see
-[./API_REFERENCE.md](./API_REFERENCE.md), and for the module internals see
-[../backend/src/ai/README.md](../backend/src/ai/README.md).
+[./API_REFERENCE.md](./API_REFERENCE.md), and for the module internals see the
+AI module source at [`backend/src/ai/`](../backend/src/ai/).
 
 > SECURITY NOTE: `POST /api/ai/vision` has no JWT guard and accepts uploads up
 > to 10 MB; see [Section 7](#7-security-default-credentials-and-exposures).
@@ -232,7 +232,7 @@ that does not need image recognition. For the endpoint contract see
 The Flutter client targets a single, compile-time API base URL.
 `EnvConfig.apiBaseUrl` is defined as
 `String.fromEnvironment('API_BASE_URL', defaultValue:
-'http://192.168.2.20:3000/api')` (`Source: mobile/lib/env_config.dart:L2`). The
+'http://192.168.2.20:3000/api')` (`Source: mobile/lib/env_config.dart:L23`). The
 default points at a LAN IP and already includes the `/api` prefix, so override
 it to match your backend host.
 
@@ -246,7 +246,7 @@ it to match your backend host.
 
 2. Generate code for the `@JsonSerializable` models (via `json_serializable`
    ^6.7.1 and `build_runner` ^2.4.6)
-   (`Source: mobile/pubspec.yaml:dev_dependencies`):
+   (`Source: mobile/pubspec.yaml:L62-L63`):
 
    ```bash
    dart run build_runner build --delete-conflicting-outputs
@@ -266,10 +266,10 @@ Replace `<host>` with an address reachable from the device or emulator: a LAN IP
 (for a physical device on the same network) or `10.0.2.2` for the Android
 emulator to reach the host machine's `localhost`. Keep the trailing `/api`
 prefix so requests resolve under the backend's global prefix
-(`Source: mobile/lib/env_config.dart:L2`, `Source: backend/env_example:L4`).
+(`Source: mobile/lib/env_config.dart:L23`, `Source: backend/env_example:L4`).
 
 If you omit `--dart-define`, the client falls back to the default
-`http://192.168.2.20:3000/api` (`Source: mobile/lib/env_config.dart:L2`). For the
+`http://192.168.2.20:3000/api` (`Source: mobile/lib/env_config.dart:L23`). For the
 mobile project overview and run details, see
 [../mobile/README.md](../mobile/README.md).
 
@@ -301,7 +301,7 @@ source and are **not** modified by this guide. Address each before deploying.
 
 > SECURITY NOTE: **Bearer tokens in mobile logs.** The mobile Dio client attaches
 > a `LogInterceptor` with `requestHeader: true` in all builds, which logs the
-> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L27-L34,L61-L68`).
+> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L48-L60,L99-L111`).
 > This detail is covered in [./ARCHITECTURE.md](./ARCHITECTURE.md); avoid
 > shipping verbose logs in release builds.
 
@@ -336,14 +336,14 @@ _Diagram source: `backend/docker-compose.yml:L4-L29`._
 
 - [./ARCHITECTURE.md](./ARCHITECTURE.md) — system design, layered/clean
   architecture, and the bootstrap sequence behind these deployment steps.
-- [./API_REFERENCE.md](./API_REFERENCE.md) — every REST endpoint, the `/api/v1`
-  base path, and the Swagger UI location.
+- [./API_REFERENCE.md](./API_REFERENCE.md) — every REST endpoint, the `/api`
+  base path (no `/v1/` segment), and the Swagger UI location.
 - [./DATA_MODELS.md](./DATA_MODELS.md) — Mongoose entities and Dart models seeded
   and served by the stack.
 - [../backend/README.md](../backend/README.md) — backend project overview and
   local development.
 - [../mobile/README.md](../mobile/README.md) — mobile project overview, run
   steps, and the `--dart-define API_BASE_URL` override.
-- [../backend/src/ai/README.md](../backend/src/ai/README.md) — AI module internals
+- [`backend/src/ai/`](../backend/src/ai/) — AI module source internals
   and the Google Cloud Vision `ai.json` workflow.
 

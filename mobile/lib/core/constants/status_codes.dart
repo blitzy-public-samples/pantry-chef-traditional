@@ -12,25 +12,25 @@ class StatusCodes {
   StatusCodes._();
 
   //General
-  /// ok = 200 (success). Source: ...:L5
+  /// ok = 200 (success).
   static const int ok = 200;
-  /// created = 201 (resource created). Source: ...:L6
+  /// created = 201 (resource created).
   static const int created = 201;
 
-  /// badRequest = 400 (malformed request). Source: ...:L8
+  /// badRequest = 400 (malformed request).
   static const int badRequest = 400;
-  /// unauthorized = 401 (DioClient refresh trigger). Source: ...:L9
+  /// unauthorized = 401 (DioClient refresh trigger).
   static const int unauthorized = 401;
-  /// notFound = 404 (resource not found). Source: ...:L10
+  /// notFound = 404 (resource not found).
   static const int notFound = 404;
-  /// tokenExpired = 419 (non-standard; DioClient refresh). Source: ...:L11
+  /// tokenExpired = 419 (non-standard; DioClient refresh).
   static const int tokenExpired = 419;
-  /// unprocessableEntity = 422 (validation/duplicate errors). Source: ...:L12
+  /// unprocessableEntity = 422 (validation/duplicate errors).
   static const int unprocessableEntity = 422;
-  /// tooManyRequests = 429 (rate limited). Source: ...:L13
+  /// tooManyRequests = 429 (rate limited).
   static const int tooManyRequests = 429;
-  /// internalServerError = 500 (server error). Source: ...:L14
+  /// internalServerError = 500 (server error).
   static const int internalServerError = 500;
-  /// serverBeingUpdated = 503 (service unavailable). Source: ...:L15
+  /// serverBeingUpdated = 503 (service unavailable).
   static const int serverBeingUpdated = 503;
 }

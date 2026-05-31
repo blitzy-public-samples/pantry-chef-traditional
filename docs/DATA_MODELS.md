@@ -45,12 +45,15 @@ The backend stores data in MongoDB accessed through Mongoose 8
 `@nestjs/mongoose ^10.1.0`). Schemas live under
 `backend/src/<module>/infrastructure/document/entities/*.schema.ts`.
 
-Every backend schema class extends `EntityDocumentHelper`
+Every collection-backing schema class extends `EntityDocumentHelper`
 (`Source: backend/src/utils/document-entity-helper.ts:L3`), which exposes a
 public `_id` whose value is serialized to a string through a `@Transform`
 applied on plain serialization
 (`Source: backend/src/utils/document-entity-helper.ts:L4-L17`). As a result,
-every document exposes a string `_id` in its serialized JSON.
+every document exposes a string `_id` in its serialized JSON. Embedded
+subdocument classes do not extend it — for example the recipe `IngridientList`
+subdocument is a plain `@Schema()` class with no `EntityDocumentHelper` base
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L6-L7`).
 
 The collection-backing classes are decorated with
 `@Schema({ timestamps: true, toJSON: { virtuals: true, getters: true } })`,
@@ -61,8 +64,12 @@ serialization (`Source: backend/src/users/infrastructure/document/entities/user.
 `Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L9-L15`).
 The `Recipe` schema additionally declares a matching `toObject` option
 (`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L46-L56`).
-Each schema also declares `createdAt`, `updatedAt`, and a `deletedAt` field
-with `default: now` on the timestamp columns.
+Because each schema sets `timestamps: true`, Mongoose maintains `createdAt` and
+`updatedAt` at runtime. Most schema classes also declare these as explicit class
+fields (with `default: now`) alongside a `deletedAt` field; `SessionSchemaClass`,
+however, declares only `createdAt` and `deletedAt` as class fields and relies on
+`timestamps: true` to supply `updatedAt`
+(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L8-L9,L19-L23`).
 
 ### Mobile Dart models
 
@@ -196,7 +203,7 @@ The `User` collection is backed by `UserSchemaClass`, which extends
 It embeds a `Preferences` subdocument by value and tracks the user's favorite
 recipes and recent searches as string arrays.
 
-Owning module README: [../backend/src/users/README.md](../backend/src/users/README.md).
+Owning module source: [`backend/src/users/`](../backend/src/users/).
 
 ### `UserSchemaClass`
 
@@ -240,7 +247,7 @@ The `Session` collection is backed by `SessionSchemaClass`, which extends
 A session references the owning user by `ObjectId` and backs refresh-token
 issuance.
 
-Owning module README: [../backend/src/session/README.md](../backend/src/session/README.md).
+Owning module source: [`backend/src/session/`](../backend/src/session/).
 
 ### `SessionSchemaClass`
 
@@ -267,7 +274,7 @@ The `Ingridient` collection is backed by `IngridientSchemaClass`, which extends
 Several fields carry `@Exclude({ toPlainOnly: true })`, so they are omitted from
 serialized output.
 
-Owning module README: [../backend/src/ingridient/README.md](../backend/src/ingridient/README.md).
+Owning module source: [`backend/src/ingridient/`](../backend/src/ingridient/).
 
 ### `IngridientSchemaClass`
 
@@ -285,8 +292,9 @@ Owning module README: [../backend/src/ingridient/README.md](../backend/src/ingri
 | `updatedAt` | `Date` | `default: now` | `ingridient.schema.ts:L45-L46` |
 | `deletedAt` | `Date?` | Declared field | `ingridient.schema.ts:L48-L49` |
 
-The `Ingridient` schema declares no secondary index
-(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts`);
+The `Ingridient` schema declares no secondary index — `SchemaFactory.createForClass`
+is the final statement and no `.index(...)` call follows
+(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L52-L54`);
 see [Section 8](#8-indexes).
 
 ## 6. PantryIngridient
@@ -297,7 +305,7 @@ which extends `EntityDocumentHelper`
 Each pantry record references an `Ingridient` by `ObjectId`, is scoped to a user
 through `userId`, and carries a storage `location` enum.
 
-Owning module README: [../backend/src/pantry/README.md](../backend/src/pantry/README.md).
+Owning module source: [`backend/src/pantry/`](../backend/src/pantry/).
 
 ### `PantryIngridientSchemaClass`
 
@@ -330,7 +338,7 @@ is preserved) and `Instruction` — and is the only entity whose repository
 honors the `deletedAt` soft-delete column at runtime
 (see [Section 9](#9-soft-delete-vs-hard-delete-matrix)).
 
-Owning module README: [../backend/src/recipe/README.md](../backend/src/recipe/README.md).
+Owning module source: [`backend/src/recipe/`](../backend/src/recipe/).
 
 ### `IngridientList` (embedded subdocument)
 
@@ -573,19 +581,19 @@ produces an updated copy as expected
 - [./ARCHITECTURE.md](./ARCHITECTURE.md) — how the persistence layer fits into
   the backend and mobile architecture.
 
-Entity-owning backend module READMEs:
+Entity-owning backend module sources:
 
-- [../backend/src/users/README.md](../backend/src/users/README.md) — `User` and embedded `Preferences`.
-- [../backend/src/session/README.md](../backend/src/session/README.md) — `Session`.
-- [../backend/src/ingridient/README.md](../backend/src/ingridient/README.md) — `Ingridient`.
-- [../backend/src/pantry/README.md](../backend/src/pantry/README.md) — `PantryIngridient`.
-- [../backend/src/recipe/README.md](../backend/src/recipe/README.md) — `Recipe`, `IngridientList`, `Instruction`.
+- [`backend/src/users/`](../backend/src/users/) — `User` and embedded `Preferences`.
+- [`backend/src/session/`](../backend/src/session/) — `Session`.
+- [`backend/src/ingridient/`](../backend/src/ingridient/) — `Ingridient`.
+- [`backend/src/pantry/`](../backend/src/pantry/) — `PantryIngridient`.
+- [`backend/src/recipe/`](../backend/src/recipe/) — `Recipe`, `IngridientList`, `Instruction`.
 
-Mobile feature READMEs:
+Mobile feature sources:
 
-- [../mobile/lib/features/recipe/README.md](../mobile/lib/features/recipe/README.md) — `Recipe`, `InstractionItem`, `IngredientListItem`.
-- [../mobile/lib/features/ingredient/README.md](../mobile/lib/features/ingredient/README.md) — `Ingredient`.
-- [../mobile/lib/features/pantry/README.md](../mobile/lib/features/pantry/README.md) — `PantryItem`.
-- [../mobile/lib/features/profile/README.md](../mobile/lib/features/profile/README.md) — `Profile`, `Preferences`.
-- [../mobile/lib/features/authentication/README.md](../mobile/lib/features/authentication/README.md) — authentication flow that consumes `Profile`.
+- [`mobile/lib/features/recipe/`](../mobile/lib/features/recipe/) — `Recipe`, `InstractionItem`, `IngredientListItem`.
+- [`mobile/lib/features/ingredient/`](../mobile/lib/features/ingredient/) — `Ingredient`.
+- [`mobile/lib/features/pantry/`](../mobile/lib/features/pantry/) — `PantryItem`.
+- [`mobile/lib/features/profile/`](../mobile/lib/features/profile/) — `Profile`, `Preferences`.
+- [`mobile/lib/features/authentication/`](../mobile/lib/features/authentication/) — authentication flow that consumes `Profile`.
 
