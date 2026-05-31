@@ -11,7 +11,33 @@ import 'package:pantry_chef/features/ingredient/domain/usecases/index.dart';
 part 'ingredient_add_event.dart';
 part 'ingredient_add_state.dart';
 
+/// BLoC for the ingredient-add form.
+///
+/// Coordinates four event flows: (1) `CategoriesAndUnitsFetched` loads
+/// category/unit reference data via `GetIngredientCategoriesAndUnitsUsecase`
+/// and seeds default `categoryId`/`unitId` from the first available options;
+/// (2) `DataChanged` propagates form-field edits into state, using
+/// `Nullable<T>` wrappers for `selectedIngredient` and `quantity` to
+/// distinguish "unchanged" from "explicitly cleared"; (3) `IngredientSearch`
+/// invokes `SearchIngredientUsecase` with a `SearchDto` (lower-cased query,
+/// current/requested page, limit, name-ascending sort), replacing results when
+/// fetching page 1 or appending otherwise, and sets
+/// `isNextPageAvailable: result.length == state.limit`; (4) `IngredientCreated`
+/// invokes `CreateIngredientUsecase` with a `CreateIngredientDto` built from
+/// current state and emits `createdIngredient` on success. The bloc is
+/// provided locally by `IngredientAddingForm` and may be seeded with a
+/// pre-detected `Ingredient` from AI vision.
 class IngredientAddBloc extends Bloc<IngredientAddEvent, IngredientAddState> {
+  /// Creates an `IngredientAddBloc`.
+  ///
+  /// When [detectedIngredient] is supplied (typically from
+  /// `CameraBloc.ImagedProcessed`), the initial state is seeded with
+  /// `selectedIngredient: detectedIngredient`,
+  /// `ingredientName: detectedIngredient.name`, and
+  /// `categoryId: detectedIngredient.category.id`. The `location` field defaults
+  /// to `ingredientLocation[0]` (`'fridge'`) regardless. Registers handlers for
+  /// `CategoriesAndUnitsFetched`, `DataChanged`, `IngredientSearch`, and
+  /// `IngredientCreated` inline.
   IngredientAddBloc({Ingredient? detectedIngredient})
       : super(IngredientAddState(
           selectedIngredient: detectedIngredient,
