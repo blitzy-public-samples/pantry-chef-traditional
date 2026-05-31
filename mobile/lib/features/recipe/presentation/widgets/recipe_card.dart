@@ -9,16 +9,33 @@ import 'package:pantry_chef/features/recipe/domain/models/recipe.dart';
 import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// A `StatelessWidget` rendering a single recipe as a tappable card in a list view.
+///
+/// Shows the recipe's `imageUrl`, `title`, `description`, `prepTime`, `cookTime`,
+/// `servings`, and (when present) a `matchScore` progress bar coloured by the
+/// private `_getProgressBarColor` helper. Tapping the card dispatches
+/// `RecipeDetailedSelected(id: item.id)` to `RecipeBloc` and then navigates to
+/// `Navigation.recipeDetailed`. Tapping the favorite icon dispatches
+/// `FavoriteRecipesListUpdated(recipeId: item.id, isFavorite: !isFavorite)` to
+/// `ProfileBloc` — the card does NOT mutate the `Recipe` model directly because
+/// `Recipe.copyWith` cannot toggle `inFavorite` (see the feature README).
 class RecipeCard extends StatelessWidget {
+  /// The `Recipe` to render.
   final Recipe item;
+  /// Whether the current user has this recipe in their `User.favoriteRecipes`
+  /// list; controls the fill state of the favorite icon button.
   final bool isFavorite;
 
+  /// Creates a card for the given `item` with an optional `isFavorite` flag
+  /// (defaults to `false`).
   const RecipeCard({
     super.key,
     required this.item,
     this.isFavorite = false,
   });
 
+  // Selects a progress-bar colour from item.matchScore:
+  // >=0.7 -> lightGreen, 0.3-0.7 -> lightOrange, <0.3 -> brightRed.
   Color _getProgressBarColor(BuildContext context) {
     if (item.matchScore! >= 0.7) {
       return context.theme.appColors.lightGreen;
@@ -29,6 +46,8 @@ class RecipeCard extends StatelessWidget {
     return context.theme.appColors.brightRed;
   }
 
+  /// Composes the card layout, conditional `matchScore` progress bar, and
+  /// tap/favorite handlers.
   @override
   Widget build(BuildContext context) {
     return Card(
