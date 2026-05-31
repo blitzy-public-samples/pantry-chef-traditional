@@ -3,7 +3,7 @@
 ## Module Purpose
 
 The `recipe/` module is the headline feature of the PantryChef backend. It exposes
-CRUD endpoints for recipes plus the pantry-aware `GET /api/recipe/matches`
+CRUD endpoints for recipes plus the pantry-aware `GET /api/v1/recipe/matches`
 endpoint that scores recipes based on the authenticated user's current pantry
 contents and `Preferences`. The matching algorithm — a Mongo pre-filter chain
 followed by a per-recipe scoring loop — lives at
@@ -16,7 +16,7 @@ describing cooking steps.
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `RecipeController` | `recipe.controller.ts` | Routes under `/api/recipe`, all guarded by `AuthGuard('jwt')` |
+| `RecipeController` | `recipe.controller.ts` | Routes under `/api/v1/recipe`, all guarded by `AuthGuard('jwt')` |
 | `RecipeService` | `recipe.service.ts` | Orchestrates CRUD plus `matches(userId, filterOptions)`, delegating to `UsersService`, `PantryService`, and `RecipeRepository` |
 | `RecipeRepository` (abstract) | `infrastructure/recipe.repository.ts` | Abstract repository contract with six methods |
 | `RecipeDocumentRepository` | `infrastructure/document/repositories/recipe.repository.ts` | Mongoose-backed implementation; hosts the `matches()` algorithm |
@@ -89,23 +89,23 @@ Versions pinned exactly per `backend/package.json`:
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/recipe` | `AuthGuard('jwt')` | Create a recipe |
-| `GET` | `/api/recipe/matches` | `AuthGuard('jwt')` | **Headline**: pantry-aware matches sorted by `matchScore` desc |
-| `GET` | `/api/recipe` | `AuthGuard('jwt')` | List recipes with pagination (cap 50) |
-| `GET` | `/api/recipe/:id` | `AuthGuard('jwt')` | Fetch a single recipe by id |
-| `PATCH` | `/api/recipe/:id` | `AuthGuard('jwt')` | Partial update; 422 when recipe is not found |
-| `DELETE` | `/api/recipe/:id` | `AuthGuard('jwt')` | Proper soft-delete (`updateOne({ deletedAt: new Date() })`) |
+| `POST` | `/api/v1/recipe` | `AuthGuard('jwt')` | Create a recipe |
+| `GET` | `/api/v1/recipe/matches` | `AuthGuard('jwt')` | **Headline**: pantry-aware matches sorted by `matchScore` desc |
+| `GET` | `/api/v1/recipe` | `AuthGuard('jwt')` | List recipes with pagination (cap 50) |
+| `GET` | `/api/v1/recipe/:id` | `AuthGuard('jwt')` | Fetch a single recipe by id |
+| `PATCH` | `/api/v1/recipe/:id` | `AuthGuard('jwt')` | Partial update; 422 when recipe is not found |
+| `DELETE` | `/api/v1/recipe/:id` | `AuthGuard('jwt')` | Proper soft-delete (`updateOne({ deletedAt: new Date() })`) |
 
 ## Data Flows
 
 The diagram below summarises the pantry-aware matching pipeline that powers
-`GET /api/recipe/matches`. The full deep-dive (with all four Mongo pre-filter
+`GET /api/v1/recipe/matches`. The full deep-dive (with all four Mongo pre-filter
 clauses, the scoring loop, and the post-filter algebra) lives in
 [../../../ARCHITECTURE.md](../../../ARCHITECTURE.md) § Recipe Matching Pipeline.
 
 ```mermaid
 flowchart TD
-    A[GET /api/recipe/matches] --> B[RecipeService.matches userId, filterOptions]
+    A[GET /api/v1/recipe/matches] --> B[RecipeService.matches userId, filterOptions]
     B --> C[fetch User preferences]
     B --> D[fetch PantryIngridient by userId]
     C --> E[RecipeDocumentRepository.matches]
@@ -127,10 +127,9 @@ inherits the global runtime configuration:
 | `DATABASE_URL` | `mongodb://localhost:27017` | `backend/env_example:L11` |
 | `API_PREFIX` | `api` | `backend/env_example:L4` |
 
-The controller path prefix `/api/recipe` is derived from the global
-`API_PREFIX` and the controller path `'recipe'`. Although `@Controller(...)` is
-given a `version: '1'` argument, `app.enableVersioning()` is never called, so the
-version is inert and no `/v1` segment appears.
+The controller path prefix `/api/v1/recipe` is derived from the global
+`API_PREFIX` (`api`), the `version: '1'` argument on `@Controller(...)`, and the
+controller path `'recipe'`.
 
 ## Known Limitations and Implementation Gaps
 

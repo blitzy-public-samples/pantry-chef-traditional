@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
 
 /**
- * Validation contract for POST /api/auth/email/register.
+ * Validation contract for POST /api/v1/auth/email/register.
  *
  * Consumed by AuthController.register → AuthService.register. The
  * `email` field is normalized to lowercase and validated via `@IsEmail()`.

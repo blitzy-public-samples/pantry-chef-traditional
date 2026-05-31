@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The `mobile/lib/features/recipe/` feature implements recipe browsing, detail, and pantry-aware matching for the PantryChef Flutter client. It consumes the backend `/api/recipe` family — most notably `GET /api/recipe/matches`, which scores recipes against the user's pantry and `Preferences` (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § Recipe Matching Pipeline). The domain layer preserves backend spellings verbatim (`ingridientList`, `InstractionItem`, `instraction_item.dart`) and contains a documented `Recipe.copyWith` no-op on `inFavorite` (see Known Limitations), surfaced but not fixed here.
+The `mobile/lib/features/recipe/` feature implements recipe browsing, detail, and pantry-aware matching for the PantryChef Flutter client. It consumes the backend `/api/v1/recipe` family — most notably `GET /api/v1/recipe/matches`, which scores recipes against the user's pantry and `Preferences` (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § Recipe Matching Pipeline). The domain layer preserves backend spellings verbatim (`ingridientList`, `InstractionItem`, `instraction_item.dart`) and contains a documented `Recipe.copyWith` no-op on `inFavorite` (see Known Limitations), surfaced but not fixed here.
 
 ## Key Components
 
@@ -30,7 +30,7 @@ The `mobile/lib/features/recipe/` feature implements recipe browsing, detail, an
 
 ## Architecture Fit
 
-The feature follows the standard mobile clean-architecture pattern: `presentation/` (BLoC, widgets, screens) calls `domain/` use cases over the abstract `RecipeRepository`, bound to the `data/` layer's `RecipeRepositoryImpl`. Backend integration funnels through `RecipeApi` over the app-wide `getIt<DioClient>().dio` instance with its JWT bearer interceptor (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § JWT Authentication Flow). The **matching algorithm runs entirely on the server**; the mobile feature is a thin consumer that issues `GET /api/recipe/matches` and renders the sorted result (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § Recipe Matching Pipeline).
+The feature follows the standard mobile clean-architecture pattern: `presentation/` (BLoC, widgets, screens) calls `domain/` use cases over the abstract `RecipeRepository`, bound to the `data/` layer's `RecipeRepositoryImpl`. Backend integration funnels through `RecipeApi` over the app-wide `getIt<DioClient>().dio` instance with its JWT bearer interceptor (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § JWT Authentication Flow). The **matching algorithm runs entirely on the server**; the mobile feature is a thin consumer that issues `GET /api/v1/recipe/matches` and renders the sorted result (see [ARCHITECTURE.md](../../../../ARCHITECTURE.md) § Recipe Matching Pipeline).
 
 ## Dependencies
 
@@ -64,22 +64,22 @@ Versions pinned exactly per `mobile/pubspec.yaml`:
 ## Primary Use Cases
 
 - **Browse recipes** — `RecipeMain` shows a paginated list of `RecipeCard` items with `imageUrl`, `title`, `description`, `prepTime`, `cookTime`, `servings`, and a `matchScore` progress bar coloured by `_getProgressBarColor` (≥0.7 green, 0.3–0.7 orange, <0.3 red).
-- **Get pantry-aware matches** — `GET /api/recipe/matches` with optional `isQuickMake`/`isAlmostThere` flags; the server sorts by `matchScore` desc and `RecipeBloc` emits the items list.
+- **Get pantry-aware matches** — `GET /api/v1/recipe/matches` with optional `isQuickMake`/`isAlmostThere` flags; the server sorts by `matchScore` desc and `RecipeBloc` emits the items list.
 - **View recipe detail** — `RecipeDetailed` renders `ingridientList` (spelling preserved verbatim) as `"<name>, <amount> <unit>"` lines, then `instructions` (`List<InstractionItem>`, preserved verbatim) as `"<step>. <description>"` lines.
 - **Filter by quick-make / almost-there** — `RecipeFiltersDto` exposes the two boolean flags, serialized via `toJson()` (see the contract caveat in Known Limitations).
 - **Toggle favorite** — `RecipeCard` does NOT mutate `Recipe`; it dispatches `FavoriteRecipesListUpdated(recipeId, isFavorite)` to `ProfileBloc`, which manages `User.favoriteRecipes` (see [DATA_MODEL.md](../../../../DATA_MODEL.md) § User).
 
 ## API / Endpoint Reference
 
-Endpoints consumed via `RecipeApi`, all under the global prefix `/api/recipe` — there is **no `/v1` segment** because the backend never calls `app.enableVersioning()`. Each requires JWT auth (`@UseGuards(AuthGuard('jwt'))`); the bearer header is attached by the shared `DioClient` interceptor.
+Endpoints consumed via `RecipeApi`, all under `/api/v1/recipe` — the `recipe` controller declares `version: '1'` under the global `api` prefix. Each requires JWT auth (`@UseGuards(AuthGuard('jwt'))`); the bearer header is attached by the shared `DioClient` interceptor.
 
 | Method | Path | Backend Guard | Mobile Method |
 | --- | --- | --- | --- |
-| `GET` | `/api/recipe/matches` | `AuthGuard('jwt')` | `RecipeApi.recipeMatching(filters)` — query params from `RecipeFiltersDto.toJson()` |
-| `GET` | `/api/recipe` | `AuthGuard('jwt')` | `RecipeApi.getRecipeList()` and `RecipeApi.getFavoriteList(ids)` (the latter passes `QueryRecipeDto(ids: ids)`) |
-| `GET` | `/api/recipe/:id` | `AuthGuard('jwt')` | `RecipeApi.getRecipeById(id)` |
+| `GET` | `/api/v1/recipe/matches` | `AuthGuard('jwt')` | `RecipeApi.recipeMatching(filters)` — query params from `RecipeFiltersDto.toJson()` |
+| `GET` | `/api/v1/recipe` | `AuthGuard('jwt')` | `RecipeApi.getRecipeList()` and `RecipeApi.getFavoriteList(ids)` (the latter passes `QueryRecipeDto(ids: ids)`) |
+| `GET` | `/api/v1/recipe/:id` | `AuthGuard('jwt')` | `RecipeApi.getRecipeById(id)` |
 
-> Note: the backend also exposes `POST /api/recipe` (create), but `RecipeApi` has **no** create method and the mobile UI does not surface it — it is intentionally excluded from the consumed list above.
+> Note: the backend also exposes `POST /api/v1/recipe` (create), but `RecipeApi` has **no** create method and the mobile UI does not surface it — it is intentionally excluded from the consumed list above.
 
 Backend pagination caps `limit` at 50 per page; mobile `QueryRecipeDto.limit` defaults to 500 and the backend silently clamps it. See [backend recipe README](../../../../backend/src/recipe/README.md).
 
@@ -95,7 +95,7 @@ sequenceDiagram
     participant UC as RecipeMatchingUsecase
     participant R as RecipeRepositoryImpl
     participant D as DioClient
-    participant API as Backend /api/recipe/matches
+    participant API as Backend /api/v1/recipe/matches
     U->>S: pull-to-refresh
     S->>B: add(RecipeMatching())
     B->>UC: call(RecipeFiltersDto())

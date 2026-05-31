@@ -5,7 +5,7 @@
 The `users/` module manages user accounts and their embedded `Preferences` subdocument
 (dietary restrictions, allergies, disliked ingredients, and a `cookingTime` cap) used to
 filter the recipe matching pipeline. It exposes a JWT-protected CRUD API under
-`/api/users` plus a `/me` route for the authenticated principal, and is consumed by
+`/api/v1/users` plus a `/me` route for the authenticated principal, and is consumed by
 `AuthModule` for register/login/me flows and by `RecipeService.matches` to fetch the
 current user's `Preferences`. Password hashing with `bcryptjs` is performed inside
 `UsersService.create` (`users.service.ts`); `AuthService.update` verifies the
@@ -15,7 +15,7 @@ old password upstream and forwards the new value to this module without re-hashi
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `UsersController` | `users.controller.ts` | Five routes under `/api/users`, all `AuthGuard('jwt')`. |
+| `UsersController` | `users.controller.ts` | Five routes under `/api/v1/users`, all `AuthGuard('jwt')`. |
 | `UsersService` | `users.service.ts` | Business orchestration; hashes passwords on create, enforces unique emails. |
 | `UserRepository` (abstract) | `infrastructure/user.repository.ts` | Abstract persistence contract for the User aggregate. |
 | `UsersDocumentRepository` | `infrastructure/document/repositories/user.repository.ts` | Mongoose-backed implementation. **`softDelete` currently calls `deleteOne`** — physically destructive (see § Known Limitations). |
@@ -72,27 +72,26 @@ version is pinned in `package-lock.json` rather than `package.json`:
 - **Register a user** — typically invoked through `AuthService.register`, which
   delegates to `UsersService.create` (where `bcryptjs` hashes the password).
 - **List users** — paginated browsing with a hard cap of 50 records per page.
-- **Fetch the current user** — `GET /api/users/me` returns the principal extracted
+- **Fetch the current user** — `GET /api/v1/users/me` returns the principal extracted
   from `request.user.id`.
-- **Update user profile** — `PATCH /api/users` accepts a `PartialType(CreateUserDto)`
+- **Update user profile** — `PATCH /api/v1/users` accepts a `PartialType(CreateUserDto)`
   payload; password changes are intended to flow through `AuthService.update`.
-- **"Soft"-delete a user** — `DELETE /api/users/:id` currently uses `deleteOne`
+- **"Soft"-delete a user** — `DELETE /api/v1/users/:id` currently uses `deleteOne`
   (destructive — see § Known Limitations).
 
 ## API / Endpoint Reference
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/users` | `AuthGuard('jwt')` | Create a user. Body: `CreateUserDto`. Returns `201 Created` with the new `User`. |
-| `GET` | `/api/users` | `AuthGuard('jwt')` | Paginated list. Query: `page`, `limit` (capped at 50), `filters`, `sort`. Returns `{ data, hasNextPage }`. |
-| `GET` | `/api/users/me` | `AuthGuard('jwt')` | Fetch the authenticated user via `request.user.id`. |
-| `PATCH` | `/api/users` | `AuthGuard('jwt')` | Partial update of the authenticated user. Body: `UpdateUserDto`. |
-| `DELETE` | `/api/users/:id` | `AuthGuard('jwt')` | "Soft"-delete a user (currently physically destructive — see § Known Limitations). Returns `204 No Content`. |
+| `POST` | `/api/v1/users` | `AuthGuard('jwt')` | Create a user. Body: `CreateUserDto`. Returns `201 Created` with the new `User`. |
+| `GET` | `/api/v1/users` | `AuthGuard('jwt')` | Paginated list. Query: `page`, `limit` (capped at 50), `filters`, `sort`. Returns `{ data, hasNextPage }`. |
+| `GET` | `/api/v1/users/me` | `AuthGuard('jwt')` | Fetch the authenticated user via `request.user.id`. |
+| `PATCH` | `/api/v1/users` | `AuthGuard('jwt')` | Partial update of the authenticated user. Body: `UpdateUserDto`. |
+| `DELETE` | `/api/v1/users/:id` | `AuthGuard('jwt')` | "Soft"-delete a user (currently physically destructive — see § Known Limitations). Returns `204 No Content`. |
 
 Paths derive from `@Controller({ path: 'users', version: '1' })`
-(`users.controller.ts`) combined with the global `/api` prefix in `main.ts`.
-Because `app.enableVersioning()` is never called, the `version: '1'` option is
-inert and no `/v1` segment is added, so routes resolve at `/api/users/*`. The
+(`users.controller.ts`) combined with the global `/api` prefix in `main.ts`,
+so routes resolve at `/api/v1/users/*`. The
 Swagger surface is published at `/docs`.
 
 ## Data Flows
@@ -101,7 +100,7 @@ The registration flow showing embedded `Preferences` default and `Session` linka
 
 ```mermaid
 flowchart TD
-    A[Client POST /api/auth/email/register] --> B[AuthController.register]
+    A[Client POST /api/v1/auth/email/register] --> B[AuthController.register]
     B --> C[AuthService.register]
     C --> D[UsersService.create]
     D -->|bcryptjs.hash password| E[UsersDocumentRepository.create]
@@ -145,7 +144,7 @@ authentication is configured by upstream `AuthModule` via `AUTH_JWT_SECRET` and
 > hashes via `bcryptjs` (`users.service.ts`), but `UsersService.update`
 > (`users.service.ts`) forwards the payload verbatim without re-hashing. The
 > intended path is `AuthService.update`, which verifies the old password upstream;
-> direct callers of `PATCH /api/users` with a `password` field will persist plaintext.
+> direct callers of `PATCH /api/v1/users` with a `password` field will persist plaintext.
 
 > ⚠️ **`findManyWithPagination` ignores `filterOptions`** —
 > `infrastructure/document/repositories/user.repository.ts`. The Mongo `where`

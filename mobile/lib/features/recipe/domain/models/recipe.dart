@@ -11,7 +11,7 @@ part 'recipe.g.dart';
 /// Mirrors the backend `RecipeSchemaClass` (see `DATA_MODEL.md` § Recipe).
 /// Includes `ingridientList` (spelling preserved verbatim) and
 /// `instructions: List<InstractionItem>` (spelling preserved verbatim), and
-/// an optional `matchScore` populated only by `/api/recipe/matches`
+/// an optional `matchScore` populated only by `/api/v1/recipe/matches`
 /// responses.
 @JsonSerializable()
 class Recipe {
@@ -61,7 +61,7 @@ class Recipe {
 
   /// Server-derived match score in [0.0, 1.0] = `availableIngredients / totalIngredients`.
   ///
-  /// Populated ONLY by `/api/recipe/matches`. Null on regular list/detail responses.
+  /// Populated ONLY by `/api/v1/recipe/matches`. Null on regular list/detail responses.
   final double? matchScore; // how well it matches available ingredients
 
   /// Creates a `Recipe` with all required fields; `matchScore` is optional.

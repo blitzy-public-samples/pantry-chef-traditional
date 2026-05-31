@@ -47,7 +47,7 @@ export class SortRecipeDto {
 }
 
 /**
- * Query string contract for GET /api/recipe (the paginated list endpoint).
+ * Query string contract for GET /api/v1/recipe (the paginated list endpoint).
  *
  * Carries pagination (`page`, `limit`), free-text search (`query` → name regex),
  * id whitelist (`ids`), and optional `sort` directives. The controller enforces

@@ -10,7 +10,7 @@ import { Transform, Type, plainToInstance } from 'class-transformer';
 import { PantryIngridient } from '../domain/pantryIngridient';
 
 /**
- * Filter contract for GET /api/pantry list queries (spelling preserved
+ * Filter contract for GET /api/v1/pantry list queries (spelling preserved
  * verbatim).
  *
  * Declares an optional `id` field, but the repository's
@@ -29,7 +29,7 @@ export class FilterPantryIngridientDto {
 }
 
 /**
- * Sort directive for GET /api/pantry list queries (spelling preserved
+ * Sort directive for GET /api/v1/pantry list queries (spelling preserved
  * verbatim).
  *
  * `orderBy` is one of the keys of PantryIngridient; `order` is 'ASC' or
@@ -47,7 +47,7 @@ export class SortPantryIngridientDto {
 }
 
 /**
- * Top-level query contract for GET /api/pantry (spelling preserved
+ * Top-level query contract for GET /api/v1/pantry (spelling preserved
  * verbatim).
  *
  * Combines pagination (`page`, `limit`), `filters` (FilterPantryIngridientDto

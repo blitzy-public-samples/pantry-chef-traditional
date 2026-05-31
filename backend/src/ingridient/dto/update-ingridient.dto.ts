@@ -9,7 +9,7 @@ import { CreateIngridientDto } from './create-ingridient.dto';
 import { Reference } from 'src/common/types';
 
 /**
- * Validation contract for `PATCH /api/ingredient/:id` update requests.
+ * Validation contract for `PATCH /api/v1/ingredient/:id` update requests.
  *
  * Extends `PartialType(CreateIngridientDto)` so all create fields become
  * optional. Adds a required `id` parameter and `lowerCaseTransformer`

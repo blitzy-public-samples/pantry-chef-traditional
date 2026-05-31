@@ -9,7 +9,7 @@ import 'package:pantry_chef/features/recipe/domain/repositories/recipe.repositor
 /// Takes a `RecipeFiltersDto` and returns the server-sorted match list.
 /// Dispatched from `RecipeBloc.RecipeMatching`, the default screen entry
 /// point on `RecipeMain.initState`. The mobile use case is a thin wrapper;
-/// the actual matching algorithm runs server-side at `/api/recipe/matches`
+/// the actual matching algorithm runs server-side at `/api/v1/recipe/matches`
 /// (see `ARCHITECTURE.md` § Recipe Matching Pipeline and
 /// `backend/src/recipe/README.md`).
 class RecipeMatchingUsecase implements UseCaseWithParams<List<Recipe>, RecipeFiltersDto> {

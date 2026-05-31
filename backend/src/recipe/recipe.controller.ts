@@ -33,7 +33,7 @@ import { FilterType } from './types/filter.types';
   version: '1',
 })
 /**
- * Controller routing /api/recipe/* requests to RecipeService.
+ * Controller routing /api/v1/recipe/* requests to RecipeService.
  *
  * All endpoints require JWT authentication via @UseGuards(AuthGuard('jwt'))
  * and are tagged for Swagger as 'Recipe' with bearer auth. The pantry-aware
@@ -43,7 +43,7 @@ export class RecipeController {
   constructor(private readonly recipeService: RecipeService) {}
 
   /**
-   * POST /api/recipe — create a new recipe.
+   * POST /api/v1/recipe — create a new recipe.
    *
    * Delegates to RecipeService.create which enforces a unique-title check
    * before persisting via the recipe repository.
@@ -62,7 +62,7 @@ export class RecipeController {
   }
 
   /**
-   * GET /api/recipe/matches — pantry-aware recipe matches.
+   * GET /api/v1/recipe/matches — pantry-aware recipe matches.
    *
    * Fetches the authenticated user's Preferences and PantryIngridient list,
    * delegates to RecipeService.matches, returns recipes sorted by matchScore.
@@ -79,7 +79,7 @@ export class RecipeController {
   }
 
   /**
-   * GET /api/recipe — list recipes with pagination (hard cap 50 per page).
+   * GET /api/v1/recipe — list recipes with pagination (hard cap 50 per page).
    *
    * Forwards filterOptions (name regex search, ids whitelist) and sortOptions
    * to RecipeService.findManyWithPagination, then wraps the result with the
@@ -113,7 +113,7 @@ export class RecipeController {
   }
 
   /**
-   * GET /api/recipe/:id — fetch a single recipe by id.
+   * GET /api/v1/recipe/:id — fetch a single recipe by id.
    *
    * @param id Recipe identifier (MongoDB ObjectId as string).
    * @returns The Recipe domain entity, or null when no document matches.
@@ -130,7 +130,7 @@ export class RecipeController {
   }
 
   /**
-   * PATCH /api/recipe/:id — partial update of an existing recipe.
+   * PATCH /api/v1/recipe/:id — partial update of an existing recipe.
    *
    * Delegates to RecipeService.update which first verifies the recipe exists.
    *
@@ -156,7 +156,7 @@ export class RecipeController {
   }
 
   /**
-   * DELETE /api/recipe/:id — proper soft-delete of a recipe.
+   * DELETE /api/v1/recipe/:id — proper soft-delete of a recipe.
    *
    * Delegates to RecipeService.softDelete which performs a Mongoose
    * `updateOne({ _id }, { deletedAt: new Date() })` at

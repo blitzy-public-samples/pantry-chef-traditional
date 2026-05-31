@@ -126,6 +126,7 @@ export class AiService {
       return {};
     }
 
+    // Iterate through labels and find the first match in the dictionary
     // FIXME: loop does not break, so the LAST matching dictionary term wins
     // (despite the legacy "first match" intent). Document only; do not fix.
     let recognizedIngridient: string = null;

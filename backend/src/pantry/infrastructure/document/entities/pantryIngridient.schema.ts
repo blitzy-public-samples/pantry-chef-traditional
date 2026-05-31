@@ -13,10 +13,10 @@ export type PantryIngridientSchemaDocument =
  *
  * Decorated with @Schema({ timestamps: true }) so Mongoose auto-maintains
  * createdAt and updatedAt. Declares a `location` enum
- * ('fridge' | 'freezer' | 'pantry') at the schema level (L32-L33) — note
+ * ('fridge' | 'freezer' | 'pantry') on the `location` field — note
  * that this enum is not currently mirrored by an @IsEnum on the DTO, so
  * invalid values surface as Mongoose write-time errors rather than
- * ValidationPipe 400s. An index on `userId` at L49 supports user-scoped
+ * ValidationPipe 400s. An index on the `userId` field supports user-scoped
  * queries.
  *
  * See ../../../../../../DATA_MODEL.md § PantryIngridient for the full field

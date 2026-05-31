@@ -360,9 +360,10 @@ deleting the document. This preserves history and keeps foreign references intac
 > `PantryIngridientDocumentRepository.softDelete()` (spelling preserved verbatim)
 > does **not** stamp `deletedAt`; despite its name it calls
 > `this.pantryIngridientModel.deleteOne({ _id: id })`, physically destroying the
-> record. This is preserved as-is for this documentation pass; it will be flagged
-> inline with `// FIXME:` / `// TODO(prod):` when the pantry source is annotated in a
-> later checkpoint, and the production-readiness follow-up is catalogued in
+> record. This is preserved as-is for this documentation pass; it is flagged
+> inline with `// FIXME:` and `// TODO(prod):` in the pantry source
+> (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186),
+> and the production-readiness follow-up is catalogued in
 > [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 > Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204.
 
@@ -390,7 +391,7 @@ separate `categories` or `units` collection, the schema caches the human-readabl
 `name` alongside the `id`, so an ingredient document is self-describing without a
 join. The reference data itself (the catalogue of valid categories and units, each
 with an integer `id` and a display `name`) is hardcoded and served to clients by
-`GET /api/ingredient/creation-data`
+`GET /api/v1/ingredient/creation-data`
 (Source: backend/src/ingridient/ingridient.controller.ts:L62). Note that although
 the catalogue ids are integers, the `Reference.id` field is typed as `string`
 (Source: backend/src/common/types.ts:L22-L25).

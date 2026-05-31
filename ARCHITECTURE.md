@@ -112,9 +112,9 @@ Five concerns cut across every feature module.
 
 ### JWT Authentication Flow
 
-1. A client signs in by posting to `POST /api/auth/email/login` with an
+1. A client signs in by posting to `POST /api/v1/auth/email/login` with an
    `AuthEmailLoginDto` carrying email and password (Source: backend/src/auth/auth.controller.ts:L56-L62).
-   The mobile signup screen reaches the sibling `POST /api/auth/email/register`
+   The mobile signup screen reaches the sibling `POST /api/v1/auth/email/register`
    endpoint after navigating through the `Navigation.singup` route (spelling
    preserved verbatim — the route constant is intentionally misspelled and must
    not be renamed) (Source: backend/src/auth/auth.controller.ts:L74-L80).
@@ -128,13 +128,13 @@ Five concerns cut across every feature module.
    error interceptor delegates to a dedicated `_refreshDio` instance that carries
    no auth interceptor, so the refresh call itself cannot recurse
    (Source: mobile/lib/core/utils/dio_client.dart:L44-L51,L55-L69).
-5. `_refreshDio` posts the refresh token to `POST /api/auth/refresh`, which is
+5. `_refreshDio` posts the refresh token to `POST /api/v1/auth/refresh`, which is
    guarded by `AuthGuard('jwt-refresh')` — a `passport-jwt` strategy keyed on the
    separate `AUTH_REFRESH_SECRET`; on success it mints new access and refresh
    tokens, which the client persists before transparently retrying the original
    request (Source: backend/src/auth/auth.controller.ts:L111-L119; mobile/lib/core/utils/dio_client.dart:L71-L97).
 6. Session state lives in a dedicated `Session` collection so that
-   `POST /api/auth/logout` can invalidate the refresh path by marking the
+   `POST /api/v1/auth/logout` can invalidate the refresh path by marking the
    session's `deletedAt` (Source: backend/src/auth/auth.controller.ts:L131-L139).
 
 > ⚠️ The default `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` (~10 years) shipped in
@@ -157,9 +157,10 @@ The field-level contract is described in [DATA_MODEL.md](DATA_MODEL.md).
 > despite its name it calls `deleteOne({ _id: id })`, physically destroying the
 > record rather than flagging it
 > (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204).
-> The discrepancy will be flagged inline with a `// FIXME:` when the pantry source is
-> annotated in a later checkpoint, and is catalogued in
-> [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+> The discrepancy is flagged inline with `// FIXME:` and `// TODO(prod):` in the
+> pantry source
+> (Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186),
+> and is catalogued in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 ### Pagination Cap 50
 
@@ -230,14 +231,11 @@ buffer to Google Cloud Vision (Source: backend/src/ai/ai.controller.ts:L65-L73).
 
 > ⚠️ The feature controllers declare a version
 > (`@Controller({ path: 'recipe', version: '1' })`, Source: backend/src/recipe/recipe.controller.ts:L31-L34),
-> but `app.enableVersioning()` is never called during bootstrap
-> (Source: backend/src/main.ts:L10-L35), so at runtime the `version` property is
-> inert and the effective paths carry only the `/api` prefix (for example
-> `/api/auth/refresh`). This document therefore documents the actual runtime paths
-> under `/api` (with no `/v1` segment), matching the module READMEs. The mobile
-> client confirms this: its endpoint base ends in `/api` with no version segment
-> (Source: mobile/lib/env_config.dart:L2; mobile/lib/core/utils/dio_client.dart:L78-L81).
-> Wiring up versioning is tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+> so under the global `/api` prefix (Source: backend/src/main.ts:L10-L35) their
+> routes resolve at `/api/v1/<feature>/*` (for example `/api/v1/auth/refresh`),
+> matching the module READMEs. The unversioned `AiController` (`@Controller('ai')`)
+> resolves at `/api/ai/vision`. Operational hardening of the versioning strategy
+> is tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 ## Recipe Matching Pipeline
 
@@ -357,5 +355,5 @@ For endpoint-level usage of this pipeline see the
 [recipe module README](backend/src/recipe/README.md); for the backend `IngridientList`
 (spelling preserved verbatim) and `Instruction` sub-schemas it relies on, see
 [DATA_MODEL.md](DATA_MODEL.md). The mobile client mirrors these with a separately spelled
-`InstractionItem` (spelling preserved verbatim) in `instraction_item.dart`, documented when
-the mobile recipe feature is in scope.
+`InstractionItem` (spelling preserved verbatim) in `instraction_item.dart`, documented in the
+[mobile recipe feature README](mobile/lib/features/recipe/README.md).

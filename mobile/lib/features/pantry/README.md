@@ -60,22 +60,22 @@ The feature follows the standard mobile clean-architecture layering: `presentati
 
 - Browse all pantry items grouped by storage location through a `GroupedListView` (Source: `presentation/widgets/screens/patry_main.dart:L52-L66`).
 - Add a pantry item manually via the edit form (Source: `domain/usecases/add_to_pantry.usecase.dart`).
-- Add a pantry item from the camera + AI-vision workflow — that flow lives in the ingredient feature, but the resulting `POST /api/pantry` is handled here.
+- Add a pantry item from the camera + AI-vision workflow — that flow lives in the ingredient feature, but the resulting `POST /api/v1/pantry` is handled here.
 - Edit an existing item's quantity, location, and expiration date (Source: `presentation/widgets/screens/pantry_item_edit.dart`).
 - Delete a pantry item — the route name implies soft-delete, but the backend physically removes the row (see Known Limitations).
 - Rehydrate the cached pantry list on app launch (Source: `presentation/bloc/pantry/pantry_bloc.dart:L13` — the `hydrate()` call).
 
 ## API / Endpoint Reference
 
-All routes sit under `/api/pantry` — there is **no `/v1` segment**, because the backend declares `@Controller({ path: 'pantry', version: '1' })` but never calls `app.enableVersioning()`, leaving the version inert (Source: `mobile/lib/core/constants/endpoints.dart:L92`). Every endpoint is JWT-protected by a class-level guard (Source: `backend/src/pantry/pantry.controller.ts:L42`).
+All routes sit under `/api/v1/pantry`, because the backend declares `@Controller({ path: 'pantry', version: '1' })` under the global `api` prefix (Source: `mobile/lib/core/constants/endpoints.dart:L92`). Every endpoint is JWT-protected by a class-level guard (Source: `backend/src/pantry/pantry.controller.ts:L42`).
 
 | Method | Path | Guard | Description |
 |--------|------|-------|-------------|
-| `GET` | `/api/pantry` | `AuthGuard('jwt')` | List the authenticated user's pantry items (paginated; backend caps `limit` at 50) |
-| `POST` | `/api/pantry` | `AuthGuard('jwt')` | Add a pantry item; consumes `CreatePantryItemDto` |
-| `GET` | `/api/pantry/:id` | `AuthGuard('jwt')` | Fetch a single pantry item by id |
-| `PATCH` | `/api/pantry/:id` | `AuthGuard('jwt')` | Update an existing pantry item; consumes `UpdatePantryItemDto` |
-| `DELETE` | `/api/pantry/:id` | `AuthGuard('jwt')` | Delete a pantry item (see Known Limitations — the backend physically deletes) |
+| `GET` | `/api/v1/pantry` | `AuthGuard('jwt')` | List the authenticated user's pantry items (paginated; backend caps `limit` at 50) |
+| `POST` | `/api/v1/pantry` | `AuthGuard('jwt')` | Add a pantry item; consumes `CreatePantryItemDto` |
+| `GET` | `/api/v1/pantry/:id` | `AuthGuard('jwt')` | Fetch a single pantry item by id |
+| `PATCH` | `/api/v1/pantry/:id` | `AuthGuard('jwt')` | Update an existing pantry item; consumes `UpdatePantryItemDto` |
+| `DELETE` | `/api/v1/pantry/:id` | `AuthGuard('jwt')` | Delete a pantry item (see Known Limitations — the backend physically deletes) |
 
 The mobile `PantryApi` (Source: `data/api/pantry.api.dart`) issues these calls through the shared `DioClient`, which injects the bearer JWT.
 
@@ -107,7 +107,7 @@ App start triggers HydratedBloc rehydration; a cached snapshot renders immediate
 
 ## Known Limitations and Implementation Gaps
 
-> ⚠️ **Backend `softDelete` is destructive** — it calls `deleteOne()` instead of setting `deletedAt` (Source: `backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204`), so the mobile `DELETE /api/pantry/:id` physically removes the record despite the route name implying soft-delete. See [`../../../../DATA_MODEL.md`](../../../../DATA_MODEL.md) § Soft-Delete (deletedAt).
+> ⚠️ **Backend `softDelete` is destructive** — it calls `deleteOne()` instead of setting `deletedAt` (Source: `backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L200-L204`), so the mobile `DELETE /api/v1/pantry/:id` physically removes the record despite the route name implying soft-delete. See [`../../../../DATA_MODEL.md`](../../../../DATA_MODEL.md) § Soft-Delete (deletedAt).
 
 > ⚠️ **Location enum strings are not validated client-side** — `'fridge'`, `'freezer'`, and `'pantry'` come from `mobile/lib/core/constants/ingredient_location.dart:L23`, with no compile-time enum or exhaustiveness check; a value mismatch fails only on the backend.
 

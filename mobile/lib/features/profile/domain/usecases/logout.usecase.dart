@@ -19,7 +19,7 @@ import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc
 /// [BuildContext] is required for provider scope and the Navigator; teardown runs in five steps:
 ///
 /// 1. Server-side logout: instantiates [ProfileRepositiryImpl] (typo preserved verbatim) and
-///    calls `repo.logout()` to invalidate the refresh session via `POST /api/auth/logout`.
+///    calls `repo.logout()` to invalidate the refresh session via `POST /api/v1/auth/logout`.
 /// 2. Local credential cleanup: resolves [SharedPreferencesHelper] via
 ///    `getIt<SharedPreferencesHelper>()` (the only GetIt-resolved dependency here), then clears
 ///    both JWTs with `removeAccessToken()` and `removeRefreshToken()`.

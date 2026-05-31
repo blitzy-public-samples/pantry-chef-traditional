@@ -6,7 +6,7 @@ import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transf
 /**
  * DTO for the forgot-password flow (initiate password reset by email).
  *
- * WARNING — this DTO is currently UNWIRED. No `POST /api/auth/forgot-password`
+ * WARNING — this DTO is currently UNWIRED. No `POST /api/v1/auth/forgot-password`
  * endpoint exists in AuthController; the matching `MailModule` import in
  * AuthModule is commented out (see auth.module.ts). The forgot-password
  * flow is therefore non-functional in the current codebase.
@@ -16,11 +16,11 @@ import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transf
  * - See ../../../../PRODUCTION_READINESS.md § Security Hardening (Wire password
  *   reset endpoints)
  *
- * To wire up: implement `POST /api/auth/forgot-password` in AuthController,
+ * To wire up: implement `POST /api/v1/auth/forgot-password` in AuthController,
  * inject MailService into AuthService, and uncomment the MailModule import
  * in auth.module.ts.
  */
-// TODO(prod): Wire this DTO into AuthController via POST /api/auth/forgot-password.
+// TODO(prod): Wire this DTO into AuthController via POST /api/v1/auth/forgot-password.
 export class AuthForgotPasswordDto {
   @ApiProperty()
   @Transform(lowerCaseTransformer)

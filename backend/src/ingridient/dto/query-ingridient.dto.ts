@@ -41,7 +41,7 @@ export class SortIngridientDto {
 }
 
 /**
- * Validation contract for `GET /api/ingredient` list/search requests
+ * Validation contract for `GET /api/v1/ingredient` list/search requests
  * (spelling preserved verbatim).
  *
  * Supports pagination (`page` default 1, `limit` default 10; the

@@ -26,8 +26,8 @@ soft-delete (`deletedAt`) contract referenced repeatedly below, see
 > default, or seed data is modified by this engagement. As each source module is
 > processed, its files receive the corresponding inline markers (`// TODO(prod):`
 > for production gaps, `// NOTE:` for intentional decisions, `// FIXME:` for
-> genuine bugs); the backend foundation is annotated at this checkpoint, with the
-> remaining backend modules and the mobile client to follow in later checkpoints.
+> genuine bugs); every in-scope source file across the backend and the mobile
+> client has been annotated with these markers as part of this engagement.
 > The remediation steps here describe the recommended path without applying it.
 
 **Legend.** Each category carries a status indicator:
@@ -208,11 +208,11 @@ password-reset flow is half-built.
 > issuance, email delivery, hash verification).
 > *Source: backend/src/auth/dto/auth-forgot-password.dto.ts; backend/src/auth/dto/auth-reset-password.dto.ts; backend/src/auth/auth.controller.ts.*
 
-> 🚧 **Plaintext-password update path on `PATCH /api/users`.** `UsersService.create`
+> 🚧 **Plaintext-password update path on `PATCH /api/v1/users`.** `UsersService.create`
 > bcrypt-hashes the password, but `UsersService.update` forwards the payload to
 > `UsersDocumentRepository.update` without re-hashing. The intended password-change
 > flow runs through `AuthService.update` (which verifies the old password upstream),
-> but a direct authenticated call to `PATCH /api/users` carrying a `password`
+> but a direct authenticated call to `PATCH /api/v1/users` carrying a `password`
 > field would persist that value in plaintext. Either add a re-hash step in
 > `UsersService.update` or drop the `password` field from `UpdateUserDto`. Surfaced
 > locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
@@ -407,15 +407,13 @@ The Flutter client has no production release configuration on any platform.
 ## Summary Table — Gap to Module Mapping
 
 The table below maps each code-level gap surfaced in this central checklist to
-the module README that will document it and the inline annotation that will flag
-it at the source — the planned end-state traceability for the engagement. These
-annotations and READMEs are populated as each module is processed across
-checkpoints; the database foundation is complete at this checkpoint, while the
-remaining rows are populated in later checkpoints. A developer reading a single
-module can then find its local context; an operator scanning for blockers reads
-this document.
+the module README that documents it and the inline annotation that flags it at
+the source — the end-to-end traceability for the engagement. These annotations
+and READMEs are in place across every in-scope module. A developer reading a
+single module can then find its local context; an operator scanning for blockers
+reads this document.
 
-| Gap | Module README | Planned Inline Annotation |
+| Gap | Module README | Inline Annotation |
 |-----|---------------|-------------------|
 | Recipe `_id` matching only / no unit normalization / no quantity check | [backend/src/recipe/README.md](backend/src/recipe/README.md) | `// TODO(prod):` block comment above `matches()` in `recipe.repository.ts` |
 | AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts` |

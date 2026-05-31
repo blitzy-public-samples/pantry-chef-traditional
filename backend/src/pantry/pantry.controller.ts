@@ -25,7 +25,7 @@ import { PantryIngridient } from './domain/pantryIngridient';
 import { PantryService } from './pantry.service';
 
 /**
- * Controller routing /api/pantry/* requests to PantryService.
+ * Controller routing /api/v1/pantry/* requests to PantryService.
  *
  * All endpoints require JWT authentication via AuthGuard('jwt'). User scoping
  * is enforced by extracting req.user.id (populated by JwtStrategy.validate)
@@ -49,7 +49,7 @@ export class PantryController {
   constructor(private readonly pantryService: PantryService) {}
 
   /**
-   * POST /api/pantry — Create a new pantry item for the authenticated user.
+   * POST /api/v1/pantry — Create a new pantry item for the authenticated user.
    *
    * Extracts userId from req.user.id (populated by JwtStrategy.validate) and
    * forwards both userId and the validated DTO to PantryService.create.
@@ -69,7 +69,7 @@ export class PantryController {
   }
 
   /**
-   * GET /api/pantry — List the authenticated user's pantry items with
+   * GET /api/v1/pantry — List the authenticated user's pantry items with
    * pagination, filtering, and sorting.
    *
    * The hard cap of `limit = 50` (after defaulting to 10) is enforced per the
@@ -109,7 +109,7 @@ export class PantryController {
   }
 
   /**
-   * GET /api/pantry/:id — Fetch a single pantry item by id.
+   * GET /api/v1/pantry/:id — Fetch a single pantry item by id.
    *
    * @param id PantryIngridient _id (string ObjectId).
    * @returns The PantryIngridient or null if not found.
@@ -128,7 +128,7 @@ export class PantryController {
   }
 
   /**
-   * PATCH /api/pantry/:id — Partially update a pantry item.
+   * PATCH /api/v1/pantry/:id — Partially update a pantry item.
    *
    * Throws HttpException(UNPROCESSABLE_ENTITY) at the service layer when the
    * target id does not exist.
@@ -152,7 +152,7 @@ export class PantryController {
   }
 
   /**
-   * DELETE /api/pantry/:id — "Soft"-delete a pantry item.
+   * DELETE /api/v1/pantry/:id — "Soft"-delete a pantry item.
    *
    * NOTE: Per README § Known Limitations, the underlying repository
    * implementation currently calls `deleteOne` and PHYSICALLY removes the

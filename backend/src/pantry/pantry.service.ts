@@ -21,7 +21,7 @@ import { UpdatePantryIngridientDto } from './dto/update-pantry-ingridient.dto';
  * infrastructure/document/repositories/pantryIngridient.repository.ts.
  *
  * Consumers include:
- * - PantryController (HTTP layer, /api/pantry/*).
+ * - PantryController (HTTP layer, /api/v1/pantry/*).
  * - RecipeService.matches() — reads the authenticated user's full pantry via
  *   findAllByUserId() to compute pantry-aware recipe match scores. See
  *   ../../../ARCHITECTURE.md § Recipe Matching Pipeline.

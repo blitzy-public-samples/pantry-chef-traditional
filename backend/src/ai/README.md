@@ -43,7 +43,7 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) § Full Request Path 
 
 ## API / Endpoint Reference
 
-> The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller declares `@Controller('ai')` with NO `version` parameter, so the route lives at **`/api/ai/vision`** — **NOT** `/api/v1/ai/vision`.
+> The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller declares `@Controller('ai')` with NO `version` parameter — unlike the versioned feature controllers (`auth`, `users`, `ingridient`, `pantry`, `recipe`) — so the route lives at **`/api/ai/vision`**.
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |

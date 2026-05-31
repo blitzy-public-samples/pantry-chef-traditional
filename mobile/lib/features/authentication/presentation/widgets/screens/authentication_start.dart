@@ -41,7 +41,8 @@ class AuthenticationStart extends StatelessWidget {
                       children: [
                         ActionButton(
                           text: AppLocalizations.of(context)!.signup,
-                          // NOTE: 'singup' route name is preserved verbatim (typo retained for API stability).
+                          // NOTE: 'singup' route name is preserved verbatim
+                          // (typo retained for API stability).
                           onPress: () => Navigator.of(context).pushNamed(Navigation.singup),
                         ),
                         const SizedBox(height: 12),

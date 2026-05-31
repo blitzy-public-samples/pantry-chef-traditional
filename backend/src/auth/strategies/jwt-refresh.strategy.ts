@@ -7,7 +7,7 @@ import { OrNeverType } from '../../utils/types/or-never.type';
 import { AllConfigType } from 'src/config/config.type';
 
 /**
- * Passport strategy `jwt-refresh` for the POST /api/auth/refresh endpoint.
+ * Passport strategy `jwt-refresh` for the POST /api/v1/auth/refresh endpoint.
  *
  * Uses a separate secret (`auth.refreshSecret`, env: AUTH_REFRESH_SECRET)
  * and longer TTL (default 3650d) than the access-token strategy. Applied
@@ -15,7 +15,7 @@ import { AllConfigType } from 'src/config/config.type';
  * AuthController. Note that this strategy authenticates the *refresh*
  * token, NOT the access token; therefore clients must send the refresh
  * token (not the access token) in the Authorization header when calling
- * POST /api/auth/refresh.
+ * POST /api/v1/auth/refresh.
  *
  * See ../README.md § Data Flows for the full login → refresh sequence
  * and ../../../../PRODUCTION_READINESS.md § Secrets Management for the
