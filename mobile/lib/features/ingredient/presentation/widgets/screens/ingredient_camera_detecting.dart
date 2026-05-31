@@ -14,9 +14,24 @@ import 'package:pantry_chef/core/presentation/widgets/app_icon_button.dart';
 import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/ingredient/presentation/bloc/camera/camera_bloc.dart';
 
+/// Full-screen camera capture screen for AI-assisted ingredient detection. On
+/// mount the underlying state object calls `availableCameras()` and constructs
+/// `CameraController(_cameras[0], ResolutionPreset.max)`, broadcasting init
+/// status through a `StreamController<bool>`. When the user taps the capture
+/// button the preview is paused, a loader is shown, `controller.takePicture()`
+/// returns an `XFile`, and `PictureTaken(image: image)` is dispatched to the
+/// locally-provided [CameraBloc]. A `MultiBlocListener` watches for
+/// `ImagedProcessed` (navigates to `Navigation.ingredientAdding` with the
+/// detected `foundIngredient` as the route argument) and `ImageProcessingError`
+/// (navigates to `Navigation.ingredientAdding` without arguments, falling back
+/// to manual entry). A secondary "Add Manually" `ActionButton` bypasses AI
+/// capture entirely. The camera preview is clipped to the device media size
+/// via [MediaSizeClipper] declared further down in this file.
 class IngredientCameraDetecting extends StatefulWidget {
+  /// Default const constructor; only the optional widget [key] is accepted.
   const IngredientCameraDetecting({super.key});
 
+  /// Standard Flutter override returning the private state object.
   @override
   State<IngredientCameraDetecting> createState() => _IngredientCameraDetectingState();
 }
@@ -170,14 +185,27 @@ class _IngredientCameraDetectingState extends State<IngredientCameraDetecting> {
   }
 }
 
+/// Custom rectangular clipper used by the camera preview's `ClipRect` to
+/// constrain the live preview to the device's media size. Produces a
+/// `Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height)` from the supplied
+/// [mediaSize] and always returns `true` from [shouldReclip] so the preview
+/// reclips on every layout pass — correct for camera previews because the
+/// orientation and aspect ratio may change at any time.
 class MediaSizeClipper extends CustomClipper<Rect> {
+  /// The target device media size to clip the camera preview to. Typically
+  /// `MediaQuery.of(context).size` of the hosting route.
   final Size mediaSize;
+  /// Creates a clipper bound to the supplied [mediaSize].
   const MediaSizeClipper(this.mediaSize);
+  /// Returns `Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height)` — i.e.
+  /// the upper-left rectangle of [mediaSize] regardless of the [size] argument.
   @override
   Rect getClip(Size size) {
     return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
   }
 
+  /// Always returns `true`. The camera preview must reclip on every layout pass
+  /// because device orientation and aspect ratio may change at any time.
   @override
   bool shouldReclip(CustomClipper<Rect> oldClipper) {
     return true;
