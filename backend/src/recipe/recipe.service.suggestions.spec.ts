@@ -489,4 +489,74 @@ describe('RecipeService.getSuggestions', () => {
     expect(fractionalAboveOne.data[0].recipe.id).toBe('r0');
     expect(fractionalAboveOne.hasMore).toBe(true);
   });
+
+  // -------------------------------------------------------------------------
+  // Exact threshold-transition pins (QA CP-6 Info Note 3). The status,
+  // isQuickMake, and limit-cap boundaries are already covered by bracketing
+  // values above; these cases assert the EXACT transition points directly, so a
+  // future off-by-one in getSuggestions() is caught precisely rather than by
+  // inference.
+  // -------------------------------------------------------------------------
+
+  it('classifies a recipe with EXACTLY 3 missing ingredients as MISSING', async () => {
+    // 4 ingredients, only i1 (Egg) is in the default pantry, so exactly 3 are
+    // missing (i4, i5, i6). missing.length === 3 is the first value that exceeds
+    // the ALMOST_THERE ceiling of 2, pinning the 2 -> 3 transition to MISSING.
+    const recipe = makeRecipe(
+      'D',
+      [
+        ['i1', 'Egg'],
+        ['i4', 'Butter'],
+        ['i5', 'Sugar'],
+        ['i6', 'Salt'],
+      ],
+      0.25,
+    );
+    recipeRepositoryMock.matches.mockResolvedValue([recipe]);
+
+    const result = await service.getSuggestions('u1', {});
+
+    expect(result.data[0].status).toBe('MISSING');
+    expect(
+      result.data[0].missingIngredients.map((ingridient) => ingridient.name),
+    ).toEqual(['Butter', 'Sugar', 'Salt']);
+    expect(result.data[0].missingIngredients).toHaveLength(3);
+  });
+
+  it('flags isQuickMake true for a recipe with EXACTLY 5 ingredients', async () => {
+    // ingridientList.length === 5 is the inclusive upper bound of isQuickMake
+    // (<= 5). The suite already pins 4 -> true and 6 -> false; this pins the
+    // exact 5 -> true edge.
+    const recipe = makeRecipe(
+      'E',
+      [
+        ['i1', 'Egg'],
+        ['i2', 'Milk'],
+        ['i3', 'Flour'],
+        ['i4', 'Butter'],
+        ['i5', 'Sugar'],
+      ],
+      0.6,
+    );
+    recipeRepositoryMock.matches.mockResolvedValue([recipe]);
+
+    const result = await service.getSuggestions('u1', {});
+
+    expect(result.data[0].isQuickMake).toBe(true);
+  });
+
+  it('caps the page size at 50 when EXACTLY 51 is requested', async () => {
+    // limit === 51 is the first value above the 50 cap, pinning the > 50 branch
+    // at its exact edge (the existing suite only exercises limit = 100).
+    const recipes: Recipe[] = [];
+    for (let index = 0; index < 60; index += 1) {
+      recipes.push(makeRecipe(`r${index}`, [['i1', 'Egg']], 1));
+    }
+    recipeRepositoryMock.matches.mockResolvedValue(recipes);
+
+    const result = await service.getSuggestions('u1', {}, 1, 51);
+
+    expect(result.data).toHaveLength(50);
+    expect(result.hasMore).toBe(true);
+  });
 });
