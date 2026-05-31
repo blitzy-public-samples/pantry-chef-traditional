@@ -20,7 +20,16 @@ import 'package:collection/collection.dart';
 import 'package:pantry_chef/features/pantry/data/dto/create_pantry_item.dto.dart';
 import 'package:pantry_chef/features/pantry/presentation/bloc/pantry/pantry_bloc.dart';
 
+/// Ingredient entry/confirmation screen shown after camera/AI
+/// detection or for direct manual input.
+///
+/// Provides an `IngredientAddBloc` seeded with [detectedIngredient]
+/// that immediately dispatches `CategoriesAndUnitsFetched()`, builds a
+/// `PlatformScaffold` add form, and on submit bridges into the pantry
+/// add flow via `PantryBloc` + `PantryItemAdded`.
 class IngredientAddingForm extends StatefulWidget {
+  /// Optional ingredient detected upstream (e.g. by the camera/AI
+  /// flow) used to pre-populate the form; null for a blank manual add.
   final Ingredient? detectedIngredient;
   const IngredientAddingForm({super.key, this.detectedIngredient});
 
@@ -29,6 +38,15 @@ class IngredientAddingForm extends StatefulWidget {
 }
 
 class _IngredientAddingFormState extends State<IngredientAddingForm> {
+  /// Builds the ingredient add screen for [context].
+  ///
+  /// Wires an `IngredientAddBloc` (seeded with `widget.detectedIngredient`
+  /// and dispatching `CategoriesAndUnitsFetched()`), renders a
+  /// `PlatformScaffold` with a localized app bar, coordinates side effects
+  /// through a `MultiBlocListener`, shows a loading spinner until the
+  /// categories/units arrive, then renders the scrollable add form
+  /// (search, category, quantity, unit, expiration, location) with a
+  /// bottom submit `ActionButton`.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -43,6 +61,10 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
               listenWhen: (prev, curr) =>
                   prev.createdIngredient != curr.createdIngredient && curr.createdIngredient != null,
               listener: (context, state) {
+                // When createdIngredient becomes non-null, build a
+                // CreatePantryItemDto and dispatch PantryItemAdded so the
+                // PantryBloc persists the freshly created ingredient.
+                // Note: `ingridient` is an intentional preserved misspelling.
                 context.read<PantryBloc>().add(
                       PantryItemAdded(
                         dto: CreatePantryItemDto(
@@ -59,6 +81,9 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
             BlocListener<PantryBloc, PantryState>(
               listenWhen: (prev, curr) => prev.items != curr.items,
               listener: (context, state) {
+                // When pantry items change (a new item was added), hide
+                // the loader overlay and pop back to the first route,
+                // returning the user to the top of the navigation flow.
                 context.loaderOverlay.hide();
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
@@ -67,6 +92,8 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
           child: BlocBuilder<IngredientAddBloc, IngredientAddState>(
             buildWhen: (prev, curr) => prev.categoriesAndUnits != curr.categoriesAndUnits,
             builder: (context, state) {
+              // While categories/units are still loading, show a centered
+              // progress indicator instead of the form.
               if (state.categoriesAndUnits == null) {
                 return Center(
                   child: PlatformCircularProgressIndicator(
@@ -109,6 +136,10 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
                                         bloc: context.read<IngredientAddBloc>(),
                                         displayValue: state.ingredientName,
                                         onChaged: (value) {
+                                          // Picked an existing Ingredient:
+                                          // dispatch DataChanged carrying it
+                                          // (wrapped in Nullable.value) plus
+                                          // its name/category/unit/imageUrl.
                                           if (value is Ingredient) {
                                             context.read<IngredientAddBloc>().add(
                                                   DataChanged(
@@ -121,6 +152,10 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
                                                   ),
                                                 );
                                           } else {
+                                            // Free-text input: keep the
+                                            // typed name and clear the
+                                            // selected ingredient via
+                                            // const Nullable.value(null).
                                             context.read<IngredientAddBloc>().add(
                                                   DataChanged(
                                                     ingredientName: value,
@@ -239,15 +274,27 @@ class _IngredientAddingFormState extends State<IngredientAddingForm> {
                             builder: (context, state) {
                               return ActionButton(
                                 text: AppLocalizations.of(context)!.add,
+                                // Disabled (null) until ingredientName,
+                                // quantity, and expirationDate are all set.
                                 onPress: state.ingredientName == null ||
                                         state.quantity == null ||
                                         state.expirationDate == null
                                     ? null
                                     : () {
+                                        // Show the loader, then either create
+                                        // a brand-new ingredient or add the
+                                        // already-selected one to the pantry.
                                         context.loaderOverlay.show();
+                                        // No selectedIngredient: create it
+                                        // first via IngredientCreated(); the
+                                        // listener above then adds it.
                                         if (state.selectedIngredient == null) {
                                           context.read<IngredientAddBloc>().add(IngredientCreated());
                                         } else {
+                                          // Already-selected ingredient: add
+                                          // it straight to the pantry via a
+                                          // CreatePantryItemDto (`ingridient`
+                                          // is a preserved misspelling).
                                           context.read<PantryBloc>().add(
                                                 PantryItemAdded(
                                                   dto: CreatePantryItemDto(
