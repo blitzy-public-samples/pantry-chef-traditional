@@ -51,5 +51,33 @@
   "instructions": "Instractions",
   "preferences": "Preferences",
   "recipeFavorite": "Favorite recipes",
-  "favoriteRecipesEmptyMessage": "Your favorite recipes will be displayed here"
+  "favoriteRecipesEmptyMessage": "Your favorite recipes will be displayed here",
+  "whatCanIMakeTonight": "What Can I Make Tonight?",
+  "@whatCanIMakeTonight": {
+    "description": "Label for the entry-point button on the recipe tab that opens the \"What Can I Make Tonight?\" pantry-ranked suggestions screen."
+  },
+  "suggestionsEmptyMessage": "Add items to your pantry to get suggestions.",
+  "@suggestionsEmptyMessage": {
+    "description": "Empty-state guidance on the suggestions screen, shown when the pantry has no items to base suggestions on."
+  },
+  "suggestionsErrorMessage": "Something went wrong. Please try again.",
+  "@suggestionsErrorMessage": {
+    "description": "Error-state message on the suggestions screen, shown when loading suggestions fails; accompanied by the retry action."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Label for the retry button shown in the suggestions error state."
+  },
+  "almostThere": "ALMOST THERE",
+  "@almostThere": {
+    "description": "Label for the ALMOST THERE filter toggle and the matching status chip on a suggestion card (1-2 ingredients missing)."
+  },
+  "quickMake": "QUICK MAKE",
+  "@quickMake": {
+    "description": "Label for the QUICK MAKE filter toggle and the badge on a suggestion card for a recipe with 5 or fewer ingredients."
+  },
+  "missing": "Missing",
+  "@missing": {
+    "description": "Status chip label on a suggestion card for a recipe missing 3 or more pantry ingredients."
+  }
 }

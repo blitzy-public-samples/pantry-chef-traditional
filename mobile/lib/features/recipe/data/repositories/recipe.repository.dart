@@ -31,4 +31,17 @@ class RecipeRepositoryImpl implements RecipeRepository {
     Map<String, dynamic> response = await api.getRecipeById(id);
     return Recipe.fromJson(response);
   }
+
+  @override
+  // Added for "What Can I Make Tonight?" suggestions feature
+  Future<RecipeSuggestionsResponseDto> getSuggestions(
+    RecipeFiltersDto filters, {
+    int page = 1,
+    int limit = 10,
+  }) async {
+    RecipeApi api = RecipeApi();
+    final response =
+        await api.getSuggestions(filters, page: page, limit: limit);
+    return RecipeSuggestionsResponseDto.fromJson(response);
+  }
 }

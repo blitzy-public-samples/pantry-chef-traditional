@@ -9,4 +9,11 @@ abstract class RecipeRepository {
   Future<List<Recipe>> recipeMatching(RecipeFiltersDto filters);
 
   Future<Recipe> getRecipeById(String id);
+
+  // Added for "What Can I Make Tonight?" suggestions feature
+  Future<RecipeSuggestionsResponseDto> getSuggestions(
+    RecipeFiltersDto filters, {
+    int page = 1,
+    int limit = 10,
+  });
 }

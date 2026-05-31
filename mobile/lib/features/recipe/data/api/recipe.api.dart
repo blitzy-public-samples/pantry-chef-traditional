@@ -37,4 +37,27 @@ class RecipeApi {
     );
     return response.data['data'];
   }
+
+  // Added for "What Can I Make Tonight?" suggestions feature
+  Future<Map<String, dynamic>> getSuggestions(
+    RecipeFiltersDto filters, {
+    int page = 1,
+    int limit = 10,
+  }) async {
+    // Forward only enabled (true) filter flags. RecipeFiltersDto defaults both
+    // flags to false; serialized over HTTP they reach the backend as the string
+    // 'false' (which is truthy there) and would wrongly filter the full ranked
+    // list down to quick/almost-there recipes. Dropping the false flags keeps
+    // the default suggestions request unfiltered.
+    final Map<String, dynamic> queryParameters = <String, dynamic>{
+      ...filters.toJson(),
+      'page': page,
+      'limit': limit,
+    }..removeWhere((key, value) => value == false);
+    Response<dynamic> response = await _dio.get(
+      '${Endpoints.recipe}/suggestions',
+      queryParameters: queryParameters,
+    );
+    return response.data; // {data, hasMore}
+  }
 }
