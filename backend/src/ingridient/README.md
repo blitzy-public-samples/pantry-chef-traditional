@@ -6,20 +6,17 @@ The `Ingridient` module (spelling preserved verbatim throughout the backend
 codebase — note the URL path uses the correct `ingredient` spelling at
 `/api/v1/ingredient/*`) manages the catalog of base ingredients used by both the
 `PantryIngridient` (spelling preserved verbatim) and `Recipe` modules. The
-controller exposes six routes — five CRUD endpoints plus a `GET /creation-data`
-route that returns hardcoded reference data (5 categories, 9 units) used by the
-mobile client to populate ingredient-creation forms. Persistence runs through
-`IngridientService` (spelling preserved verbatim) to the abstract
-`IngridientRepository` (spelling preserved verbatim), with
-`IngridientDocumentRepository` (spelling preserved verbatim) providing the
+controller exposes six routes — five
+CRUD endpoints plus a `GET /creation-data` route that returns hardcoded reference
+data (5 categories, 9 units) used by the mobile client to populate
+ingredient-creation forms. Persistence runs through `IngridientService` to the
+abstract `IngridientRepository`, with `IngridientDocumentRepository` providing the
 Mongoose backing; soft-delete is implemented properly via
 `updateOne({ deletedAt: new Date() })` (Source:
 `infrastructure/document/repositories/ingridient.repository.ts`), in contrast to
-the destructive `softDelete` in the pantry module — both tracked in
-[`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Database.
-The domain entity lives at `domain/ingrident.ts` — note the **filename** carries
-an additional typo distinct from the `Ingridient` class spelling; both are
-preserved verbatim.
+the destructive `softDelete` in the pantry module. The domain entity lives at
+`domain/ingrident.ts` — the **filename** carries an additional typo distinct from
+the `Ingridient` class spelling; both are preserved verbatim.
 
 ## Key Components
 
@@ -36,14 +33,12 @@ preserved verbatim.
 
 ## Architecture Fit
 
-Requests enter through `IngridientController` (spelling preserved verbatim) and
-flow controller → service → abstract repository → document repository → MongoDB:
-the controller delegates to `IngridientService` for business orchestration, which
-calls the abstract `IngridientRepository` contract, bound at composition time to
-`IngridientDocumentRepository` for Mongoose persistence. The one deviation from
-this layering is the `GET /creation-data` endpoint, which returns hardcoded
-category and unit data directly from the controller method without any database
-lookup (Source: `ingridient.controller.ts`).
+Requests flow controller → service → abstract repository → document repository →
+MongoDB: `IngridientController` delegates to `IngridientService` for orchestration,
+which calls the abstract `IngridientRepository` contract, bound at composition time
+to `IngridientDocumentRepository` for Mongoose persistence. The one deviation is
+`GET /creation-data`, which returns hardcoded category and unit data directly from
+the controller method without a database lookup (Source: `ingridient.controller.ts`).
 
 This module is consumed by:
 
@@ -141,16 +136,14 @@ There are no module-specific environment variables; the `Ingridient` module reli
 > ⚠️ **Additional filename typo `ingrident.ts`** — the domain entity file at `backend/src/ingridient/domain/ingrident.ts` carries an additional typo distinct from the `Ingridient` class spelling. The class is `Ingridient`; the filename drops the second `i`. Preserved verbatim.
 
 > ⚠️ **Hardcoded category/unit reference data** — Source:
-> `ingridient.controller.ts`. The 5 categories and 9 units are hardcoded inside
-> the controller method; they are not seedable, not configurable, and not
-> localized. Adding a new category requires a code deployment and full release
-> cycle. No i18n support.
+> `ingridient.controller.ts`. The 5 categories and 9 units are hardcoded in the
+> controller method: not seedable, not configurable, not localized. Adding one
+> requires a code deploy.
 
 > ⚠️ **`Reference.id` typed as `string` but populated with integer** — the
 > `Reference` type at `backend/src/common/types.ts` declares `id: string`, but the
-> hardcoded reference data at `ingridient.controller.ts` emits integer ids (e.g.,
-> `{ id: 1, name: 'spice' }`). Downstream code coerces as needed. See
-> [`../../../DATA_MODEL.md`](../../../DATA_MODEL.md) § Reference Type for context.
+> hardcoded data emits integer ids (e.g., `{ id: 1, name: 'spice' }`). See
+> [`../../../DATA_MODEL.md`](../../../DATA_MODEL.md) § Reference Type.
 
 ## Production Readiness Status
 
@@ -162,11 +155,8 @@ There are no module-specific environment variables; the `Ingridient` module reli
 
 > 🚧 **Validation** — consider replacing the free-text `category` and `unit` fields with strong enums or branded types. The current schema accepts any `Reference` payload, which permits arbitrary client-side category strings that diverge from the server-side hardcoded list.
 
-> 🚧 **Migration** — the spelling `Ingridient` is a stable contract embedded in
-> MongoDB collection names, TypeScript identifiers, and any external API consumers
-> that depend on the JSON envelope. A future rename to the correct `Ingredient`
-> spelling would require a coordinated migration of: collection rename (or alias),
-> every backend identifier and file rename, mobile DTO updates, and (optionally)
-> the URL path if API consumers depend on the verbatim spelling elsewhere. See
-> [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) for
-> migration considerations.
+> 🚧 **Migration** — the `Ingridient` spelling is a stable contract embedded in
+> MongoDB collection names and TypeScript identifiers. A future rename to
+> `Ingredient` would require a coordinated migration: collection rename/alias,
+> backend identifier and file renames, and mobile DTO updates. See
+> [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md).

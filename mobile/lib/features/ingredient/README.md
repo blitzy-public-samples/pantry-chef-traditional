@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The ingredient feature is the mobile module for ingredient discovery, manual creation, and AI-assisted recognition. It owns the full user-facing flow: camera capture, upload to the backend AI vision endpoint, label detection via Google Cloud Vision, ingredient resolution against the backend's MongoDB `Ingridient` (spelling preserved verbatim from the backend schema) collection, user confirmation, and persistence (the confirmed item becomes a pantry entry). The module follows mobile clean architecture (domain/data/presentation) and integrates with two backend modules: the `IngridientController` (spelling preserved verbatim from the backend) at `/api/v1/ingredient/*` and the `AiController` at `/api/ai/vision`. Note that the mobile folder uses the correct spelling `ingredient/` (class `Ingredient`) while the backend uses the verbatim-preserved spelling `ingridient/` (class `Ingridient`); this divergence is intentional and is discussed further in §9.
+The ingredient feature is the mobile module for ingredient discovery, manual creation, and AI-assisted recognition. It owns the full flow: camera capture, upload to the backend AI vision endpoint, Google Cloud Vision label detection, ingredient resolution against the backend's MongoDB `Ingridient` (spelling preserved verbatim from the backend schema) collection, user confirmation, and persistence as a pantry entry. The module follows mobile clean architecture (domain/data/presentation) and integrates with two backend modules: the `IngridientController` (spelling preserved verbatim) at `/api/v1/ingredient/*` and the `AiController` at `/api/ai/vision`. The mobile-vs-backend spelling divergence is intentional and is detailed in §9.
 
 ## Key Components
 
@@ -36,9 +36,9 @@ The ingredient feature is the mobile module for ingredient discovery, manual cre
 
 ## Architecture Fit
 
-The feature follows mobile clean architecture: `presentation/` (UI widgets + BLoC state) depends on `domain/` (contracts, models, use cases), which is realized by `data/` (the Dio API client, DTOs, and repository implementation). The presentation layer reads `Ingredient` instances from the domain layer, and the data layer maps backend `Ingridient` JSON responses into the mobile-correct `Ingredient` class. `IngredientApi` resolves its Dio instance via `getIt<DioClient>().dio` (Source: `data/api/ingredient.api.dart:L12-L14`), so every request automatically inherits the JWT interceptor and refresh logic configured in `mobile/lib/core/utils/dio_client.dart`. The module carries no business logic of its own beyond form orchestration — it is a thin client over two backend modules.
+The feature follows mobile clean architecture: `presentation/` (UI + BLoC) depends on `domain/` (contracts, models, use cases), realized by `data/` (the Dio API client, DTOs, repository impl). The data layer maps backend `Ingridient` JSON responses into the mobile-correct `Ingredient` class. `IngredientApi` resolves its Dio instance via `getIt<DioClient>().dio` (Source: `data/api/ingredient.api.dart:L12-L14`), inheriting the JWT interceptor and refresh logic from `mobile/lib/core/utils/dio_client.dart`. The module is a thin client over two backend modules, with no business logic beyond form orchestration.
 
-See [`../../../../ARCHITECTURE.md`](../../../../ARCHITECTURE.md) §§ Full Request Path, JWT Authentication Flow, and BLoC State Management for the system-level view. The backend counterpart is documented in [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md) and [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md), and the shared HTTP layer in [`../../../../mobile/lib/core/README.md`](../../../../mobile/lib/core/README.md).
+See [`../../../../ARCHITECTURE.md`](../../../../ARCHITECTURE.md) §§ Full Request Path and JWT Authentication Flow for the system view; the backend counterparts are [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md) and [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md), and the shared HTTP layer is [`../../../../mobile/lib/core/README.md`](../../../../mobile/lib/core/README.md).
 
 ## Dependencies
 
@@ -47,14 +47,14 @@ See [`../../../../ARCHITECTURE.md`](../../../../ARCHITECTURE.md) §§ Full Reque
 - `mobile/lib/core/utils/dio_client.dart` — Dio HTTP client (JWT interceptor + refresh) resolved via `getIt<DioClient>().dio`.
 - `mobile/lib/core/constants/endpoints.dart` — `Endpoints.ingredient`, `Endpoints.ingredientCreationData`, `Endpoints.ai` (Source: `mobile/lib/core/constants/endpoints.dart:L80-L99`).
 - `mobile/lib/core/utils/service_locator.dart` — GetIt resolution for `DioClient`.
-- `mobile/lib/core/utils/usercase.dart` (file name spelling preserved verbatim — typo retained) — provides `UseCase<T>` and `UseCaseWithParams<T, P>` contracts that the four use cases implement.
-- `mobile/lib/core/utils/mappers.dart` — `Mappers.categoryToJson` and `Mappers.unitToJson` used in `Ingredient` and `CreateIngredientDto` JSON serialization.
+- `mobile/lib/core/utils/usercase.dart` (file name spelling preserved verbatim) — `UseCase<T>` / `UseCaseWithParams<T, P>` contracts the use cases implement.
+- `mobile/lib/core/utils/mappers.dart` — `Mappers.categoryToJson`/`Mappers.unitToJson` for `Ingredient`/`CreateIngredientDto` JSON serialization.
 - `mobile/lib/core/utils/nullable_wrapper.dart` — `Nullable<T>` used in `DataChanged` event + `IngredientAddState.copyWith`.
-- `mobile/lib/core/constants/ingredient_location.dart` — provides the `ingredientLocation` list (`['fridge', 'freezer', 'pantry']`) used as the location dropdown source and initial value (`ingredientLocation[0] = 'fridge'`).
+- `mobile/lib/core/constants/ingredient_location.dart` — `ingredientLocation` (`['fridge', 'freezer', 'pantry']`): dropdown source, default `[0] = 'fridge'`.
 - `mobile/lib/core/constants/navigation.dart` — `Navigation.ingredientDetecting`, `Navigation.ingredientAdding`.
 - `mobile/lib/core/data/dto/index.dart` — `SearchDto`, `OrderDto` for paginated search.
 - `mobile/lib/core/presentation/widgets/*` — shared widgets (`ActionButton`, `TextFieldInput`, `SelectField`, `DatePickerField`, `AppIconButton`, `AppBarWidget`).
-- `mobile/lib/features/pantry/data/dto/create_pantry_item.dto.dart` — `CreatePantryItemDto` whose `ingridient` (field name preserved verbatim from the backend wire-format) field accepts the mobile `Ingredient` model.
+- `mobile/lib/features/pantry/data/dto/create_pantry_item.dto.dart` — `CreatePantryItemDto` whose verbatim `ingridient` field accepts the mobile `Ingredient` model.
 - `mobile/lib/features/pantry/presentation/bloc/pantry/pantry_bloc.dart` — `PantryBloc` + `PantryItemAdded` event dispatched from the adding-form screen on creation.
 
 ### External
@@ -74,16 +74,16 @@ All versions verified against `mobile/pubspec.yaml`.
 
 ## Primary Use Cases
 
-- **Open camera, capture image** of a pantry item (Source: `presentation/widgets/screens/ingredient_camera_detecting.dart:L43-L44` initializes `CameraController(_cameras[0], ResolutionPreset.max)`; L145-L146 takes the picture and emits `PictureTaken`).
-- **Upload to backend AI vision** (multipart, form field `image`) via `IngredientApi.processImage` → `${Endpoints.ai}/vision` (Source: `data/api/ingredient.api.dart:L31-L41`).
-- **Receive ingredient suggestion** from Google Cloud Vision label detection plus a server-side dictionary lookup performed by `IngridientService` (spelling preserved verbatim from the backend) via `findManyWithPagination`; the mobile client receives the resolved JSON `Ingridient` or `{}` and maps it through `Ingredient.fromJson`.
-- **Confirm + persist ingredient** (POST `/api/v1/ingredient` via `IngredientApi.createIngredient` → maps response to `Ingredient.fromJson`). Source: `data/api/ingredient.api.dart:L26-L29`.
-- **Search existing ingredients** (paginated, GET `/api/v1/ingredient` with `SearchDto` query params). The dialog scroll listener requests the next page when within `CommonConstants.fetchScrollOffset=150` of the bottom. Source: `presentation/widgets/ingredient_search_dialog.dart:L29-L43`.
-- **Create ingredient manually** via the add form when AI detection fails or the user opts out — a fallback button on the camera screen routes to `Navigation.ingredientAdding` without an argument. Source: `presentation/widgets/screens/ingredient_camera_detecting.dart:L83,L154`.
+- **Open camera, capture image** of a pantry item (Source: `ingredient_camera_detecting.dart:L43-L44`; `:L145-L146` emits `PictureTaken`).
+- **Upload to backend AI vision** (multipart, field `image`) via `IngredientApi.processImage` → `${Endpoints.ai}/vision` (Source: `data/api/ingredient.api.dart:L31-L41`).
+- **Receive ingredient suggestion** from Google Cloud Vision plus a server-side dictionary lookup (`IngridientService.findManyWithPagination`, spelling preserved verbatim); the client maps the resolved `Ingridient` JSON (or `{}`) via `Ingredient.fromJson`.
+- **Confirm + persist** (POST `/api/v1/ingredient` via `IngredientApi.createIngredient`; Source: `data/api/ingredient.api.dart:L26-L29`).
+- **Search existing ingredients** (paginated GET `/api/v1/ingredient` with `SearchDto`); the dialog fetches the next page within `CommonConstants.fetchScrollOffset=150` of the bottom (Source: `ingredient_search_dialog.dart:L29-L43`).
+- **Create ingredient manually** when AI detection fails — a fallback button routes to `Navigation.ingredientAdding` (Source: `ingredient_camera_detecting.dart:L83,L154`).
 
 ## API / Endpoint Reference
 
-> The mobile feature consumes endpoints from two backend modules: the `IngridientController` (spelling preserved verbatim) at `/api/v1/ingredient/*`, and the `AiController` at `/api/ai/vision`. `IngridientController` declares `@Controller({ path: 'ingredient', version: '1' })`, so its routes carry the `/v1` segment under the global `api` prefix; the `AiController` declares `@Controller('ai')` (Source: `backend/src/ai/ai.controller.ts:L22`) with no `version` parameter, so it resolves at `/api/ai/vision`. This matches the backend's own [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md).
+> The feature consumes two backend controllers: `IngridientController` (spelling preserved verbatim) at `/api/v1/ingredient/*`, and `AiController` at `/api/ai/vision` — the latter declares `@Controller('ai')` with no `version` parameter, so it has no `/v1` segment (Source: `backend/src/ai/ai.controller.ts:L22`). See the backend's own [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md).
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
@@ -121,7 +121,7 @@ sequenceDiagram
     CB-->>FORM: pushReplacementNamed(ingredientAdding, foundIngredient)
 ```
 
-> When Google Cloud Vision is disabled or finds no match, the backend returns `{}` (Source: `backend/src/ai/ai.service.ts:L107,L126`) and the mobile flow still navigates to the add form — but `Ingredient.fromJson({})` will throw, which the BLoC catches and emits `ImageProcessingError`, routing the user to the manual entry form anyway (Source: `presentation/bloc/camera/camera_bloc.dart:L14-L19`).
+> When Vision is disabled or finds no match, the backend returns `{}` (Source: `backend/src/ai/ai.service.ts:L107,L126`); `Ingredient.fromJson({})` then throws, the BLoC catches it and emits `ImageProcessingError`, routing the user to the manual entry form (Source: `presentation/bloc/camera/camera_bloc.dart:L14-L19`).
 
 ## Configuration
 
@@ -139,30 +139,22 @@ sequenceDiagram
 
 ## Known Limitations and Implementation Gaps
 
-> Most of the listed gaps are owned upstream by the backend AI module. The cross-cutting risks below are documented here so a mobile reader has the full picture, with cross-links to the canonical owners.
+> Most gaps are backend-owned; see [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md) and [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md). Summarized here for mobile readers.
 
-> ⚠️ **Backend AI endpoint is unguarded.** `POST /api/ai/vision` has no `@UseGuards(AuthGuard('jwt'))` decorator (Source: `backend/src/ai/ai.controller.ts:L22-L77`). The mobile client sends the JWT header via the `DioClient` interceptor, but the backend does not verify it. See [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md) and [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) § Security Hardening.
+> ⚠️ **Backend AI endpoint gaps (upstream-owned).** `POST /api/ai/vision` is unguarded (no `@UseGuards(AuthGuard('jwt'))`, Source: `backend/src/ai/ai.controller.ts:L22-L77`), its MIME `fileFilter` is commented out (`:L51-L61`), and the dictionary is ~36 hardcoded terms (Source: `backend/src/ai/ai.service.ts:L24-L62`). The mobile client cannot mitigate these; unresolved items use the manual add form.
 
-> ⚠️ **Backend AI ingredient dictionary is small.** ~36 hardcoded English terms in the dictionary (Source: `backend/src/ai/ai.service.ts:L24-L62`). Most real-world food items will not resolve, and the mobile flow will fall back to the manual add form. No mobile-side mitigation is possible; tracked in [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md).
+> ⚠️ **Mobile-vs-backend spelling divergence.** This feature uses the correct `ingredient/`/`Ingredient`; the backend uses verbatim `ingridient/`/`Ingridient` (spelling preserved verbatim). The DTO `create_pantry_item.dto.dart:L26` mixes both: `final Ingredient ingridient;`. Intentional — **do not unify.**
 
-> ⚠️ **Backend MIME-type filter is commented out.** The `fileFilter` restricting uploads to `image/jpeg`/`image/png` is present but commented out (Source: `backend/src/ai/ai.controller.ts:L51-L61`). The mobile client uses `MultipartFile.fromFile(image.path, filename: image.name)` (Source: `data/api/ingredient.api.dart:L34`) which sends whatever the camera writes; arbitrary file types would also be accepted.
+> ⚠️ **Verbatim file name `search_ingredietn.usecase.dart`** (spelling preserved verbatim — 'ingredietn' typo retained). The class is correctly named `SearchIngredientUsecase`; renaming the file would break the barrel export at `domain/usecases/index.dart:L3`. Flagged with `// NOTE:`.
 
-> ⚠️ **Mobile-vs-backend spelling divergence.** This mobile feature folder uses the correct spelling `ingredient/` and the class `Ingredient`. The backend uses the verbatim-preserved spelling `ingridient/` and the class `Ingridient` (spelling preserved verbatim from the backend schema). Both spellings are intentional. The cross-feature DTO `mobile/lib/features/pantry/data/dto/create_pantry_item.dto.dart:L26` declares its field as `final Ingredient ingridient;` (field name preserved verbatim from the backend wire-format) — mixing the mobile-correct class name with the backend-verbatim field name. **Do not unify.**
-
-> ⚠️ **Verbatim file name `search_ingredietn.usecase.dart`** (file name spelling preserved verbatim — 'ingredietn' typo retained for compile-time stability). The class inside the file is correctly named `SearchIngredientUsecase`; only the file name carries the typo. Renaming the file would break the barrel export at `domain/usecases/index.dart:L3`. Documented in source with a `// NOTE:` annotation at the top of the file.
-
-> ⚠️ **No offline image queue.** If the user captures a photo while offline, the multipart upload at `data/api/ingredient.api.dart:L31-L41` rethrows the Dio error, the BLoC emits `ImageProcessingError` (Source: `presentation/bloc/camera/camera_bloc.dart:L18`), and the captured image is discarded with no retry. Hydrated state does not cover in-flight requests.
+> ⚠️ **No offline image queue.** A capture taken offline rethrows the Dio error and emits `ImageProcessingError` (Source: `presentation/bloc/camera/camera_bloc.dart:L18`); the image is discarded with no retry, and hydrated state does not cover in-flight requests.
 
 ## Production Readiness Status
 
-> Each gap maps to one or more categories in [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md). The headline mobile-facing risk is the unguarded AI endpoint (owned by the backend AI module).
+> Each gap maps to a category in [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md); the headline mobile-facing risk — the unguarded AI endpoint — is backend-owned.
 
-> 🚧 **Security Hardening** — Add `@UseGuards(AuthGuard('jwt'))` to the backend `AiController` before relying on it in production. The mobile JWT is already sent on every request via the `DioClient` interceptor, so no mobile change is needed. See [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) § Security Hardening and [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md).
+> 🚧 **Security Hardening** — guard the backend `AiController` with `@UseGuards(AuthGuard('jwt'))`, uncomment the MIME `fileFilter` (`backend/src/ai/ai.controller.ts:L51-L61`), and add `@nestjs/throttler` rate limits on the 10MB upload (`:L62`) to close the anonymous DoS vector. The mobile JWT is already sent via the `DioClient` interceptor, so no mobile change is needed. See [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) § Security Hardening.
 
-> 🚧 **Security Hardening** — Enforce MIME-type validation on the backend AI endpoint by uncommenting the `fileFilter` block at `backend/src/ai/ai.controller.ts:L51-L61`. Once enforced, the mobile client should also restrict `MultipartFile` content-type to `image/jpeg` for compatibility.
+> 🚧 **Coverage / Quality** — expand the backend AI dictionary (~36 terms at `backend/src/ai/ai.service.ts:L24-L62`) toward a managed model or labeled dataset. No mobile change required.
 
-> 🚧 **Coverage / Quality** — Expand the backend AI ingredient dictionary (currently ~36 terms at `backend/src/ai/ai.service.ts:L24-L62`) to handle production vocabulary. Consider a managed ML model or a labeled dataset rather than a hardcoded list. No mobile change required.
-
-> 🚧 **Security Hardening** — Add file-size and per-user rate limits on the image upload (`@nestjs/throttler` on the backend) to mitigate cost + abuse, since the current 10MB upload limit at `backend/src/ai/ai.controller.ts:L62` combined with an unguarded endpoint creates an anonymous DoS vector. See [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) § Security Hardening.
-
-> See [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) for the full gap inventory and [`../../../../ARCHITECTURE.md`](../../../../ARCHITECTURE.md) §§ Full Request Path and JWT Authentication Flow for end-to-end context. The `Ingridient` schema referenced throughout this README is documented in [`../../../../DATA_MODEL.md`](../../../../DATA_MODEL.md).
+> See [`../../../../PRODUCTION_READINESS.md`](../../../../PRODUCTION_READINESS.md) for the full inventory and [`../../../../ARCHITECTURE.md`](../../../../ARCHITECTURE.md) §§ Full Request Path and JWT Authentication Flow. The `Ingridient` schema is documented in [`../../../../DATA_MODEL.md`](../../../../DATA_MODEL.md).

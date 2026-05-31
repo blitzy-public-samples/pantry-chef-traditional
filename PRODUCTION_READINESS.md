@@ -366,6 +366,15 @@ Automated test coverage is thin and concentrated on a single feature.
 > 🚧 **No integration tests for the AI vision endpoint**, and no tests covering
 > pantry CRUD against the destructive `softDelete` behavior described above.
 
+> 🚧 **AI ingredient-resolution correctness defects.** `AiService.detectIngredientsFromBuffer`
+> scans all Vision labels without breaking, so the **last** matching dictionary term wins
+> (not the first); and when no label matches, the filter is `null`, so the unfiltered lookup
+> returns the first non-deleted `Ingridient` (spelling preserved verbatim) instead of `{}`.
+> Both are flagged inline with `// FIXME:` (documented, not fixed) and must be corrected so a
+> no-match returns `{}`. Surfaced locally in [backend/src/ai/README.md](backend/src/ai/README.md)
+> § Known Limitations and § Production Readiness Status.
+> *Source: backend/src/ai/ai.service.ts:L130; backend/src/ai/ai.service.ts:L149.*
+
 > 🚧 **Mobile tests are the default smoke test.** `mobile/test/widget_test.dart`
 > still contains only the generated "Counter increments smoke test". Add BLoC
 > unit tests, golden tests for key screens, and an integration test for the
@@ -419,11 +428,12 @@ reads this document.
 | AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts` |
 | AI endpoint no JWT guard | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` above `AiController` class |
 | AI small ingredient dictionary | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.service.ts` |
+| AI last-match / null-filter resolution defect | [backend/src/ai/README.md](backend/src/ai/README.md) | `// FIXME:` at `ai.service.ts:L130` (loop does not break) and `:L149` (null filter) |
 | Pantry destructive `softDelete` | [backend/src/pantry/README.md](backend/src/pantry/README.md) | `// FIXME:` + `// TODO(prod):` at `pantryIngridient.repository.ts` |
 | Auth password reset unwired | [backend/src/auth/README.md](backend/src/auth/README.md) | (No inline — a missing endpoint cannot be flagged in code) |
 | Seed runner destructive | [backend/src/database/README.md](backend/src/database/README.md) | `// TODO(prod):` at each seed service `run()` method |
 | Preserved spelling variants | [backend/src/ingridient/README.md](backend/src/ingridient/README.md), [backend/src/pantry/README.md](backend/src/pantry/README.md), [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` at first occurrence in each affected file |
-| `Recipe.copyWith` no-op on `inFavorite` | [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` + `// FIXME:` at `recipe.dart:L37-L53` |
+| `Recipe.copyWith` no-op on `inFavorite` | [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` + `// FIXME:` at `recipe.dart:L83-L108` |
 | Destructive users `softDelete` (`deleteOne`) | [backend/src/users/README.md](backend/src/users/README.md) | Prose only in users folder per AAP §0.8.1 (no inline `// FIXME:`) |
 | Plaintext-password update path on `PATCH /users` | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose; flagged under Security Hardening above |
 | `findManyWithPagination` ignores `filterOptions` | [backend/src/users/README.md](backend/src/users/README.md) | JSDoc note on the repository method |

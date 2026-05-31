@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/v1/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and soft-delete of the authenticated account (`DELETE /me`). Note that the password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no controller endpoints consume them — see Known Limitations below.
+The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/v1/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and deletion of the authenticated account (`DELETE /me` — physically destructive, see Known Limitations). Password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no endpoints consume them (see Known Limitations).
 
 ## Key Components
 
@@ -28,7 +28,7 @@ The Auth module owns email-and-password authentication for PantryChef. `AuthCont
 
 ## Architecture Fit
 
-`AuthController` is a thin HTTP adapter that delegates every route to `AuthService`. `AuthService` coordinates `JwtService` (token signing), `UsersService` (user CRUD), `SessionService` (session lifecycle), and `ConfigService<AllConfigType>` for typed config access (Source: auth.service.ts). This follows the backend's controller → service → repository → domain layering, except that persistence is reached indirectly through `UsersService` and `SessionService` rather than a repository owned by this module. The `jwt` and `jwt-refresh` strategies are registered as providers in `AuthModule` and applied to routes via `AuthGuard('jwt')` / `AuthGuard('jwt-refresh')`. `AnonymousStrategy` is also registered as a provider but is **not** currently applied to any route — `POST /email/login` and `POST /email/register` simply declare no `@UseGuards`, so they are unguarded rather than running through an anonymous guard. See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) §"JWT Authentication Flow" for the end-to-end client → backend sequence. `AuthModule` also carries a commented `// MailModule,` import (Source: auth.module.ts) that would presumably back the unwired password reset endpoints; it is preserved verbatim.
+`AuthController` is a thin HTTP adapter that delegates every route to `AuthService`. `AuthService` coordinates `JwtService` (token signing), `UsersService` (user CRUD), `SessionService` (session lifecycle), and `ConfigService<AllConfigType>` for typed config access (Source: auth.service.ts). This follows the backend's controller → service → repository → domain layering, except that persistence is reached indirectly through `UsersService` and `SessionService` rather than a repository owned by this module. The `jwt` and `jwt-refresh` strategies are registered as providers in `AuthModule` and applied to routes via `AuthGuard('jwt')` / `AuthGuard('jwt-refresh')`. `AnonymousStrategy` is registered as a provider but **not** applied to any route — `POST /email/login` and `POST /email/register` declare no `@UseGuards`, so they are simply unguarded. See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) §"JWT Authentication Flow" for the end-to-end sequence. `AuthModule` also carries a commented `// MailModule,` import (Source: auth.module.ts), preserved verbatim.
 
 ## Dependencies
 
@@ -66,7 +66,7 @@ Exact versions from `backend/package.json:L24-L75`:
 - Re-issue access + refresh tokens via a refresh-token bearer (`POST /refresh`).
 - Log out, which soft-deletes the current session so the refresh token stops working (`POST /logout`).
 - Update profile fields; `oldPassword` is required when changing `password` (`PATCH /me`).
-- Soft-delete the authenticated user account (`DELETE /me`).
+- Delete the authenticated user account (`DELETE /me`) — physically destructive (`UsersService.softDelete` calls `deleteOne`); see Known Limitations.
 
 ## API / Endpoint Reference
 
@@ -78,13 +78,13 @@ Exact versions from `backend/package.json:L24-L75`:
 | `POST` | `/api/v1/auth/refresh` | `AuthGuard('jwt-refresh')` | Re-issue access + refresh tokens (Source: auth.controller.ts) |
 | `POST` | `/api/v1/auth/logout` | `AuthGuard('jwt')` | Invalidate the current session (Source: auth.controller.ts) |
 | `PATCH` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Update profile; `oldPassword` required for password change (Source: auth.controller.ts) |
-| `DELETE` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Soft-delete authenticated user account (Source: auth.controller.ts) |
+| `DELETE` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Delete authenticated user account — **physically destructive** (`UsersService.softDelete` calls `deleteOne`); see [users README § Known Limitations](../users/README.md) (Source: auth.controller.ts:L165-L178) |
 
-Routes are derived from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts) combined with the global `app.setGlobalPrefix(...)` (default `api`, with `/` excluded) in `backend/src/main.ts`, yielding `/api/v1/auth/<route>`. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object is absent from those responses and must be fetched separately via `GET /me`.
+Routes derive from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts) plus the global `app.setGlobalPrefix('api')` in `backend/src/main.ts`, yielding `/api/v1/auth/<route>`. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object must be fetched separately via `GET /me`.
 
 ## Data Flows
 
-The diagram below shows the login → bearer-token request → token re-issue cycle. The client (Flutter `DioClient`) intercepts every outbound request to inject `Authorization: Bearer <token>` and, on a 401, calls the refresh endpoint with a separate Dio instance to avoid recursion.
+The diagram below shows the login → bearer-token request → token re-issue cycle. The Flutter `DioClient` injects `Authorization: Bearer <token>` on every request and, on a 401, calls the refresh endpoint with a separate Dio instance to avoid recursion.
 
 ```mermaid
 sequenceDiagram
@@ -110,7 +110,7 @@ sequenceDiagram
     J-->>C: {token, refreshToken, tokenExpires}
 ```
 
-The refresh route is the second half of that cycle: `JwtRefreshStrategy` verifies the refresh token with `AUTH_REFRESH_SECRET`, then `AuthService.refreshToken` looks up the session via `SessionService.findOne` and throws `UnauthorizedException` (HTTP 401) when the session is absent before re-issuing a token pair (Source: auth.service.ts). The route handler is small and delegates straight to the service:
+The refresh route is the second half of that cycle: `JwtRefreshStrategy` verifies the refresh token with `AUTH_REFRESH_SECRET`, then `AuthService.refreshToken` looks up the session via `SessionService.findOne` and throws `UnauthorizedException` (HTTP 401) when the session is absent before re-issuing a token pair (Source: auth.service.ts). The handler delegates straight to the service:
 
 ```typescript
 @Post('refresh')
@@ -140,7 +140,7 @@ The `authConfig` factory at `config/auth.config.ts` calls `validateConfig(proces
 
 > ⚠️ **No rate limiting on `/email/login` or `/email/register`** — both endpoints are unauthenticated (no guard) and not protected by `@nestjs/throttler`, so brute-force protection is missing.
 
-Each gap above is tracked centrally in [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md).
+> ⚠️ **`DELETE /api/v1/auth/me` is physically destructive, not a soft-delete.** Despite the method name, `UsersService.softDelete` calls `deleteOne` and permanently removes the user document — no `deletedAt` timestamp is set (Source: `backend/src/auth/auth.controller.ts:L165-L178`; `backend/src/users/infrastructure/document/repositories/user.repository.ts:L205-L206`). Existing `Session` documents are left untouched, so refresh tokens are not revoked. Mirrors the users module [README § Known Limitations](../users/README.md); tracked in [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md).
 
 ## Production Readiness Status
 

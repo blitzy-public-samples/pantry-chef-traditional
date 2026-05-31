@@ -21,7 +21,7 @@ documented in the final row and under Known Limitations.
 | Component | File | Responsibility |
 | --- | --- | --- |
 | `MongooseConfigService` | `mongoose-config.service.ts` | Implements `MongooseOptionsFactory`; returns `{ uri, dbName, user, pass }` derived from `AllConfigType.database` (Source: `backend/src/database/mongoose-config.service.ts:L24-L43`) |
-| `databaseConfig` factory | `config/database.config.ts` | `registerAs<DatabaseConfig>('database', ...)` factory; validates `DATABASE_*` env vars via `EnvironmentVariablesValidator` (Source: `backend/src/database/config/database.config.ts:L123-L147`) |
+| `databaseConfig` factory | `config/database.config.ts` | `registerAs<DatabaseConfig>('database', ...)` factory; validates `DATABASE_*` env vars via `EnvironmentVariablesValidator` (Source: `backend/src/database/config/database.config.ts:L76-L100`) |
 | `DatabaseConfig` type | `config/database-config.type.ts` | Typed config shape with required `isDocumentDatabase`, `maxConnections` and optional connection/TLS fields (Source: `backend/src/database/config/database-config.type.ts:L14-L30`) |
 | Seed runner | `seeds/run-seed.ts` | Bootstraps a standalone Nest context and invokes the four seed services in order (Source: `backend/src/database/seeds/run-seed.ts:L29-L38`) |
 | `SeedModule` | `seeds/seed.module.ts` | NestJS module aggregating the four seed sub-modules + `ConfigModule.forRoot` + `MongooseModule.forRootAsync` (Source: `backend/src/database/seeds/seed.module.ts:L28-L44`) |
@@ -80,7 +80,7 @@ controllers/services to operate directly on the Mongoose `Model<>` via `@InjectM
   (Source: `backend/src/database/seeds/user/user-seed.service.ts:L57-L84`).
 - **Validate env vars before connecting** — `EnvironmentVariablesValidator` rejects malformed
   `DATABASE_*` config prior to Mongoose init
-  (Source: `backend/src/database/config/database.config.ts:L54-L141`).
+  (Source: `backend/src/database/config/database.config.ts:L14-L74`).
 
 ## API / Endpoint Reference
 
@@ -121,8 +121,8 @@ The module reads `DATABASE_*` env vars, validates them through
 
 | Env Var | Default | Source | Purpose |
 | --- | --- | --- | --- |
-| `DATABASE_TYPE` | `mongodb` | `backend/env_example:L6` | Database driver identifier; consumed to derive `isDocumentDatabase` (Source: `backend/src/database/config/database.config.ts:L127`) |
-| `DATABASE_PORT` | `27017` | `backend/env_example:L7` | DB port; the factory falls back to `5432` if this is unset (Source: `backend/src/database/config/database.config.ts:L131-L133`) |
+| `DATABASE_TYPE` | `mongodb` | `backend/env_example:L6` | Database driver identifier; consumed to derive `isDocumentDatabase` (Source: `backend/src/database/config/database.config.ts:L80`) |
+| `DATABASE_PORT` | `27017` | `backend/env_example:L7` | DB port; the factory falls back to `5432` if this is unset (Source: `backend/src/database/config/database.config.ts:L84-L86`) |
 | `DATABASE_USERNAME` | `admin` | `backend/env_example:L8` | DB user — insecure default for production |
 | `DATABASE_PASSWORD` | `123456` | `backend/env_example:L9` | DB password — insecure default for production |
 | `DATABASE_NAME` | `blitzy` | `backend/env_example:L10` | DB name |
@@ -131,7 +131,7 @@ The module reads `DATABASE_*` env vars, validates them through
 > The validator also recognizes `DATABASE_HOST`, `DATABASE_SYNCHRONIZE`,
 > `DATABASE_MAX_CONNECTIONS`, `DATABASE_SSL_ENABLED`, `DATABASE_REJECT_UNAUTHORIZED`,
 > `DATABASE_CA`, `DATABASE_KEY`, and `DATABASE_CERT`
-> (Source: `backend/src/database/config/database.config.ts:L54-L141`). These are NOT in
+> (Source: `backend/src/database/config/database.config.ts:L14-L74`). These are NOT in
 > `backend/env_example`; set them in `.env` only if needed.
 
 ## Known Limitations and Implementation Gaps
@@ -164,7 +164,7 @@ The module reads `DATABASE_*` env vars, validates them through
 
 > ⚠️ **Port fallback inconsistency** — when `DATABASE_PORT` is unset, the factory falls back to
 > `5432` (PostgreSQL's default) though the project targets MongoDB (default `27017`)
-> (Source: `backend/src/database/config/database.config.ts:L131-L133`). The
+> (Source: `backend/src/database/config/database.config.ts:L84-L86`). The
 > `backend/env_example:L7` value of `27017` masks this locally.
 
 ## Production Readiness Status
