@@ -28,6 +28,9 @@ class SuggestionsBloc extends Bloc<SuggestionsEvent, SuggestionsState> {
           items: result.data,
           hasMore: result.hasMore,
           filters: event.filters,
+          // QA FINAL Issue #2: propagate the backend's pantry-empty flag so the
+          // screen can render the empty-pantry guidance state.
+          isPantryEmpty: result.isPantryEmpty,
         ),
       );
     } catch (e) {

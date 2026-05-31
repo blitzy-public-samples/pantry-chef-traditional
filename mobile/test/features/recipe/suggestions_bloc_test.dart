@@ -122,4 +122,73 @@ void main() {
     bloc.add(const SuggestionsFetched());
     await expectation;
   });
+
+  // QA FINAL Issue #2: the backend keeps returning ranked (score-0) recipes when
+  // the pantry is empty, so the empty-pantry UI state cannot be inferred from an
+  // empty items list. This test pins the BLoC contract that the explicit
+  // `isPantryEmpty` flag from the response is propagated into the loaded state,
+  // which is exactly what SuggestionsScreen keys off to render the guidance copy.
+  test('propagates isPantryEmpty from the response into the loaded state',
+      () async {
+    const recipe = Recipe(
+      id: '1',
+      title: 't',
+      description: 'd',
+      ingridientList: [],
+      instructions: [],
+      prepTime: 0,
+      cookTime: 0,
+      servings: 1,
+      difficulty: 'easy',
+      tags: [],
+      imageUrl: 'https://example.com/x.png',
+      matchScore: 0.0,
+    );
+    final suggestions = <RecipeSuggestionDto>[
+      const RecipeSuggestionDto(
+        recipe: recipe,
+        matchScore: 0.0,
+        status: 'MISSING',
+        isQuickMake: false,
+        missingIngredients: [],
+      ),
+    ];
+    final fake = _FakeGetSuggestionsUsecase()
+      ..result = RecipeSuggestionsResponseDto(
+        data: suggestions,
+        hasMore: false,
+        isPantryEmpty: true,
+      );
+    final bloc = SuggestionsBloc(fake);
+    addTearDown(bloc.close);
+
+    final expectation = expectLater(
+      bloc.stream,
+      emitsInOrder([
+        // 1. Fetch start: flag still defaults to false before the result lands.
+        predicate<SuggestionsState>(
+          (s) => s.isFetching && !s.isPantryEmpty && s.error == null,
+        ),
+        // 2. Result applied: items present AND the pantry-empty flag is set.
+        predicate<SuggestionsState>(
+          (s) =>
+              s.isFetching &&
+              s.isPantryEmpty &&
+              s.items == suggestions &&
+              s.error == null,
+        ),
+        // 3. Fetch complete: the flag is retained alongside the loaded items.
+        predicate<SuggestionsState>(
+          (s) =>
+              !s.isFetching &&
+              s.isPantryEmpty &&
+              s.items == suggestions &&
+              s.error == null,
+        ),
+      ]),
+    );
+
+    bloc.add(const SuggestionsFetched());
+    await expectation;
+  });
 }

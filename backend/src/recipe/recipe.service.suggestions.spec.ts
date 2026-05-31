@@ -161,6 +161,9 @@ describe('RecipeService.getSuggestions', () => {
       'B',
       'C',
     ]);
+    // QA FINAL Issue #2: a non-empty pantry must report isPantryEmpty=false so
+    // the client renders the suggestions list rather than the empty state.
+    expect(result.isPantryEmpty).toBe(false);
   });
 
   it('classifies a fully-stocked recipe as READY with no missing ingredients', async () => {
@@ -282,6 +285,11 @@ describe('RecipeService.getSuggestions', () => {
     expect(result.data).toHaveLength(1);
     expect(result.data[0].status).toBe('MISSING');
     expect(result.data[0].missingIngredients).toHaveLength(3);
+    // QA FINAL Issue #2: an empty pantry must report isPantryEmpty=true so the
+    // client renders the "Add items to your pantry to get suggestions." empty
+    // state instead of the all-missing cards. The data envelope is unchanged
+    // (the score-0 recipes are still returned per AAP §0.4.2.1).
+    expect(result.isPantryEmpty).toBe(true);
   });
 
   it('forwards the resolved user preferences and pantry to matches()', async () => {

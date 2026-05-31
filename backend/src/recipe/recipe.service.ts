@@ -199,7 +199,13 @@ export class RecipeService {
     const data = mapped.slice((pageNum - 1) * limitNum, pageNum * limitNum);
     const hasMore = pageNum * limitNum < total;
 
-    return { data, hasMore };
+    // QA FINAL Issue #2: surface an explicit pantry-empty flag so the mobile
+    // suggestions screen can render the empty-pantry guidance state. The data
+    // envelope is unchanged (the API still returns the ranked score-0 recipes
+    // for an empty pantry per AAP §0.4.2.1); this flag is purely additive.
+    const isPantryEmpty = pantry.length === 0;
+
+    return { data, hasMore, isPantryEmpty };
   }
 
   async update(

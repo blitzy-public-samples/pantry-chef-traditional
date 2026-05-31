@@ -59,122 +59,136 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
         context,
         title: AppLocalizations.of(context)!.whatCanIMakeTonight,
       ),
-      body: BlocBuilder<SuggestionsBloc, SuggestionsState>(
-        builder: (context, state) {
-          // 1. Loading — FIRST LOAD ONLY. Show the skeleton only until the
-          // very first fetch resolves, i.e. while no items have been received
-          // yet (items == null) and no error is pending. This intentionally
-          // keys off `items == null` rather than `isFetching`: once items
-          // exist, a pull-to-refresh or filter re-fetch (isFetching == true
-          // with items != null) keeps the already-loaded list and filter chips
-          // on screen instead of replacing them with the skeleton. A first-load
-          // FAILURE (items == null, error != null) falls through to the error
-          // branch below. Note the initial fetch is dispatched asynchronously
-          // from initState, so on the first build items is still null while
-          // isFetching is still false — keying off items (not isFetching) is
-          // what renders the skeleton on that first frame.
-          if (state.items == null && state.error == null) {
-            return const ShimmerList(cardHeight: 200);
-          }
+      // QA FINAL Issue #11: cap the content width and center it so the
+      // single-column card list does not stretch edge-to-edge (and look
+      // sparse) on wide desktop viewports. On narrow/mobile widths the incoming
+      // constraint is smaller than this cap, so the layout stays full-width as
+      // before.
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: BlocBuilder<SuggestionsBloc, SuggestionsState>(
+            builder: (context, state) {
+              // 1. Loading — FIRST LOAD ONLY. Show the skeleton only until the
+              // very first fetch resolves, i.e. while no items have been received
+              // yet (items == null) and no error is pending. This intentionally
+              // keys off `items == null` rather than `isFetching`: once items
+              // exist, a pull-to-refresh or filter re-fetch (isFetching == true
+              // with items != null) keeps the already-loaded list and filter chips
+              // on screen instead of replacing them with the skeleton. A first-load
+              // FAILURE (items == null, error != null) falls through to the error
+              // branch below. Note the initial fetch is dispatched asynchronously
+              // from initState, so on the first build items is still null while
+              // isFetching is still false — keying off items (not isFetching) is
+              // what renders the skeleton on that first frame.
+              if (state.items == null && state.error == null) {
+                return const ShimmerList(cardHeight: 200);
+              }
 
-          // 2. Error — localized message plus a retry button. The retry carries
-          // the active filters so the user's toggle selection is preserved.
-          if (state.error != null) {
-            return SizedBox(
-              width: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.suggestionsErrorMessage,
-                    textAlign: TextAlign.center,
-                    style: context.theme.appTextTheme.semiBold14.copyWith(
-                      color: context.theme.appColors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: CommonConstants.pagePadding,
-                    ),
-                    child: ActionButton(
-                      text: AppLocalizations.of(context)!.retry,
-                      onPress: () => context.read<SuggestionsBloc>().add(
-                            SuggestionsFetched(filters: state.filters),
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // 3. Empty — the fetch succeeded but produced no suggestions (e.g. an
-          // empty pantry): show the illustration and the guidance copy.
-          if (state.items!.isEmpty) {
-            return SizedBox(
-              width: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/empty_pantry.webp',
-                    width: 200,
-                  ),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: CommonConstants.pagePadding,
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context)!.suggestionsEmptyMessage,
-                      textAlign: TextAlign.center,
-                      style: context.theme.appTextTheme.semiBold14.copyWith(
-                        color: context.theme.appColors.grey,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // 4. Loaded — filter toggles above a pull-to-refresh list of ranked
-          // suggestions. Items are rendered in the backend's order (match score
-          // descending, READY first) and are never re-sorted here.
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: CommonConstants.pagePadding,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                  ),
-                  // Wrap (not Row) so the two chips reflow onto a second line
-                  // instead of overflowing on narrow widths or at larger text
-                  // scales; `spacing`/`runSpacing` provide the inter-chip gaps.
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+              // 2. Error — localized message plus a retry button. The retry carries
+              // the active filters so the user's toggle selection is preserved.
+              if (state.error != null) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      FilterChip(
-                        label: Text(
-                          AppLocalizations.of(context)!.almostThere,
+                      Text(
+                        AppLocalizations.of(context)!.suggestionsErrorMessage,
+                        textAlign: TextAlign.center,
+                        style: context.theme.appTextTheme.semiBold14.copyWith(
+                          color: context.theme.appColors.red,
                         ),
-                        labelStyle: context.theme.appTextTheme.semiBold14,
-                        selected: state.filters.isAlmostThere,
-                        backgroundColor: context.theme.appColors.darkBeige,
-                        selectedColor: context.theme.appColors.green,
-                        checkmarkColor: context.theme.appColors.black,
-                        side: BorderSide(color: context.theme.appColors.grey),
-                        // RecipeFiltersDto has no copyWith, so build a fresh
-                        // instance carrying the toggled flag plus the other
-                        // flag's current value.
-                        onSelected: (value) =>
-                            context.read<SuggestionsBloc>().add(
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: CommonConstants.pagePadding,
+                        ),
+                        child: ActionButton(
+                          text: AppLocalizations.of(context)!.retry,
+                          onPress: () => context.read<SuggestionsBloc>().add(
+                                SuggestionsFetched(filters: state.filters),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // 3. Empty — render the empty-pantry guidance. QA FINAL Issue #2: the
+              // backend still returns the ranked (score-0) recipes when the pantry
+              // is empty, so we key off the explicit `isPantryEmpty` flag rather
+              // than an empty `items` list; we also keep the genuine no-results case
+              // (e.g. a filter excluded everything) so both render the illustration
+              // and the guidance copy.
+              if (state.isPantryEmpty || state.items!.isEmpty) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/empty_pantry.webp',
+                        width: 200,
+                      ),
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: CommonConstants.pagePadding,
+                        ),
+                        child: Text(
+                          AppLocalizations.of(context)!.suggestionsEmptyMessage,
+                          textAlign: TextAlign.center,
+                          style: context.theme.appTextTheme.semiBold14.copyWith(
+                            color: context.theme.appColors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // 4. Loaded — filter toggles above a pull-to-refresh list of ranked
+              // suggestions. Items are rendered in the backend's order (match score
+              // descending, READY first) and are never re-sorted here.
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CommonConstants.pagePadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                      ),
+                      // Wrap (not Row) so the two chips reflow onto a second line
+                      // instead of overflowing on narrow widths or at larger text
+                      // scales; `spacing`/`runSpacing` provide the inter-chip gaps.
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilterChip(
+                            label: Text(
+                              AppLocalizations.of(context)!.almostThere,
+                            ),
+                            labelStyle: context.theme.appTextTheme.semiBold14,
+                            selected: state.filters.isAlmostThere,
+                            backgroundColor: context.theme.appColors.darkBeige,
+                            selectedColor: context.theme.appColors.green,
+                            checkmarkColor: context.theme.appColors.black,
+                            side:
+                                BorderSide(color: context.theme.appColors.grey),
+                            // RecipeFiltersDto has no copyWith, so build a fresh
+                            // instance carrying the toggled flag plus the other
+                            // flag's current value.
+                            onSelected: (value) => context
+                                .read<SuggestionsBloc>()
+                                .add(
                                   SuggestionsFetched(
                                     filters: RecipeFiltersDto(
                                       isAlmostThere: value,
@@ -182,54 +196,58 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                                     ),
                                   ),
                                 ),
-                      ),
-                      FilterChip(
-                        label: Text(
-                          AppLocalizations.of(context)!.quickMake,
-                        ),
-                        labelStyle: context.theme.appTextTheme.semiBold14,
-                        selected: state.filters.isQuickMake,
-                        backgroundColor: context.theme.appColors.darkBeige,
-                        selectedColor: context.theme.appColors.green,
-                        checkmarkColor: context.theme.appColors.black,
-                        side: BorderSide(color: context.theme.appColors.grey),
-                        onSelected: (value) => context
-                            .read<SuggestionsBloc>()
-                            .add(
-                              SuggestionsFetched(
-                                filters: RecipeFiltersDto(
-                                  isAlmostThere: state.filters.isAlmostThere,
-                                  isQuickMake: value,
-                                ),
-                              ),
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: RefreshIndicator.adaptive(
-                    color: context.theme.appColors.green,
-                    onRefresh: () async => context.read<SuggestionsBloc>().add(
-                          SuggestionsFetched(filters: state.filters),
-                        ),
-                    child: ListView.builder(
-                      itemCount: state.items!.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.only(
-                            bottom: 12,
                           ),
-                          child: SuggestionCard(item: state.items![index]),
-                        );
-                      },
+                          FilterChip(
+                            label: Text(
+                              AppLocalizations.of(context)!.quickMake,
+                            ),
+                            labelStyle: context.theme.appTextTheme.semiBold14,
+                            selected: state.filters.isQuickMake,
+                            backgroundColor: context.theme.appColors.darkBeige,
+                            selectedColor: context.theme.appColors.green,
+                            checkmarkColor: context.theme.appColors.black,
+                            side:
+                                BorderSide(color: context.theme.appColors.grey),
+                            onSelected: (value) =>
+                                context.read<SuggestionsBloc>().add(
+                                      SuggestionsFetched(
+                                        filters: RecipeFiltersDto(
+                                          isAlmostThere:
+                                              state.filters.isAlmostThere,
+                                          isQuickMake: value,
+                                        ),
+                                      ),
+                                    ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: RefreshIndicator.adaptive(
+                        color: context.theme.appColors.green,
+                        onRefresh: () async =>
+                            context.read<SuggestionsBloc>().add(
+                                  SuggestionsFetched(filters: state.filters),
+                                ),
+                        child: ListView.builder(
+                          itemCount: state.items!.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: const EdgeInsets.only(
+                                bottom: 12,
+                              ),
+                              child: SuggestionCard(item: state.items![index]),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }

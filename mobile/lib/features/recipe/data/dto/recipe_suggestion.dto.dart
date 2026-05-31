@@ -46,9 +46,18 @@ class RecipeSuggestionsResponseDto {
   final List<RecipeSuggestionDto> data;
   final bool hasMore;
 
+  // Added for QA FINAL Issue #2: true when the user's pantry is empty. The
+  // backend still returns the ranked (score-0) recipes in that case, so the
+  // suggestions screen uses this flag — not an empty `data` list — to decide
+  // whether to render the "Add items to your pantry to get suggestions." empty
+  // state. The `false` constructor default makes json_serializable emit a
+  // `?? false` fallback, so payloads that omit the field deserialize safely.
+  final bool isPantryEmpty;
+
   const RecipeSuggestionsResponseDto({
     required this.data,
     required this.hasMore,
+    this.isPantryEmpty = false,
   });
 
   factory RecipeSuggestionsResponseDto.fromJson(Map<String, dynamic> json) =>

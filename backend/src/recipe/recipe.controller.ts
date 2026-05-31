@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -58,6 +59,13 @@ export class RecipeController {
   @Get('suggestions')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: RecipeSuggestionsResponseDto })
+  // QA FINAL Issue #7: document the query parameters so Swagger exposes the
+  // pagination controls and the ALMOST THERE / QUICK MAKE filter flags
+  // (isAlmostThere / isQuickMake) the mobile client sends. All are optional.
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'isAlmostThere', required: false, type: Boolean })
+  @ApiQuery({ name: 'isQuickMake', required: false, type: Boolean })
   async getSuggestions(
     @Request() req,
     @Query() filters: FilterType,

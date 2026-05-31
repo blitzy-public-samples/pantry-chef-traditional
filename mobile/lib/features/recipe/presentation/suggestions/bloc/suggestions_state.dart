@@ -6,6 +6,10 @@ class SuggestionsState extends Equatable {
   final String? error;
   final bool hasMore;
   final RecipeFiltersDto filters;
+  // Added for QA FINAL Issue #2: mirrors the backend's pantry-empty flag so the
+  // screen can render the empty-pantry guidance state even though the backend
+  // still returns (score-0) recipes for an empty pantry.
+  final bool isPantryEmpty;
 
   const SuggestionsState({
     this.items,
@@ -13,6 +17,7 @@ class SuggestionsState extends Equatable {
     this.error,
     this.hasMore = false,
     this.filters = const RecipeFiltersDto(),
+    this.isPantryEmpty = false,
   });
 
   @override
@@ -22,6 +27,7 @@ class SuggestionsState extends Equatable {
         error,
         hasMore,
         filters,
+        isPantryEmpty,
       ];
 
   SuggestionsState copyWith({
@@ -30,6 +36,7 @@ class SuggestionsState extends Equatable {
     Nullable<String>? error,
     bool? hasMore,
     RecipeFiltersDto? filters,
+    bool? isPantryEmpty,
   }) =>
       SuggestionsState(
         items: items ?? this.items,
@@ -37,5 +44,6 @@ class SuggestionsState extends Equatable {
         error: error != null ? error.value : this.error,
         hasMore: hasMore ?? this.hasMore,
         filters: filters ?? this.filters,
+        isPantryEmpty: isPantryEmpty ?? this.isPantryEmpty,
       );
 }
