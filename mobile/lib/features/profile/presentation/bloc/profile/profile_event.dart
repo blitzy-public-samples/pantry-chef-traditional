@@ -15,7 +15,7 @@ sealed class ProfileEvent extends Equatable {
 
 /// Event dispatched to fetch the current user profile.
 ///
-/// Triggers [GetProfileUsecase], which calls `GET /api/v1/auth/me` and emits
+/// Triggers [GetProfileUsecase], which calls `GET /api/auth/me` and emits
 /// the resulting [Profile] into [ProfileState.userProfile].
 class ProfileFetched extends ProfileEvent {}
 

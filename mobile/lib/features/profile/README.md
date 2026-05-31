@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The Profile feature manages the authenticated user's profile state — the embedded `Preferences` value object (dietary, allergies, disliked ingredients, cooking time) plus the favorite-recipes list — and renders the profile dashboard, preferences page, and favorites list. State is offline-first: `ProfileBloc` is a `Bloc` with `HydratedMixin` (functionally equivalent to a `HydratedBloc`) that serializes itself to `HydratedBloc.storage`, configured in `mobile/lib/main.dart:L14-L16` against the `path_provider` temporary directory. It also coordinates favorite-recipe synchronization with the backend `User.favoriteRecipes` array and owns the multi-step logout flow (Source: `mobile/lib/features/profile/domain/usecases/logout.usecase.dart:L17-L28`). Note: `data/repositories/profile.repositiry.dart` and its class `ProfileRepositiryImpl` carry an intentional typo — "repositiry" — preserved verbatim per AAP §0.10 and must not be renamed (Source: `mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L6`).
+The Profile feature manages the authenticated user's profile state — the embedded `Preferences` value object (dietary, allergies, disliked ingredients, cooking time) plus the favorite-recipes list — and renders the profile dashboard, preferences page, and favorites list. State is offline-first: `ProfileBloc` is a `Bloc` with `HydratedMixin` (functionally equivalent to a `HydratedBloc`) that serializes itself to `HydratedBloc.storage`, configured in `mobile/lib/main.dart:L27-L29` against the `path_provider` temporary directory. It also coordinates favorite-recipe synchronization with the backend `User.favoriteRecipes` array and owns the multi-step logout flow (Source: `mobile/lib/features/profile/domain/usecases/logout.usecase.dart:L50-L61`). Note: `data/repositories/profile.repositiry.dart` and its class `ProfileRepositiryImpl` carry an intentional typo — "repositiry" — preserved verbatim per AAP §0.10 and must not be renamed (Source: `mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L20`).
 
 ## Key Components
 
@@ -30,7 +30,7 @@ The Profile feature manages the authenticated user's profile state — the embed
 
 ## Architecture Fit
 
-This feature follows the mobile clean-architecture layering in [../../../../ARCHITECTURE.md](../../../../ARCHITECTURE.md) § BLoC State Management: `presentation` → `domain` → `data`. `ProfileBloc` is hydrated through `HydratedMixin` and persists across launches via `HydratedBloc.storage` (configured in `mobile/lib/main.dart:L14-L16`), making Profile the canonical example of offline-first user data. The client-side `Preferences` model mirrors the backend's embedded `Preferences` subdocument 1:1; see [../../../../DATA_MODEL.md](../../../../DATA_MODEL.md) § Preferences (embedded subdocument) for the canonical schema.
+This feature follows the mobile clean-architecture layering in [../../../../ARCHITECTURE.md](../../../../ARCHITECTURE.md) § BLoC State Management: `presentation` → `domain` → `data`. `ProfileBloc` is hydrated through `HydratedMixin` and persists across launches via `HydratedBloc.storage` (configured in `mobile/lib/main.dart:L27-L29`), making Profile the canonical example of offline-first user data. The client-side `Preferences` model mirrors the backend's embedded `Preferences` subdocument 1:1; see [../../../../DATA_MODEL.md](../../../../DATA_MODEL.md) § Preferences (embedded subdocument) for the canonical schema.
 
 ## Dependencies
 
@@ -62,21 +62,21 @@ This feature follows the mobile clean-architecture layering in [../../../../ARCH
 
 ## Primary Use Cases
 
-- **Load profile on app start** — `ProfileBloc.hydrate()` rehydrates persisted state via `fromJson`; if none is cached, the UI dispatches `ProfileFetched` → `GetProfileUsecase` → `ProfileRepositiryImpl.getProfile()` → `ProfileApi.getProfile()` → `GET /api/v1/auth/me` (Source: `profile_bloc.dart:L16-L22`).
-- **View and edit preferences** — from `ProfileMain`, `Navigation.preferences` opens `PreferencesScreen`, presently a stub of `PlatformScaffold` plus an app bar only (Source: `preferences.dart:L11-L17`).
-- **Update profile / preferences** — updates go through `ProfileApi.updateProfile(ProfileUpdateDto)` → `PATCH /api/v1/users` using `toJsonWithoutNullFields()` for null-safe partial updates (Source: `profile.api.dart:L19-L21`).
-- **Manage favorite recipes** — `FavoriteRecipesListUpdated(recipeId, isFavorite)` drives `FavoriteRecipesUpdateUsecase`, which updates favorites server-side via `PATCH /api/v1/users` and fetches the added recipe via `RecipeRepositoryImpl.getRecipeById()` to enrich BLoC state (Source: `favorite_recipes_update.usecase.dart:L11-L20`).
-- **View favorites list** — the `FavoriteRecipes` screen renders cached recipes with shimmer loading and empty states, lazily dispatching `FavoriteRecipesFetched` when the list is null (Source: `favorite_recipes.dart:L25-L29`).
-- **Logout** — `Logout(context)` → `LogoutUsecase`: (1) `POST /api/v1/auth/logout`; (2) `SharedPreferencesHelper.removeAccessToken()`/`removeRefreshToken()`; (3) reset events to `PantryBloc`, `RecipeBloc`, `ProfileBloc`, and `HomeBloc`; (4) `HydratedBloc.storage.clear()`; (5) `Navigator.pushNamedAndRemoveUntil(Navigation.authenticationStart, (_) => false)` (Source: `logout.usecase.dart:L17-L28`).
-- **Reset profile state** — the `ProfileDataReseted` event resets `ProfileState` to its empty default, invoked during logout teardown (Source: `profile_bloc.dart:L67-L69`).
+- **Load profile on app start** — `ProfileBloc.hydrate()` rehydrates persisted state via `fromJson`; if none is cached, the UI dispatches `ProfileFetched` → `GetProfileUsecase` → `ProfileRepositiryImpl.getProfile()` → `ProfileApi.getProfile()` → `GET /api/auth/me` (Source: `profile_bloc.dart:L34-L41`).
+- **View and edit preferences** — from `ProfileMain`, `Navigation.preferences` opens `PreferencesScreen`, presently a stub of `PlatformScaffold` plus an app bar only (Source: `preferences.dart:L15-L28`).
+- **Update profile / preferences** — updates go through `ProfileApi.updateProfile(ProfileUpdateDto)` → `PATCH /api/users` using `toJsonWithoutNullFields()` for null-safe partial updates (Source: `profile.api.dart:L45-L46`).
+- **Manage favorite recipes** — `FavoriteRecipesListUpdated(recipeId, isFavorite)` drives `FavoriteRecipesUpdateUsecase`, which updates favorites server-side via `PATCH /api/users` and fetches the added recipe via `RecipeRepositoryImpl.getRecipeById()` to enrich BLoC state (Source: `favorite_recipes_update.usecase.dart:L28-L34`).
+- **View favorites list** — the `FavoriteRecipes` screen renders cached recipes with shimmer loading and empty states, lazily dispatching `FavoriteRecipesFetched` when the list is null (Source: `favorite_recipes.dart:L42-L44`).
+- **Logout** — `Logout(context)` → `LogoutUsecase`: (1) `POST /api/auth/logout`; (2) `SharedPreferencesHelper.removeAccessToken()`/`removeRefreshToken()`; (3) reset events to `PantryBloc`, `RecipeBloc`, `ProfileBloc`, and `HomeBloc`; (4) `HydratedBloc.storage.clear()`; (5) `Navigator.pushNamedAndRemoveUntil(Navigation.authenticationStart, (_) => false)` (Source: `logout.usecase.dart:L50-L61`).
+- **Reset profile state** — the `ProfileDataReseted` event resets `ProfileState` to its empty default, invoked during logout teardown (Source: `profile_bloc.dart:L86-L88`).
 
 ## API / Endpoint Reference
 
 | Method | Path | Guard | Description |
 |--------|------|-------|-------------|
-| GET | `/api/v1/auth/me` | JWT (Bearer) | Returns the current `User` including embedded `Preferences` and the `favoriteRecipes` array. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L14-L17`, `mobile/lib/core/constants/endpoints.dart:L15`. |
-| PATCH | `/api/v1/users` | JWT (Bearer) | Updates the current user's mutable fields (`email`, `password`, `preferences`, `favoriteRecipes`). Body produced via `ProfileUpdateDto.toJsonWithoutNullFields()`. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L19-L21`, `mobile/lib/core/constants/endpoints.dart:L16`. |
-| POST | `/api/v1/auth/logout` | JWT (Bearer) | Invalidates the refresh session server-side. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L23-L25`, `mobile/lib/core/constants/endpoints.dart:L14`. |
+| GET | `/api/auth/me` | JWT (Bearer) | Returns the current `User` including embedded `Preferences` and the `favoriteRecipes` array. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L34-L37`, `mobile/lib/core/constants/endpoints.dart:L60`. |
+| PATCH | `/api/users` | JWT (Bearer) | Updates the current user's mutable fields (`email`, `password`, `preferences`, `favoriteRecipes`). Body produced via `ProfileUpdateDto.toJsonWithoutNullFields()`. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L45-L46`, `mobile/lib/core/constants/endpoints.dart:L64`. |
+| POST | `/api/auth/logout` | JWT (Bearer) | Invalidates the refresh session server-side. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L54-L55`, `mobile/lib/core/constants/endpoints.dart:L56`. |
 
 ## Data Flows
 
@@ -86,10 +86,10 @@ flowchart TD
     B -- yes --> C[Emit hydrated ProfileState]
     B -- no --> D[ProfileFetched →<br/>GetProfileUsecase]
     D --> E[ProfileRepositiryImpl typo →<br/>ProfileApi via DioClient]
-    E --> F[GET /api/v1/auth/me]
+    E --> F[GET /api/auth/me]
     C --> G[FavoriteRecipesListUpdated]
-    G --> H[FavoriteRecipesUpdateUsecase →<br/>PATCH /api/v1/users + getRecipeById]
-    C --> I[Edit Preferences →<br/>PATCH /api/v1/users]
+    G --> H[FavoriteRecipesUpdateUsecase →<br/>PATCH /api/users + getRecipeById]
+    C --> I[Edit Preferences →<br/>PATCH /api/users]
     H --> J[toJson persists →<br/>HydratedStorage]
     I --> J
 ```
@@ -98,30 +98,30 @@ flowchart TD
 
 | Configuration | Default / Value | Source | Notes |
 |---------------|------------------|--------|-------|
-| `API_BASE_URL` (compile-time) | `http://192.168.2.20:3000/api` | `mobile/lib/env_config.dart:L2` | Set via `--dart-define API_BASE_URL=...` at Flutter build time. |
-| `Endpoints.profile` | `$apiBaseUrl/auth/me` | `mobile/lib/core/constants/endpoints.dart:L15` | Loads current profile. |
-| `Endpoints.updateProfile` | `$apiBaseUrl/users` | `mobile/lib/core/constants/endpoints.dart:L16` | PATCH profile and preferences. |
-| `Endpoints.logout` | `$apiBaseUrl/auth/logout` | `mobile/lib/core/constants/endpoints.dart:L14` | Invalidates server-side refresh session. |
-| `Preferences.accessToken` | `"accessToken"` | `mobile/lib/core/constants/preferences.dart:L4` | SharedPreferences key for the JWT access token (cleared on logout). |
-| `Preferences.refreshToken` | `"refreshToken"` | `mobile/lib/core/constants/preferences.dart:L5` | SharedPreferences key for the JWT refresh token (cleared on logout). |
-| `HydratedBloc.storage` directory | `getTemporaryDirectory()` | `mobile/lib/main.dart:L14-L16` | OS temp dir via `path_provider`; eviction-prone under storage pressure. |
+| `API_BASE_URL` (compile-time) | `http://192.168.2.20:3000/api` | `mobile/lib/env_config.dart:L11` | Set via `--dart-define API_BASE_URL=...` at Flutter build time. |
+| `Endpoints.profile` | `$apiBaseUrl/auth/me` | `mobile/lib/core/constants/endpoints.dart:L60` | Loads current profile. |
+| `Endpoints.updateProfile` | `$apiBaseUrl/users` | `mobile/lib/core/constants/endpoints.dart:L64` | PATCH profile and preferences. |
+| `Endpoints.logout` | `$apiBaseUrl/auth/logout` | `mobile/lib/core/constants/endpoints.dart:L56` | Invalidates server-side refresh session. |
+| `Preferences.accessToken` | `"accessToken"` | `mobile/lib/core/constants/preferences.dart:L28` | SharedPreferences key for the JWT access token (cleared on logout). |
+| `Preferences.refreshToken` | `"refreshToken"` | `mobile/lib/core/constants/preferences.dart:L35` | SharedPreferences key for the JWT refresh token (cleared on logout). |
+| `HydratedBloc.storage` directory | `getTemporaryDirectory()` | `mobile/lib/main.dart:L27-L29` | OS temp dir via `path_provider`; eviction-prone under storage pressure. |
 
 ## Known Limitations and Implementation Gaps
 
 > ⚠️ **Favorites client/server divergence risk.** Favorites are stored both client-side (in the hydrated `ProfileBloc` state) and server-side (`User.favoriteRecipes` array). Reconciliation is event-driven only — if a server-side update happens out-of-band (e.g., another device, admin tool, or background job), the two stores may drift until the next `ProfileFetched` cycle.
 
-> ⚠️ **`profile.repositiry.dart` file name preserved verbatim.** The file at `mobile/lib/features/profile/data/repositories/profile.repositiry.dart` (and its inner class `ProfileRepositiryImpl`) carries the intentional typo "repositiry" instead of "repository". This is a stable file-system contract and must not be renamed (Source: `mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L6`).
+> ⚠️ **`profile.repositiry.dart` file name preserved verbatim.** The file at `mobile/lib/features/profile/data/repositories/profile.repositiry.dart` (and its inner class `ProfileRepositiryImpl`) carries the intentional typo "repositiry" instead of "repository". This is a stable file-system contract and must not be renamed (Source: `mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L20`).
 
 > ⚠️ **`Preferences` mirrors backend embedded subdocument.** The `Preferences` value object on mobile maps directly to the backend's embedded `Preferences` subdocument (`dietary[]`, `allergies[]`, `dislikedIngredients[]`, `cookingTime`). Field names and types must stay in lockstep with the backend `user.schema.ts` definition. See [../../../../DATA_MODEL.md](../../../../DATA_MODEL.md) § Preferences (embedded subdocument) for the canonical schema.
 
-> ⚠️ **No `HydratedBloc.storage` rotation across user switches.** While `LogoutUsecase` does call `HydratedBloc.storage.clear()` (Source: `mobile/lib/features/profile/domain/usecases/logout.usecase.dart:L27`), it does not *rotate* the storage namespace per user. On a shared device, a brief window between sessions could expose stale hydrated state if the clear is interrupted or another isolate writes before the clear completes.
+> ⚠️ **No `HydratedBloc.storage` rotation across user switches.** While `LogoutUsecase` does call `HydratedBloc.storage.clear()` (Source: `mobile/lib/features/profile/domain/usecases/logout.usecase.dart:L60`), it does not *rotate* the storage namespace per user. On a shared device, a brief window between sessions could expose stale hydrated state if the clear is interrupted or another isolate writes before the clear completes.
 
 ## Production Readiness Status
 
-> 🚧 **No account deletion confirmation UX; no GDPR data export flow.** The `DELETE /api/v1/users/:id` endpoint exists but no UI is wired to call it, and there is no in-app data-export workflow for compliance. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Mobile Release.
+> 🚧 **No account deletion confirmation UX; no GDPR data export flow.** The `DELETE /api/users/:id` endpoint exists but no UI is wired to call it, and there is no in-app data-export workflow for compliance. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Mobile Release.
 
 > 🚧 **Logout storage rotation hardening.** While `HydratedBloc.storage.clear()` is invoked during logout, production should additionally rotate the storage namespace per user (e.g., a per-user storage directory or namespaced key prefix) to eliminate the risk of stale profile data leaking across users on a shared device. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Security Hardening.
 
-> 🚧 **Hydrated storage in OS temp directory.** `HydratedBloc.storage` is built against `getTemporaryDirectory()` (Source: `mobile/lib/main.dart:L14-L16`), which the operating system may evict under low-storage pressure, causing a forced refetch on cold start. See [../../../../ARCHITECTURE.md](../../../../ARCHITECTURE.md) § BLoC State Management.
+> 🚧 **Hydrated storage in OS temp directory.** `HydratedBloc.storage` is built against `getTemporaryDirectory()` (Source: `mobile/lib/main.dart:L27-L29`), which the operating system may evict under low-storage pressure, causing a forced refetch on cold start. See [../../../../ARCHITECTURE.md](../../../../ARCHITECTURE.md) § BLoC State Management.
 
 > 🚧 **Favorites reconciliation strategy.** The current sync is event-driven only. An explicit "sync on app foreground" event is recommended for multi-device scenarios where favorites may have changed out-of-band. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Mobile Release.

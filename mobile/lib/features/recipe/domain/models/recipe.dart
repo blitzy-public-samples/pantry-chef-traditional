@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:pantry_chef/features/recipe/domain/models/ingredient_list_item.dart';
-// NOTE: 'instraction_item.dart' filename and 'InstractionItem' class are preserved verbatim. Do not rename.
+// NOTE: 'instraction_item.dart' filename and 'InstractionItem' class are preserved
+// verbatim. Do not rename.
 import 'package:pantry_chef/features/recipe/domain/models/instraction_item.dart';
 
 part 'recipe.g.dart';
@@ -10,7 +11,7 @@ part 'recipe.g.dart';
 /// Mirrors the backend `RecipeSchemaClass` (see `DATA_MODEL.md` § Recipe).
 /// Includes `ingridientList` (spelling preserved verbatim) and
 /// `instructions: List<InstractionItem>` (spelling preserved verbatim), and
-/// an optional `matchScore` populated only by `/api/v1/recipe/matches`
+/// an optional `matchScore` populated only by `/api/recipe/matches`
 /// responses.
 @JsonSerializable()
 class Recipe {
@@ -24,19 +25,19 @@ class Recipe {
   /// Free-text description; rendered in `RecipeCard` (3 lines, ellipsis) and `RecipeDetailed`.
   final String description;
 
+  // NOTE: 'ingridientList' field name preserved verbatim (matches backend Recipe schema).
   /// Ingredients required to make this recipe.
   ///
   /// Field name preserved verbatim from backend Recipe schema (`ingridientList`).
   /// Each item is an `IngredientListItem` whose `ingridient` field (lowercase, sic)
   /// carries the `Ingredient` reference.
-  // NOTE: 'ingridientList' field name preserved verbatim (matches backend Recipe schema).
   final List<IngredientListItem> ingridientList;
 
+  // NOTE: 'InstractionItem' spelling preserved verbatim (class in instraction_item.dart).
   /// Ordered cooking steps.
   ///
   /// The type name `InstractionItem` is preserved verbatim from backend
   /// (defined in `instraction_item.dart`).
-  // NOTE: InstractionItem (spelling preserved verbatim) — the class name in instraction_item.dart.
   final List<InstractionItem> instructions;
 
   /// Prep time in minutes.
@@ -60,7 +61,7 @@ class Recipe {
 
   /// Server-derived match score in [0.0, 1.0] = `availableIngredients / totalIngredients`.
   ///
-  /// Populated ONLY by `/api/v1/recipe/matches`. Null on regular list/detail responses.
+  /// Populated ONLY by `/api/recipe/matches`. Null on regular list/detail responses.
   final double? matchScore; // how well it matches available ingredients
 
   /// Creates a `Recipe` with all required fields; `matchScore` is optional.
@@ -79,14 +80,15 @@ class Recipe {
     this.matchScore,
   });
 
+  // NOTE: copyWith accepts an inFavorite parameter but does NOT use it.
+  // Recipe has no inFavorite field.
+  // FIXME: inFavorite is unused. Document only; do not fix. See PRODUCTION_READINESS.md.
   /// Returns a new `Recipe` with overridden fields.
   ///
   /// **NOTE:** the `inFavorite` parameter is currently accepted but ignored — `Recipe`
-  /// has no `inFavorite` field. See FIXME annotation above this method and
+  /// has no `inFavorite` field. See the `// FIXME:` annotation above this method and
   /// `mobile/lib/features/recipe/README.md` § Known Limitations. Favorites are managed
   /// in `User.favoriteRecipes` via `ProfileBloc`.
-  // NOTE: copyWith accepts inFavorite parameter but does NOT use it. Recipe has no inFavorite field.
-  // FIXME: Document only; do not fix. inFavorite parameter is unused — see PRODUCTION_READINESS.md.
   Recipe copyWith({
     final bool? inFavorite,
   }) =>

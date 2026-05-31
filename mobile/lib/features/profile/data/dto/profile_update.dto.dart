@@ -3,7 +3,7 @@ import 'package:pantry_chef/features/profile/domain/models/preferences.dart';
 
 part 'profile_update.dto.g.dart';
 
-/// PATCH request body for `PATCH /api/v1/users`.
+/// PATCH request body for `PATCH /api/users`.
 ///
 /// All fields are optional so callers can issue partial updates. The class
 /// is `@JsonSerializable()` for the generated [toJson], but also exposes

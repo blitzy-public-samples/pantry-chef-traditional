@@ -36,7 +36,8 @@ class Endpoints {
   /// Invoked by `DioClient._refreshDio` (in `mobile/lib/core/utils/dio_client.dart`)
   /// when the primary `dio` interceptor sees a 401 (`StatusCodes.unauthorized`) or
   /// 419 (`StatusCodes.tokenExpired`) response. Resolves to `<apiBaseUrl>/auth/refresh`
-  /// (typically `/api/v1/auth/refresh` after the backend's global and version prefixes).
+  /// (e.g. `/api/auth/refresh`). No `/v1` segment exists today: the backend applies only
+  /// the global prefix `api` and never calls `app.enableVersioning()`.
   static const String refreshToken = '$apiBaseUrl/auth/refresh';
   /// Email-login endpoint (HTTP POST).
   ///

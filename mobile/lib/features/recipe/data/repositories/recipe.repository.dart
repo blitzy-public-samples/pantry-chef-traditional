@@ -12,7 +12,7 @@ import 'package:pantry_chef/features/recipe/domain/repositories/recipe.repositor
 /// substitute a fake — see
 /// [PRODUCTION_READINESS.md](../../../../../../PRODUCTION_READINESS.md).
 class RecipeRepositoryImpl implements RecipeRepository {
-  /// Returns the full recipe list from `GET /api/v1/recipe`, mapping each
+  /// Returns the full recipe list from `GET /api/recipe`, mapping each
   /// element via `Recipe.fromJson`.
   ///
   /// The backend silently caps the page size at 50 regardless of the requested
@@ -26,7 +26,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   /// Resolves the given recipe `ids` into full `Recipe` instances via
-  /// `GET /api/v1/recipe` with a `QueryRecipeDto(ids: ids)` query parameter.
+  /// `GET /api/recipe` with a `QueryRecipeDto(ids: ids)` query parameter.
   ///
   /// Used by the favorites flow in `ProfileBloc` to hydrate the user's saved
   /// recipe ids stored on the `User.favoriteRecipes` array (see
@@ -55,7 +55,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
     return response.map((el) => Recipe.fromJson(el)).toList();
   }
 
-  /// Fetches a single recipe by id via `GET /api/v1/recipe/:id` and
+  /// Fetches a single recipe by id via `GET /api/recipe/:id` and
   /// deserializes the response with `Recipe.fromJson`.
   ///
   /// Throws a `DioException` on 404 or other HTTP errors; callers should

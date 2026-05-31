@@ -2,18 +2,18 @@
 
 ## Module Purpose
 
-The PantryChef mobile client is a Flutter application that delivers a unified pantry-management and recipe-discovery experience across Android, iOS, and Web. The package is identified as `pantry_chef` version `1.0.0+1` (Source: `mobile/pubspec.yaml:L1,L19`) and is private, marked `publish_to: 'none'` (Source: `mobile/pubspec.yaml:L5`). It targets the Flutter/Dart SDK `^3.5.1` (Source: `mobile/pubspec.yaml:L22`) and relies on BLoC for state management, HydratedBloc for state persistence, GetIt for dependency injection, and Dio for HTTP communication with the PantryChef NestJS backend. Five feature modules live under `lib/features/` — `authentication`, `ingredient` (mobile-side correct spelling, in deliberate contrast to the backend's verbatim-preserved `ingridient` module), `pantry`, `profile`, and `recipe` — while a shared `lib/core/` subtree supplies navigation, theme tokens, constants, utilities, the DI service locator, and HTTP plumbing.
+The PantryChef mobile client is a Flutter app delivering pantry management and recipe discovery across Android, iOS, and Web. The package is `pantry_chef` v`1.0.0+1`, private, targeting the Flutter/Dart SDK `^3.5.1` (Source: `mobile/pubspec.yaml:L1,L5,L22`). It uses BLoC for state, HydratedBloc for persistence, GetIt for dependency injection, and Dio for HTTP. Five feature modules under `lib/features/` — `authentication`, `ingredient` (mobile-side correct spelling, versus the backend's verbatim-preserved `ingridient`), `pantry`, `profile`, and `recipe` — sit over a shared `lib/core/` infrastructure subtree.
 
 ## Key Components
 
 | Path | Type | Responsibility |
 | --- | --- | --- |
-| `lib/main.dart` | Bootstrap | Application entrypoint inside `runZonedGuarded`: initializes the Flutter binding, preserves the splash, builds HydratedBloc storage, locks portrait orientation, runs `setupLocator()`, and calls `runApp(const App())` (Source: `mobile/lib/main.dart:L10-L23`) |
-| `lib/env_config.dart` | Compile-time Config | Exposes `EnvConfig.apiBaseUrl` via `String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api')` (Source: `mobile/lib/env_config.dart:L2`) |
+| `lib/main.dart` | Bootstrap | App entrypoint inside `runZonedGuarded`: binds the engine, preserves the splash, builds HydratedBloc storage, locks portrait, runs `setupLocator()`, and calls `runApp(const App())` (Source: `mobile/lib/main.dart:L23-L36`) |
+| `lib/env_config.dart` | Compile-time Config | Exposes `EnvConfig.apiBaseUrl` via `String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api')` (Source: `mobile/lib/env_config.dart:L11`) |
 | `lib/core/` | Shared Infrastructure | Cross-cutting layer: navigation, styles, constants, utils, presentation primitives, DTOs, shared domain models (see [`lib/core/README.md`](lib/core/README.md)) |
-| `lib/features/authentication/` | Feature Module | Sign-in + sign-up flows, JWT token persistence (see [`lib/features/authentication/README.md`](lib/features/authentication/README.md)) |
-| `lib/features/ingredient/` | Feature Module | Ingredient search, creation, AI-assisted camera capture (see [`lib/features/ingredient/README.md`](lib/features/ingredient/README.md)) |
-| `lib/features/pantry/` | Feature Module | User-scoped pantry CRUD with hydrated state (see [`lib/features/pantry/README.md`](lib/features/pantry/README.md)) |
+| `lib/features/authentication/` | Feature Module | Sign-in + sign-up flows, JWT token persistence (`lib/features/authentication/`; README pending a later checkpoint) |
+| `lib/features/ingredient/` | Feature Module | Ingredient search, creation, AI-assisted camera capture (`lib/features/ingredient/`; README pending a later checkpoint) |
+| `lib/features/pantry/` | Feature Module | User-scoped pantry CRUD with hydrated state (`lib/features/pantry/`; README pending a later checkpoint) |
 | `lib/features/profile/` | Feature Module | Profile, preferences, favorites, logout (see [`lib/features/profile/README.md`](lib/features/profile/README.md)) |
 | `lib/features/recipe/` | Feature Module | Recipe browsing, detail, pantry-aware matching, favorites (see [`lib/features/recipe/README.md`](lib/features/recipe/README.md)) |
 | `pubspec.yaml` | Manifest | Package identity `pantry_chef` v1.0.0+1, SDK `^3.5.1`, runtime + dev dependencies, launcher-icon config (Source: `mobile/pubspec.yaml:L1-L77`) |
@@ -25,24 +25,24 @@ The PantryChef mobile client is a Flutter application that delivers a unified pa
 
 ## Architecture Fit
 
-The mobile client follows a **clean architecture per feature**: each feature under `lib/features/` is split into `domain/` (repository contracts, use cases, and immutable entities), `data/` (Dio API clients, JSON DTOs, and repository implementations), and `presentation/` (BLoC plus screens and widgets). The shared `lib/core/` namespace provides the cross-cutting infrastructure that every feature depends upon — `core/utils/dio_client.dart` for authenticated HTTP, `core/utils/service_locator.dart` for GetIt registration, `core/utils/shared_preferences_helper.dart` for JWT token persistence, and `core/navigation.dart` for named-route resolution. The client talks to the NestJS backend using JWT access and refresh tokens; when a request returns `401`, `DioClient` transparently attempts a token refresh via `POST /api/v1/auth/refresh` and then retries the original request. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full system request path (Flutter UI → BLoC → repository → DioClient → bearer JWT → NestJS → feature controller → MongoDB or Google Cloud Vision).
+The client follows **clean architecture per feature**: each feature splits into `domain/` (contracts, use cases, entities), `data/` (Dio clients, DTOs, repository implementations), and `presentation/` (BLoC, screens, widgets). The shared `lib/core/` layer supplies the cross-cutting infrastructure every feature uses — `dio_client.dart` for authenticated HTTP, `service_locator.dart` for GetIt, `shared_preferences_helper.dart` for JWT persistence, and `navigation.dart` for routes. On a `401`, `DioClient` refreshes via `POST /api/auth/refresh` and retries. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full request path.
 
 ## Dependencies
 
 ### Internal
 
-Every feature module imports the same cross-cutting primitives from `lib/core/`:
+Shared primitives every feature imports from `lib/core/`:
 
-- `lib/core/utils/dio_client.dart` — Dio HTTP client wired with the JWT interceptor and refresh flow.
-- `lib/core/utils/service_locator.dart` — `setupLocator()` GetIt registrations.
-- `lib/core/utils/shared_preferences_helper.dart` — typed wrapper over `SharedPreferences` for tokens and persisted state.
-- `lib/core/constants/endpoints.dart` — backend endpoint path constants.
-- `lib/core/constants/navigation.dart` — named routes, including the `singup` route (spelling preserved verbatim — Source: `mobile/lib/core/constants/navigation.dart:L6`).
-- `lib/core/navigation.dart` — named-route resolution.
+- `core/utils/dio_client.dart` — Dio client with the JWT interceptor and refresh flow.
+- `core/utils/service_locator.dart` — `setupLocator()` GetIt registrations.
+- `core/utils/shared_preferences_helper.dart` — typed `SharedPreferences` wrapper for tokens.
+- `core/constants/endpoints.dart` — backend endpoint path constants.
+- `core/constants/navigation.dart` — named routes, including `singup` (spelling preserved verbatim — `navigation.dart:L28`).
+- `core/navigation.dart` — route resolution.
 
 ### External
 
-Runtime dependencies, with versions verbatim from `mobile/pubspec.yaml:L30-L56`:
+Runtime dependencies, versions verbatim from `mobile/pubspec.yaml:L30-L56`:
 
 | Package | Version | Purpose |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ Runtime dependencies, with versions verbatim from `mobile/pubspec.yaml:L30-L56`:
 | `flutter_localizations` | sdk: flutter | Built-in localization |
 | `bloc` | ^8.1.4 | Core BLoC pattern |
 | `flutter_bloc` | ^8.1.6 | Flutter bindings for BLoC |
-| `json_annotation` | ^4.9.0 | JSON serialization annotations (generated `.g.dart` files excluded from DartDoc) |
+| `json_annotation` | ^4.9.0 | JSON serialization annotations (generated `.g.dart` excluded from DartDoc) |
 | `equatable` | ^2.0.5 | Value equality for BLoC events/states |
 | `loader_overlay` | ^4.0.3 | Global loading overlay |
 | `hydrated_bloc` | ^9.1.5 | BLoC state persistence via `HydratedStorage` |
@@ -72,49 +72,50 @@ Runtime dependencies, with versions verbatim from `mobile/pubspec.yaml:L30-L56`:
 
 Dev dependencies from `mobile/pubspec.yaml:L58-L76`:
 
-- `flutter_test` (sdk: flutter) — widget testing (Source: `mobile/pubspec.yaml:L59-L60`).
-- `flutter_launcher_icons` ^0.14.1 — launcher icon generation (Source: `mobile/pubspec.yaml:L61`).
-- `json_serializable` ^6.7.1 — codegen for JSON DTOs, producing `*.g.dart` files that are excluded from inline DartDoc (Source: `mobile/pubspec.yaml:L62`).
-- `build_runner` ^2.4.6 — codegen driver (Source: `mobile/pubspec.yaml:L63`).
-- `flutter_lints` ^4.0.0 — lint rule set consumed via `analysis_options.yaml` (Source: `mobile/pubspec.yaml:L76`).
+| Package | Version | Purpose |
+| --- | --- | --- |
+| `flutter_test` | sdk: flutter | Widget testing |
+| `flutter_launcher_icons` | ^0.14.1 | Launcher icon generation |
+| `json_serializable` | ^6.7.1 | Codegen for JSON DTOs (`*.g.dart`, excluded from DartDoc) |
+| `build_runner` | ^2.4.6 | Codegen driver |
+| `flutter_lints` | ^4.0.0 | Lint rule set consumed via `analysis_options.yaml` |
 
 ## Primary Use Cases
 
-- **App bootstrap** — `main()` runs five sequential async steps inside `runZonedGuarded`: `WidgetsFlutterBinding.ensureInitialized()` → `FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding)` → build `HydratedBloc.storage` via `HydratedStorage.build(storageDirectory: await getTemporaryDirectory())` → `setPreferredOrientations()` (portrait lock) → `setupLocator()` → `runApp(const App())` (Source: `mobile/lib/main.dart:L11-L19`).
-- **Authentication** — sign up through the `Navigation.singup` route (spelling preserved verbatim), log in, persist JWT access + refresh tokens, and auto-refresh on `401` (see [`lib/features/authentication/README.md`](lib/features/authentication/README.md)).
-- **Pantry management** — add items manually or via camera capture, edit them, and browse a hydrated list of `PantryIngridient` records (spelling preserved verbatim from the backend; the mobile client mirrors backend field names) (see [`lib/features/pantry/README.md`](lib/features/pantry/README.md)).
-- **Recipe browsing and matching** — list recipes, filter by tags, request pantry-aware matches via `GET /api/v1/recipe/matches`, and view detail whose `instructions[]` use the `InstractionItem` class from `instraction_item.dart` (spelling preserved verbatim), then toggle favorite (see [`lib/features/recipe/README.md`](lib/features/recipe/README.md)).
-- **AI-assisted ingredient capture** — open the camera, take a photo, upload it to `POST /api/v1/ai/vision`, receive label-detection results, then confirm and persist (see [`lib/features/ingredient/README.md`](lib/features/ingredient/README.md)).
-- **Profile and preferences** — update dietary preferences, allergies, disliked ingredients, and cooking time; synchronize favorite recipes; and log out via `POST /api/v1/auth/logout` (see [`lib/features/profile/README.md`](lib/features/profile/README.md)).
+- **App bootstrap** — `main()` runs async steps in `runZonedGuarded`: bind engine → preserve splash → build `HydratedBloc.storage` → lock portrait → `setupLocator()` → `runApp` (Source: `mobile/lib/main.dart:L23-L32`).
+- **Authentication** — sign up via `Navigation.singup` (spelling preserved verbatim), log in, persist JWT access + refresh tokens, auto-refresh on `401`.
+- **Pantry management** — add items manually or via camera, edit, and browse a hydrated list of `PantryIngridient` records (spelling preserved verbatim).
+- **Recipe browsing and matching** — list and filter recipes, request matches via `GET /api/recipe/matches`, view detail using `InstractionItem` from `instraction_item.dart` (spelling preserved verbatim), toggle favorite (see [`lib/features/recipe/README.md`](lib/features/recipe/README.md)).
+- **AI ingredient capture** — photograph an item, upload to `POST /api/ai/vision`, confirm the label-detection result, persist.
+- **Profile** — edit preferences, allergies, disliked ingredients, cooking time; sync favorites; log out via `POST /api/auth/logout` (see [`lib/features/profile/README.md`](lib/features/profile/README.md)).
 
 ## API / Endpoint Reference
 
-This is a mobile-side document, so the reference below lists the **backend endpoints consumed** by the client; the authoritative endpoint definitions live in each `backend/src/<module>/README.md`. All paths are served under the backend global prefix `/api/v1`.
+This mobile-side reference lists the **backend endpoints consumed** by the client. All paths use the global prefix `/api`; the backend never calls `app.enableVersioning()`, so **no `/v1` segment exists today** despite the controllers' `version: '1'` metadata.
 
 | Method | Path | Consumed By |
 | --- | --- | --- |
-| `POST` | `/api/v1/auth/email/login` | `lib/features/authentication/` |
-| `POST` | `/api/v1/auth/email/register` | `lib/features/authentication/` |
-| `GET` | `/api/v1/auth/me` | `lib/features/authentication/`, `lib/features/profile/` |
-| `POST` | `/api/v1/auth/refresh` | `lib/core/utils/dio_client.dart` (interceptor on 401) |
-| `POST` | `/api/v1/auth/logout` | `lib/features/authentication/`, `lib/features/profile/` |
-| `PATCH` | `/api/v1/auth/me` | `lib/features/profile/` |
-| `DELETE` | `/api/v1/auth/me` | `lib/features/profile/` |
-| `GET` | `/api/v1/recipe` | `lib/features/recipe/` |
-| `GET` | `/api/v1/recipe/matches` | `lib/features/recipe/` (pantry-aware matching) |
-| `GET` | `/api/v1/recipe/:id` | `lib/features/recipe/` |
-| `GET` | `/api/v1/pantry` | `lib/features/pantry/` |
-| `POST` | `/api/v1/pantry` | `lib/features/pantry/` |
-| `PATCH` | `/api/v1/pantry/:id` | `lib/features/pantry/` |
-| `DELETE` | `/api/v1/pantry/:id` | `lib/features/pantry/` |
-| `GET` | `/api/v1/ingredient/creation-data` | `lib/features/ingredient/` (categories + units reference data) |
-| `GET` | `/api/v1/ingredient` | `lib/features/ingredient/` |
-| `POST` | `/api/v1/ingredient` | `lib/features/ingredient/` |
-| `POST` | `/api/v1/ai/vision` | `lib/features/ingredient/` (multipart image upload; **endpoint is unguarded** — see Known Limitations) |
+| `POST` | `/api/auth/email/login` | `lib/features/authentication/` |
+| `POST` | `/api/auth/email/register` | `lib/features/authentication/` |
+| `GET` | `/api/auth/me` | `lib/features/authentication/`, `lib/features/profile/` |
+| `POST` | `/api/auth/refresh` | `lib/core/utils/dio_client.dart` (interceptor on 401) |
+| `POST` | `/api/auth/logout` | `lib/features/authentication/`, `lib/features/profile/` |
+| `PATCH` | `/api/users` | `lib/features/profile/` (`ProfileApi.updateProfile`) |
+| `GET` | `/api/recipe` | `lib/features/recipe/` |
+| `GET` | `/api/recipe/matches` | `lib/features/recipe/` (pantry-aware matching) |
+| `GET` | `/api/recipe/:id` | `lib/features/recipe/` |
+| `GET` | `/api/pantry` | `lib/features/pantry/` |
+| `POST` | `/api/pantry` | `lib/features/pantry/` |
+| `PATCH` | `/api/pantry/:id` | `lib/features/pantry/` |
+| `DELETE` | `/api/pantry/:id` | `lib/features/pantry/` |
+| `GET` | `/api/ingredient/creation-data` | `lib/features/ingredient/` (categories + units reference data) |
+| `GET` | `/api/ingredient` | `lib/features/ingredient/` |
+| `POST` | `/api/ingredient` | `lib/features/ingredient/` |
+| `POST` | `/api/ai/vision` | `lib/features/ingredient/` (multipart image upload; **endpoint is unguarded** — see Known Limitations) |
 
 ## Data Flows
 
-The diagram below traces the sequential startup steps executed by `main()` inside `runZonedGuarded` before the first widget is rendered (Source: `mobile/lib/main.dart:L11-L19`). Each step must complete before the next begins because later steps depend on the binding, storage, and DI registrations established earlier.
+The diagram traces the startup steps `main()` runs inside `runZonedGuarded` before the first frame (Source: `mobile/lib/main.dart:L23-L32`); each depends on the binding, storage, and DI established earlier. After `App` mounts, transitions dispatch through `Navigation.<route>` named routes resolved by `core/navigation.dart` (see [`../ARCHITECTURE.md`](../ARCHITECTURE.md)).
 
 ```mermaid
 flowchart LR
@@ -127,18 +128,12 @@ flowchart LR
     G --> H[runApp const App]
 ```
 
-Once the `App` widget mounts, screen transitions are dispatched through `Navigation.<route>` named routes declared in `core/constants/navigation.dart` and resolved by `core/navigation.dart`. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full end-to-end request path through the system (Flutter UI → BLoC → DioClient → bearer JWT → NestJS).
-
 ## Configuration
 
-The mobile client is configured at **compile time** through Dart's `--dart-define` mechanism; the only runtime configuration is what the user enters through the UI (preferences, favorites, and so on). There is no `.env` file on the mobile side — the env-driven half of the system is the backend, documented in [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md).
-
-### Compile-time API Base URL
-
-The single most important configuration is `API_BASE_URL`, read once into a compile-time constant:
+The client is configured at **compile time** through Dart's `--dart-define`; the only runtime configuration is user input. There is no `.env` on mobile — the env-driven half of the system is the backend (see [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md)). The key value is `API_BASE_URL`, read once into a compile-time constant:
 
 ```dart
-// Source: mobile/lib/env_config.dart:L1-L3
+// Source: mobile/lib/env_config.dart:L5,L11
 class EnvConfig {
   static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api');
 }
@@ -172,8 +167,6 @@ flutter build web --release --dart-define=API_BASE_URL=https://api.pantry-chef.c
 | `flutter gen-l10n` | `i10n.yaml` | `app_localizations.dart` from `lib/l10n/app_en.arb` |
 | `build_runner` + `json_serializable` | `pubspec.yaml:L62-L63` | `*.g.dart` JSON DTO serializers |
 
-Run codegen with:
-
 ```bash
 flutter pub run flutter_native_splash:create
 flutter pub run flutter_launcher_icons
@@ -183,7 +176,7 @@ flutter gen-l10n
 
 ### Lint Policy
 
-The project uses `flutter_lints` ^4.0.0 with five diagnostics elevated to errors:
+`flutter_lints` ^4.0.0 with five diagnostics elevated to errors; generated `**/*.g.dart` files are excluded from analysis (Source: `mobile/analysis_options.yaml:L14`).
 
 | Lint Rule | Severity | Source |
 | --- | --- | --- |
@@ -193,36 +186,32 @@ The project uses `flutter_lints` ^4.0.0 with five diagnostics elevated to errors
 | `avoid_print` | error | `mobile/analysis_options.yaml:L19` |
 | `cancel_subscriptions` | error | `mobile/analysis_options.yaml:L20` |
 
-Generated `**/*.g.dart` files are excluded from analysis (Source: `mobile/analysis_options.yaml:L14`).
-
 ## Known Limitations and Implementation Gaps
 
-> ⚠️ **API base URL default is a local LAN IP** — `EnvConfig.apiBaseUrl` defaults to `http://192.168.2.20:3000/api` (Source: `mobile/lib/env_config.dart:L2`). This is a developer's local machine IP that is unreachable from any other network. Production builds MUST override it via `--dart-define=API_BASE_URL=...`.
+> ⚠️ **API base URL default is a LAN IP** — `EnvConfig.apiBaseUrl` defaults to `http://192.168.2.20:3000/api` (Source: `mobile/lib/env_config.dart:L11`), unreachable off the developer's network. Production builds MUST override it via `--dart-define=API_BASE_URL=...`.
 
-> ⚠️ **Preserved spelling variants** — the codebase intentionally retains the following non-standard spellings, which are stable identifiers and must NOT be corrected during this documentation pass:
-> - `singup` (route name — Source: `mobile/lib/core/constants/navigation.dart:L6`)
-> - `InstractionItem` (class name — Source: `mobile/lib/features/recipe/domain/models/instraction_item.dart:L6`)
-> - `instraction_item.dart` (file name)
-> - `ingridientList` (field name on the `Recipe` model mirroring the backend schema — Source: `mobile/lib/features/recipe/domain/models/recipe.dart:L12`)
+> ⚠️ **No API versioning today** — routes resolve under `/api` (e.g. `/api/recipe/matches`), not `/api/v1`; the backend never calls `app.enableVersioning()`, so `version: '1'` is inert.
 
-> ⚠️ **Mobile vs. backend spelling divergence** — the mobile feature folder uses the CORRECT spelling `lib/features/ingredient/`, whereas the backend module uses the VERBATIM-PRESERVED spelling `backend/src/ingridient/`. Both spellings are intentional; do not unify them.
+> ⚠️ **Preserved spelling variants** — stable identifiers that must NOT be corrected: `singup` (route — `navigation.dart:L28`), `InstractionItem` (`instraction_item.dart:L13`), and `ingridientList` (`Recipe` field — `recipe.dart:L34`).
 
-> ⚠️ **Default test coverage is minimal** — `mobile/test/widget_test.dart` contains only the Flutter scaffold counter smoke test. There are no BLoC unit tests, golden tests, or integration tests in the mobile project at this time.
+> ⚠️ **Mobile vs. backend spelling** — mobile uses correct `lib/features/ingredient/`; the backend uses verbatim-preserved `backend/src/ingridient/`. Both intentional; do not unify.
 
-> ⚠️ **`Recipe.copyWith` no-op on `inFavorite`** — `mobile/lib/features/recipe/domain/models/recipe.dart:L37-L53` accepts an `inFavorite` parameter but never assigns it (the `Recipe` entity has no such field). This is documented inline with `// NOTE:` and `// FIXME:` markers per the tag taxonomy and is NOT fixed in this pass.
+> ⚠️ **`Recipe.copyWith` no-op on `inFavorite`** — `recipe.dart:L92-L108` accepts an `inFavorite` parameter but never assigns it (no such field). Documented inline with `// NOTE:`/`// FIXME:`, not fixed here.
 
-> ⚠️ **Hydrated state lives in the OS temp directory** — `HydratedBloc.storage` is built over `getTemporaryDirectory()` (Source: `mobile/lib/main.dart:L14-L16`), so persisted BLoC state can be evicted by the operating system under low-storage conditions. Treat hydrated state as a cache, not durable storage.
+> ⚠️ **Hydrated state in the OS temp directory** — `HydratedBloc.storage` uses `getTemporaryDirectory()` (Source: `mobile/lib/main.dart:L27-L29`), so persisted state can be evicted under low storage. Treat it as a cache.
+
+> ⚠️ **Minimal test coverage** — only the scaffold counter smoke test in `mobile/test/widget_test.dart`; no BLoC unit, golden, or integration tests.
 
 ## Production Readiness Status
 
-> 🚧 See [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md) for the complete production-readiness checklist with status indicators (❌/⚠️/✅) across eleven categories — the **Mobile Release** category is the primary section for this client.
+> 🚧 See [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md) for the complete checklist (❌/⚠️/✅) across eleven categories — **Mobile Release** is the primary section for this client.
 
-> 🚧 **Build & Runtime — Mobile Release** (❌) — no Flutter release pipeline is configured. Production builds require `flutter build apk --release --dart-define=API_BASE_URL=...` and equivalents for iOS + web. No Fastlane / Codemagic / Bitrise integration exists.
+> 🚧 **Mobile Release** (❌) — no Flutter release pipeline. Production builds require `flutter build apk --release --dart-define=API_BASE_URL=...` (and iOS + web); no Fastlane / Codemagic / Bitrise integration exists.
 
-> 🚧 **Signing configs missing** — no Play Store keystore is configured in `mobile/android/app/build.gradle` (only debug signing), and no App Store provisioning profile is wired in `mobile/ios/Runner.xcodeproj`. Both must be set up before store submission.
+> 🚧 **Signing configs missing** — no Play Store keystore in `mobile/android/app/build.gradle` (debug only) and no App Store profile in `mobile/ios/Runner.xcodeproj`.
 
-> 🚧 **PWA manifest values are placeholders** — `mobile/web/manifest.json` ships with default Flutter scaffolding values. Review the name, description, theme color, and icon variants before production deployment.
+> 🚧 **PWA manifest placeholders** — `mobile/web/manifest.json` ships default scaffolding; review name, description, theme color, and icons before deployment.
 
-> 🚧 **API base URL override required** — see Known Limitations above; the default LAN IP is not reachable from any production environment, so every non-development build must inject `API_BASE_URL`.
+> 🚧 **API base URL override required** — the default LAN IP is unreachable in production; every non-development build must inject `API_BASE_URL`.
 
-> 🚧 **Schema-related blockers documented elsewhere** — refer to [`../DATA_MODEL.md`](../DATA_MODEL.md) for the canonical schema diagram; the mobile client mirrors the backend schemas, including the preserved spellings noted above.
+> 🚧 **Schema-related blockers** — see [`../DATA_MODEL.md`](../DATA_MODEL.md); the client mirrors the backend schemas, including the preserved spellings above.

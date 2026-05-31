@@ -7,7 +7,7 @@ import 'package:pantry_chef/features/profile/data/dto/profile_update.dto.dart';
 /// Network adapter for the profile feature.
 ///
 /// Wraps [Dio] calls to the backend auth and users endpoints
-/// (`/api/v1/auth/me`, `/api/v1/users`, `/api/v1/auth/logout`) using the
+/// (`/api/auth/me`, `/api/users`, `/api/auth/logout`) using the
 /// shared [DioClient] resolved from the [getIt] service locator
 /// (`getIt<DioClient>().dio`). Stateless except for the captured Dio
 /// reference; the class does not cache responses, manage lifecycle, or
@@ -28,7 +28,7 @@ class ProfileApi {
 
   /// Fetches the current user's profile via `GET Endpoints.profile`.
   ///
-  /// Issues `GET /api/v1/auth/me`. Returns the raw decoded JSON map; the
+  /// Issues `GET /api/auth/me`. Returns the raw decoded JSON map; the
   /// caller is expected to deserialize via `Profile.fromJson` (typically in
   /// [ProfileRepositiryImpl.getProfile], file name typo preserved verbatim).
   Future<Map<String, dynamic>> getProfile() async {
@@ -38,7 +38,7 @@ class ProfileApi {
 
   /// Patches the current user via `PATCH Endpoints.updateProfile`.
   ///
-  /// Issues `PATCH /api/v1/users` with the body produced by
+  /// Issues `PATCH /api/users` with the body produced by
   /// [ProfileUpdateDto.toJsonWithoutNullFields], which omits null fields so
   /// the server does not clobber unset properties — supporting safe partial
   /// updates of email, password, embedded preferences, and favorite recipes.
@@ -48,7 +48,7 @@ class ProfileApi {
 
   /// Invalidates the refresh session server-side via `POST Endpoints.logout`.
   ///
-  /// Issues `POST /api/v1/auth/logout`. Does NOT clear local tokens or
+  /// Issues `POST /api/auth/logout`. Does NOT clear local tokens or
   /// hydrated BLoC state — that responsibility lives in `LogoutUsecase`
   /// (`domain/usecases/logout.usecase.dart`).
   Future<void> logout() async {

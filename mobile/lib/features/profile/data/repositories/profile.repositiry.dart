@@ -1,4 +1,5 @@
-// NOTE: This file's name 'profile.repositiry.dart' is preserved verbatim (typo retained for stability). Do not rename.
+// NOTE: This file's name 'profile.repositiry.dart' is preserved verbatim
+// (typo retained for stability). Do not rename.
 import 'package:pantry_chef/features/profile/data/api/profile.api.dart';
 import 'package:pantry_chef/features/profile/data/dto/profile_update.dto.dart';
 import 'package:pantry_chef/features/profile/domain/models/profile.dart';

@@ -1,4 +1,5 @@
-// NOTE: This file's name 'instraction_item.dart' and the class name 'InstractionItem' are preserved verbatim. Do not rename.
+// NOTE: This file's name 'instraction_item.dart' and the class name
+// 'InstractionItem' are preserved verbatim. Do not rename.
 import 'package:json_annotation/json_annotation.dart';
 
 part 'instraction_item.g.dart';

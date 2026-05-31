@@ -11,6 +11,7 @@ part 'ingredient_list_item.g.dart';
 /// backend.
 @JsonSerializable()
 class IngredientListItem {
+  // NOTE: 'ingridient' (lowercase) preserved verbatim to match backend JSON. Do not rename.
   /// The referenced `Ingredient` entity.
   ///
   /// Field name `ingridient` (lowercase, sic) preserved verbatim to match backend's
