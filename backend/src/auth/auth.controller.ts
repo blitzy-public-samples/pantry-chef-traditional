@@ -97,13 +97,15 @@ export class AuthController {
   }
 
   /**
-   * Rotates the session's tokens, issuing a new access/refresh pair. Guarded
-   * by `AuthGuard('jwt-refresh')` (Bearer refresh token, validated by
+   * Issues a new access/refresh pair for the existing session. Does not revoke
+   * prior refresh JWTs: previously issued refresh tokens remain valid until
+   * they expire or the session is deleted. Guarded by
+   * `AuthGuard('jwt-refresh')` (Bearer refresh token, validated by
    * `JwtRefreshStrategy`); returns HTTP 200 and delegates to
    * {@link AuthService.refreshToken} with `{ sessionId }`.
    *
    * @param request The Express request whose `user.sessionId` identifies the
-   *   session to refresh.
+   *   session whose token pair is reissued.
    * @returns A Promise of `Omit<LoginResponseType, 'user'>`.
    */
   @ApiBearerAuth()

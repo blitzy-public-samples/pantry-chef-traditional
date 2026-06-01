@@ -8,7 +8,7 @@ statement is traceable to the implementation.
 
 The backend is built on NestJS 10 running on Express and exposes its routes
 under a configurable global prefix — `api` by default
-(`Source: backend/src/main.ts:L14-L19`, `Source: backend/env_example:L4`). The
+(`Source: backend/src/main.ts:L32-L37`, `Source: backend/env_example:L4`). The
 API is documented by an existing live Swagger UI; this reference complements it
 with stable, version-controlled prose. For the system-level picture of how
 requests flow through the layers, see
@@ -39,10 +39,10 @@ referenced throughout, see [./DATA_MODELS.md](./DATA_MODELS.md).
 All routes are served under a single global prefix. The prefix is applied at
 bootstrap with `app.setGlobalPrefix(...)`, reading the value from configuration
 and excluding only the root path `/`
-(`Source: backend/src/main.ts:L14-L19`). The configured prefix is `api`
+(`Source: backend/src/main.ts:L32-L37`). The configured prefix is `api`
 (`Source: backend/env_example:L4`), and the server listens on the configured
 port, `3000` by default (`Source: backend/env_example:L2`,
-`Source: backend/src/main.ts:L33`).
+`Source: backend/src/main.ts:L56`).
 
 The effective base URL is therefore:
 
@@ -59,8 +59,8 @@ example `POST /api/auth/email/login`, `GET /api/recipe/matches`,
 > **KNOWN ISSUE — no `/v1/` segment is served.** Each resource controller
 > declares a version in its decorator, e.g.
 > `@Controller({ path: 'auth', version: '1' })`
-> (`Source: backend/src/auth/auth.controller.ts:L24-L27`). However, `main.ts`
-> never calls `app.enableVersioning()` (`Source: backend/src/main.ts:L10-L34`).
+> (`Source: backend/src/auth/auth.controller.ts:L35-L39`). However, `main.ts`
+> never calls `app.enableVersioning()` (`Source: backend/src/main.ts:L21-L57`).
 > Without URI versioning enabled, NestJS ignores the `version` property and
 > does **not** add a `/v1/` segment to the path. The served paths contain no
 > version segment.
@@ -81,16 +81,16 @@ example `POST /api/auth/email/login`, `GET /api/recipe/matches`,
 | Property | Value | Source |
 |----------|-------|--------|
 | Protocol | HTTP/JSON | `Source: mobile/lib/core/utils/dio_client.dart:L40-L47` |
-| Global prefix | `api` | `Source: backend/src/main.ts:L14-L19`, `backend/env_example:L4` |
-| Port | `3000` (configurable) | `Source: backend/env_example:L2`, `backend/src/main.ts:L33` |
-| URI version segment | none (versioning not enabled) | `Source: backend/src/main.ts:L10-L34` |
+| Global prefix | `api` | `Source: backend/src/main.ts:L32-L37`, `backend/env_example:L4` |
+| Port | `3000` (configurable) | `Source: backend/env_example:L2`, `backend/src/main.ts:L56` |
+| URI version segment | none (versioning not enabled) | `Source: backend/src/main.ts:L21-L57` |
 | Effective base URL | `http://<host>:3000/api` | `Source: mobile/lib/env_config.dart:L23` |
 
 ## 2. Authentication
 
 Protected endpoints use **Bearer JWT** authentication. The OpenAPI document
 registers a bearer scheme via `addBearerAuth()`
-(`Source: backend/src/main.ts:L27`), and protected controllers enforce it with
+(`Source: backend/src/main.ts:L47`), and protected controllers enforce it with
 the Passport JWT guard `@UseGuards(AuthGuard('jwt'))` — applied either at the
 class level (Users, Pantry, Recipe, Ingredient) or per route (Auth).
 
@@ -107,7 +107,7 @@ the access-token expiry timestamp. Token issuance signs the access token with
 the `auth.secret` and an expiry of `auth.expires`, and the refresh token with
 `auth.refreshSecret` and an expiry of `auth.refreshExpires`, computing the
 absolute expiry with `ms()`
-(`Source: backend/src/auth/auth.service.ts:L253-L289`).
+(`Source: backend/src/auth/auth.service.ts:L337-L378`).
 
 | Token | Lifetime | Env variable | Source |
 |-------|----------|--------------|--------|
@@ -120,9 +120,9 @@ The backend registers three Passport strategies that back the guards above:
 
 | Strategy | Guard name | Purpose | Source |
 |----------|-----------|---------|--------|
-| JWT | `jwt` | Validates the access token on protected routes | `Source: backend/src/auth/auth.module.ts:L21`, `backend/src/auth/auth.controller.ts:L49` |
-| JWT refresh | `jwt-refresh` | Validates the refresh token on `POST /api/auth/refresh` | `Source: backend/src/auth/auth.module.ts:L21`, `backend/src/auth/auth.controller.ts:L57` |
-| Anonymous | `anonymous` | Registered Passport strategy for anonymous access | `Source: backend/src/auth/auth.module.ts:L21`, `backend/src/auth/strategies/anonymous.strategy.ts:L6` |
+| JWT | `jwt` | Validates the access token on protected routes | `Source: backend/src/auth/auth.module.ts:L31`, `backend/src/auth/auth.controller.ts:L93` |
+| JWT refresh | `jwt-refresh` | Validates the refresh token on `POST /api/auth/refresh` | `Source: backend/src/auth/auth.module.ts:L31`, `backend/src/auth/auth.controller.ts:L113` |
+| Anonymous | `anonymous` | Registered Passport strategy for anonymous access | `Source: backend/src/auth/auth.module.ts:L31`, `backend/src/auth/strategies/anonymous.strategy.ts:L10` |
 
 For the end-to-end authentication design and the login/refresh sequence
 diagram, see [11. Diagrams](#11-diagrams),
@@ -132,42 +132,42 @@ diagram, see [11. Diagrams](#11-diagrams),
 ## 3. Auth Endpoints
 
 The auth controller is tagged `@ApiTags('Auth')` and mounted at base `auth`
-(`Source: backend/src/auth/auth.controller.ts:L23-L27`). The login and register
+(`Source: backend/src/auth/auth.controller.ts:L35-L39`). The login and register
 routes are public; the remaining routes require a Bearer token. The login,
 register, and refresh routes return token payloads that **omit** the `user`
 object (typed `Omit<LoginResponseType, 'user'>`)
-(`Source: backend/src/auth/auth.controller.ts:L33-L35`,
-`Source: backend/src/auth/auth.controller.ts:L41-L45`,
-`Source: backend/src/auth/auth.controller.ts:L55-L63`). The protected `GET` and
+(`Source: backend/src/auth/auth.controller.ts:L56-L62`,
+`Source: backend/src/auth/auth.controller.ts:L74-L80`,
+`Source: backend/src/auth/auth.controller.ts:L111-L119`). The protected `GET` and
 `PATCH /api/auth/me` routes return the user object
-(`Source: backend/src/auth/auth.controller.ts:L47-L53`,
-`Source: backend/src/auth/auth.controller.ts:L75-L84`), while `POST
+(`Source: backend/src/auth/auth.controller.ts:L91-L97`,
+`Source: backend/src/auth/auth.controller.ts:L149-L158`), while `POST
 /api/auth/logout` and `DELETE /api/auth/me` return `204 No Content`
-(`Source: backend/src/auth/auth.controller.ts:L65-L73`,
-`Source: backend/src/auth/auth.controller.ts:L86-L92`).
+(`Source: backend/src/auth/auth.controller.ts:L130-L138`,
+`Source: backend/src/auth/auth.controller.ts:L167-L175`).
 
 | Method | Path | Auth | Success | Source |
 |--------|------|------|---------|--------|
-| `POST` | `/api/auth/email/login` | public | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L31-L37` |
-| `POST` | `/api/auth/email/register` | public | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L39-L45` |
-| `GET` | `/api/auth/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L47-L53` |
-| `POST` | `/api/auth/refresh` | Bearer `jwt-refresh` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L55-L63` |
-| `POST` | `/api/auth/logout` | Bearer `jwt` | `204 No Content` | `Source: backend/src/auth/auth.controller.ts:L65-L73` |
-| `PATCH` | `/api/auth/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L75-L84` |
-| `DELETE` | `/api/auth/me` | Bearer `jwt` | `204 No Content` | `Source: backend/src/auth/auth.controller.ts:L86-L92` |
+| `POST` | `/api/auth/email/login` | public | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L56-L62` |
+| `POST` | `/api/auth/email/register` | public | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L74-L80` |
+| `GET` | `/api/auth/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L91-L97` |
+| `POST` | `/api/auth/refresh` | Bearer `jwt-refresh` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L111-L119` |
+| `POST` | `/api/auth/logout` | Bearer `jwt` | `204 No Content` | `Source: backend/src/auth/auth.controller.ts:L130-L138` |
+| `PATCH` | `/api/auth/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/auth/auth.controller.ts:L149-L158` |
+| `DELETE` | `/api/auth/me` | Bearer `jwt` | `204 No Content` | `Source: backend/src/auth/auth.controller.ts:L167-L175` |
 
 ### 3.1 `POST /api/auth/email/login`
 
 Authenticates a user by email and password and returns tokens. Public route;
 no Bearer token required. Returns `200 OK`
-(`Source: backend/src/auth/auth.controller.ts:L31-L37`).
+(`Source: backend/src/auth/auth.controller.ts:L56-L62`).
 
 Request body — `AuthEmailLoginDto`:
 
 | Field | Type | Required | Validation | Source |
 |-------|------|----------|------------|--------|
-| `email` | `string` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/auth/dto/auth-email-login.dto.ts:L7-L11` |
-| `password` | `string` | yes | `@IsNotEmpty` | `Source: backend/src/auth/dto/auth-email-login.dto.ts:L13-L15` |
+| `email` | `string` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/auth/dto/auth-email-login.dto.ts:L11-L15` |
+| `password` | `string` | yes | `@IsNotEmpty` | `Source: backend/src/auth/dto/auth-email-login.dto.ts:L18-L20` |
 
 ```http
 POST /api/auth/email/login HTTP/1.1
@@ -186,19 +186,19 @@ Content-Type: application/json
 
 A non-existent email or an incorrect password returns
 `422 Unprocessable Entity` (see [9. Error Codes](#9-error-codes);
-`Source: backend/src/auth/auth.service.ts:L40-L79`).
+`Source: backend/src/auth/auth.service.ts:L52-L116`).
 
 ### 3.2 `POST /api/auth/email/register`
 
 Registers a new user and returns tokens. Public route. Returns `200 OK`
-(`Source: backend/src/auth/auth.controller.ts:L39-L45`).
+(`Source: backend/src/auth/auth.controller.ts:L74-L80`).
 
 Request body — `AuthRegisterLoginDto`:
 
 | Field | Type | Required | Validation | Source |
 |-------|------|----------|------------|--------|
-| `email` | `string` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/auth/dto/auth-register-login.dto.ts:L7-L10` |
-| `password` | `string` | yes | `@MinLength(6)` | `Source: backend/src/auth/dto/auth-register-login.dto.ts:L12-L14` |
+| `email` | `string` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/auth/dto/auth-register-login.dto.ts:L11-L14` |
+| `password` | `string` | yes | `@MinLength(6)` | `Source: backend/src/auth/dto/auth-register-login.dto.ts:L17-L19` |
 
 ```http
 POST /api/auth/email/register HTTP/1.1
@@ -210,7 +210,7 @@ Content-Type: application/json
 ### 3.3 `GET /api/auth/me`
 
 Returns the authenticated user's profile. Requires a Bearer `jwt` token.
-Returns `200 OK` (`Source: backend/src/auth/auth.controller.ts:L47-L53`).
+Returns `200 OK` (`Source: backend/src/auth/auth.controller.ts:L91-L97`).
 
 ```http
 GET /api/auth/me HTTP/1.1
@@ -221,7 +221,7 @@ Authorization: Bearer <access_token>
 
 Rotates the session's tokens. Requires a Bearer **refresh** token validated by
 the `jwt-refresh` guard; the session id is read from the refresh payload and
-new tokens are issued (`Source: backend/src/auth/auth.controller.ts:L55-L63`).
+new tokens are issued (`Source: backend/src/auth/auth.controller.ts:L111-L119`).
 Returns `200 OK`.
 
 ```http
@@ -232,24 +232,24 @@ Authorization: Bearer <refresh_token>
 ### 3.5 `POST /api/auth/logout`
 
 Invalidates the current session. Requires a Bearer `jwt` token. Returns
-`204 No Content` (`Source: backend/src/auth/auth.controller.ts:L65-L73`).
+`204 No Content` (`Source: backend/src/auth/auth.controller.ts:L130-L138`).
 
 ### 3.6 `PATCH /api/auth/me`
 
 Updates the authenticated user's profile from an `AuthUpdateDto` body. Requires
 a Bearer `jwt` token. Returns `200 OK`
-(`Source: backend/src/auth/auth.controller.ts:L75-L84`).
+(`Source: backend/src/auth/auth.controller.ts:L149-L158`).
 
 ### 3.7 `DELETE /api/auth/me`
 
 Deletes the authenticated user's account via `service.softDelete`. Requires a
 Bearer `jwt` token. Returns `204 No Content`
-(`Source: backend/src/auth/auth.controller.ts:L86-L92`).
+(`Source: backend/src/auth/auth.controller.ts:L167-L175`).
 
 > **KNOWN ISSUE — `softDelete` is a hard delete.** The underlying user
 > repository implements `softDelete` with `deleteOne`, permanently removing the
 > document rather than setting a `deletedAt` marker
-> (`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L80-L82`).
+> (`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L174-L186`).
 > See the soft-delete vs hard-delete matrix in
 > [./DATA_MODELS.md](./DATA_MODELS.md).
 
@@ -260,41 +260,41 @@ The users controller is tagged `@ApiTags('Users')` and mounted at base `users`.
 The entire controller is protected: `@ApiBearerAuth()` and
 `@UseGuards(AuthGuard('jwt'))` are applied at the class level, so every route
 requires a Bearer `jwt` token
-(`Source: backend/src/users/users.controller.ts:L26-L32`).
+(`Source: backend/src/users/users.controller.ts:L41-L47`).
 
 | Method | Path | Auth | Success | Source |
 |--------|------|------|---------|--------|
-| `POST` | `/api/users` | Bearer `jwt` | `201 Created` | `Source: backend/src/users/users.controller.ts:L36-L40` |
-| `GET` | `/api/users` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L42-L64` |
-| `GET` | `/api/users/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L66-L71` |
-| `PATCH` | `/api/users` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L73-L81` |
-| `DELETE` | `/api/users/:id` | Bearer `jwt` | `204 No Content` | `Source: backend/src/users/users.controller.ts:L83-L92` |
+| `POST` | `/api/users` | Bearer `jwt` | `201 Created` | `Source: backend/src/users/users.controller.ts:L61-L65` |
+| `GET` | `/api/users` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L79-L103` |
+| `GET` | `/api/users/me` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L114-L120` |
+| `PATCH` | `/api/users` | Bearer `jwt` | `200 OK` | `Source: backend/src/users/users.controller.ts:L133-L142` |
+| `DELETE` | `/api/users/:id` | Bearer `jwt` | `204 No Content` | `Source: backend/src/users/users.controller.ts:L153-L166` |
 
 ### 4.1 `POST /api/users`
 
 Creates a user from a `CreateUserDto` body. Returns `201 Created`
-(`Source: backend/src/users/users.controller.ts:L36-L40`).
+(`Source: backend/src/users/users.controller.ts:L61-L65`).
 
 Request body — `CreateUserDto`:
 
 | Field | Type | Required | Validation / Notes | Source |
 |-------|------|----------|--------------------|--------|
-| `email` | `string \| null` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/users/dto/create-user.dto.ts:L41-L45` |
-| `password` | `string` | optional | `@MinLength(6)` | `Source: backend/src/users/dto/create-user.dto.ts:L47-L49` |
-| `preferences` | `PreferencesDto` | optional | nested, validated | `Source: backend/src/users/dto/create-user.dto.ts:L51-L55` |
-| `pantry` | `string[]` | optional | array of strings | `Source: backend/src/users/dto/create-user.dto.ts:L57-L61` |
-| `favoriteRecipes` | `string[]` | optional | array | `Source: backend/src/users/dto/create-user.dto.ts:L63-L66` |
-| `recentSearches` | `string[]` | optional | array of strings | `Source: backend/src/users/dto/create-user.dto.ts:L68-L72` |
+| `email` | `string \| null` | yes | `@IsEmail`, lower-cased via transformer | `Source: backend/src/users/dto/create-user.dto.ts:L58-L62` |
+| `password` | `string` | optional | `@MinLength(6)` | `Source: backend/src/users/dto/create-user.dto.ts:L65-L67` |
+| `preferences` | `PreferencesDto` | optional | nested, validated | `Source: backend/src/users/dto/create-user.dto.ts:L70-L74` |
+| `pantry` | `string[]` | optional | array of strings | `Source: backend/src/users/dto/create-user.dto.ts:L77-L81` |
+| `favoriteRecipes` | `string[]` | optional | array | `Source: backend/src/users/dto/create-user.dto.ts:L84-L87` |
+| `recentSearches` | `string[]` | optional | array of strings | `Source: backend/src/users/dto/create-user.dto.ts:L90-L94` |
 
 The embedded `PreferencesDto` supplies the inputs consumed by the recipe
 matching engine (see [6. Recipe Endpoints](#6-recipe-endpoints)):
 
 | Field | Type | Required | Source |
 |-------|------|----------|--------|
-| `dietary` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L16-L20` |
-| `allergies` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L22-L26` |
-| `dislikedIngredients` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L28-L32` |
-| `cookingTime` | `number` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L34-L37` |
+| `dietary` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L22-L26` |
+| `allergies` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L29-L33` |
+| `dislikedIngredients` | `string[]` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L36-L40` |
+| `cookingTime` | `number` | optional | `Source: backend/src/users/dto/create-user.dto.ts:L43-L46` |
 
 ```http
 POST /api/users HTTP/1.1
@@ -312,18 +312,18 @@ Content-Type: application/json
 
 Returns a paginated list of users from a `QueryUserDto` query (page, limit,
 filters, sort). Returns `200 OK`
-(`Source: backend/src/users/users.controller.ts:L42-L64`).
+(`Source: backend/src/users/users.controller.ts:L79-L103`).
 
 | Parameter | Type | Required | Description | Source |
 |-----------|------|----------|-------------|--------|
-| `page` | `number` | optional | Page number; defaults to `1` | `Source: backend/src/users/users.controller.ts:L47` |
-| `limit` | `number` | optional | Items per page; defaults to `10` | `Source: backend/src/users/users.controller.ts:L48` |
-| `filters` | object | optional | Filter options applied to the query | `Source: backend/src/users/users.controller.ts:L55` |
-| `sort` | object | optional | Sort options | `Source: backend/src/users/users.controller.ts:L56` |
+| `page` | `number` | optional | Page number; defaults to `1` | `Source: backend/src/users/users.controller.ts:L85` |
+| `limit` | `number` | optional | Items per page; defaults to `10` | `Source: backend/src/users/users.controller.ts:L86` |
+| `filters` | object | optional | Filter options applied to the query | `Source: backend/src/users/users.controller.ts:L94` |
+| `sort` | object | optional | Sort options | `Source: backend/src/users/users.controller.ts:L95` |
 
 > **KNOWN ISSUE — pagination is capped at 50.** When the requested `limit`
 > exceeds `50` it is silently reduced to `50`
-> (`Source: backend/src/users/users.controller.ts:L49-L51`). The same cap
+> (`Source: backend/src/users/users.controller.ts:L88-L90`). The same cap
 > applies to the pantry, recipe, and ingredient list endpoints.
 
 ```http
@@ -334,27 +334,27 @@ Authorization: Bearer <access_token>
 ### 4.3 `GET /api/users/me`
 
 Returns the authenticated user, resolved from `req.user?.id`. Returns
-`200 OK` (`Source: backend/src/users/users.controller.ts:L66-L71`).
+`200 OK` (`Source: backend/src/users/users.controller.ts:L114-L120`).
 
 ### 4.4 `PATCH /api/users`
 
 Updates the authenticated user from an `UpdateUserDto` body; the target id is
 taken from `req.user?.id` rather than the path. Returns `200 OK`
-(`Source: backend/src/users/users.controller.ts:L73-L81`).
+(`Source: backend/src/users/users.controller.ts:L133-L142`).
 
 ### 4.5 `DELETE /api/users/:id`
 
 Deletes the user identified by the `:id` path parameter via
 `usersService.softDelete`. Returns `204 No Content`
-(`Source: backend/src/users/users.controller.ts:L83-L92`).
+(`Source: backend/src/users/users.controller.ts:L153-L166`).
 
 | Parameter | Type | Description | Source |
 |-----------|------|-------------|--------|
-| `id` | `string` | User id to delete (path) | `Source: backend/src/users/users.controller.ts:L83-L90` |
+| `id` | `string` | User id to delete (path) | `Source: backend/src/users/users.controller.ts:L153-L166` |
 
 > **KNOWN ISSUE — `softDelete` is a hard delete.** The user repository
 > implements `softDelete` with `deleteOne`, permanently removing the document
-> (`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L80-L82`).
+> (`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L174-L186`).
 > See the soft-delete vs hard-delete matrix in
 > [./DATA_MODELS.md](./DATA_MODELS.md).
 
@@ -850,18 +850,18 @@ endpoint uses `400` for an empty upload.
 
 | Status | Meaning | Triggered by | Source |
 |--------|---------|--------------|--------|
-| `200 OK` | Success (read / login / update) | GET, login, register, refresh, PATCH routes | `Source: backend/src/auth/auth.controller.ts:L31-L37` |
-| `201 Created` | Resource created | `POST /api/users`, `/api/pantry`, `/api/recipe`, `/api/ingredient` | `Source: backend/src/users/users.controller.ts:L36-L40` |
-| `204 No Content` | Success with no body | logout and `DELETE` routes | `Source: backend/src/auth/auth.controller.ts:L65-L73` |
+| `200 OK` | Success (read / login / update) | GET, login, register, refresh, PATCH routes | `Source: backend/src/auth/auth.controller.ts:L56-L62` |
+| `201 Created` | Resource created | `POST /api/users`, `/api/pantry`, `/api/recipe`, `/api/ingredient` | `Source: backend/src/users/users.controller.ts:L61-L65` |
+| `204 No Content` | Success with no body | logout and `DELETE` routes | `Source: backend/src/auth/auth.controller.ts:L130-L138` |
 | `400 Bad Request` | AI vision called with no file | `POST /api/ai/vision` | `Source: backend/src/ai/ai.controller.ts:L33-L34` |
-| `401 Unauthorized` | Missing/invalid Bearer token | any class- or route-guarded endpoint | `Source: backend/src/users/users.controller.ts:L26-L27` |
-| `422 Unprocessable Entity` | Validation failure | global `ValidationPipe` | `Source: backend/src/main.ts:L21` |
+| `401 Unauthorized` | Missing/invalid Bearer token | any class- or route-guarded endpoint | `Source: backend/src/users/users.controller.ts:L41-L46` |
+| `422 Unprocessable Entity` | Validation failure | global `ValidationPipe` | `Source: backend/src/main.ts:L40` |
 | `422 Unprocessable Entity` | Duplicate recipe `title` | `POST /api/recipe` | `Source: backend/src/recipe/recipe.service.ts:L27-L42` |
 | `422 Unprocessable Entity` | Duplicate ingredient `name` | `POST /api/ingredient` | `Source: backend/src/ingridient/ingridient.service.ts:L20-L35` |
-| `422 Unprocessable Entity` | Login email not found / wrong password | `POST /api/auth/email/login` | `Source: backend/src/auth/auth.service.ts:L40-L79` |
+| `422 Unprocessable Entity` | Login email not found / wrong password | `POST /api/auth/email/login` | `Source: backend/src/auth/auth.service.ts:L52-L116` |
 
 Validation errors are produced by the global `ValidationPipe` registered at
-bootstrap (`Source: backend/src/main.ts:L21`). A representative `422` body:
+bootstrap (`Source: backend/src/main.ts:L40`). A representative `422` body:
 
 ```json
 {
@@ -873,9 +873,9 @@ bootstrap (`Source: backend/src/main.ts:L21`). A representative `422` body:
 ## 10. Swagger UI Location
 
 The interactive OpenAPI UI is served at **`/docs`**
-(`Source: backend/src/main.ts:L31`). The OpenAPI document is built with the
+(`Source: backend/src/main.ts:L53`). The OpenAPI document is built with the
 title `API`, the description `API docs`, the version `1.0`, and a bearer-auth
-scheme (`Source: backend/src/main.ts:L23-L28`).
+scheme (`Source: backend/src/main.ts:L43-L48`).
 
 ```
 http://<host>:3000/docs
@@ -883,7 +883,7 @@ http://<host>:3000/docs
 
 > **Divergence note.** The global `api` prefix is **not** applied to the Swagger
 > route — `SwaggerModule.setup('docs', app, document)` registers it at the root
-> `/docs` (`Source: backend/src/main.ts:L31`). Some project planning material
+> `/docs` (`Source: backend/src/main.ts:L53`). Some project planning material
 > refers to the UI as `/api/docs`; the served location is `/docs`.
 
 ## 11. Diagrams
@@ -920,8 +920,8 @@ sequenceDiagram
 
 The sequence below traces login (`POST /api/auth/email/login`) and token refresh
 (`POST /api/auth/refresh`)
-(`Source: backend/src/auth/auth.controller.ts:L31-L63`,
-`Source: backend/src/auth/auth.service.ts:L253-L289`).
+(`Source: backend/src/auth/auth.controller.ts:L56-L119`,
+`Source: backend/src/auth/auth.service.ts:L337-L378`).
 
 ```mermaid
 sequenceDiagram

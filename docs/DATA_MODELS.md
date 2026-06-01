@@ -58,7 +58,7 @@ subdocument is a plain `@Schema()` class with no `EntityDocumentHelper` base
 The collection-backing classes are decorated with
 `@Schema({ timestamps: true, toJSON: { virtuals: true, getters: true } })`,
 which enables Mongoose timestamps and applies virtuals and getters on JSON
-serialization (`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L22-L28`,
+serialization (`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L53-L59`,
 `Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L8-L14`,
 `Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L9-L15`,
 `Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L9-L15`).
@@ -189,7 +189,7 @@ classDiagram
     RecipeSchemaClass *-- "many" Instruction : embeds
 ```
 
-_Diagram sources: `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L8-L69`,
+_Diagram sources: `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L17-L114`,
 `Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L15-L24`,
 `Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16-L50`,
 `Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L16-L43`,
@@ -199,7 +199,7 @@ _Diagram sources: `Source: backend/src/users/infrastructure/document/entities/us
 
 The `User` collection is backed by `UserSchemaClass`, which extends
 `EntityDocumentHelper`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L29`).
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L60`).
 It embeds a `Preferences` subdocument by value and tracks the user's favorite
 recipes and recent searches as string arrays.
 
@@ -220,14 +220,14 @@ Owning module source: [`backend/src/users/`](../backend/src/users/).
 | `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `user.schema.ts:L67-L68` |
 
 The schema declares a `deletedAt` field intended for soft deletion
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L68`),
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L112-L113`),
 but the repository removes user documents physically; this divergence is
 documented in [Section 9](#9-soft-delete-vs-hard-delete-matrix).
 
 ### `Preferences` (embedded subdocument)
 
 `Preferences` is a plain class embedded inside `UserSchemaClass.preferences`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L8-L20`).
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L17-L34`).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
@@ -411,7 +411,7 @@ index that MongoDB creates implicitly on every collection is omitted.
 
 The `email` uniqueness constraint is declared inline on the property with
 `unique: true`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L30-L35`),
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L63-L68`),
 while the `Session`, `PantryIngridient`, and `Recipe` secondary indexes are
 declared with explicit `Schema.index(...)` calls.
 
@@ -435,7 +435,7 @@ runtime (`Source: backend/src/recipe/infrastructure/document/repositories/recipe
 `User`, `PantryIngridient`, and `Session` documents are physically removed by
 `deleteOne` / `deleteMany`, so their `deletedAt` columns are never populated
 even though the schemas declare them
-(`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L80-L82`,
+(`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L174-L186`,
 `Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L121`,
 `Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54`).
 This matrix records the behavior as built; it does not prescribe a change.

@@ -38,11 +38,11 @@ Vision service.
 The mobile client talks to the backend exclusively over HTTP/JSON using a Dio
 HTTP client (`Source: mobile/lib/core/utils/dio_client.dart:L40-L47`). The
 backend exposes its routes under a configurable global prefix — `api` by default
-(`Source: backend/src/main.ts:L14-L19`, `Source: backend/env_example:L4`) — and
+(`Source: backend/src/main.ts:L32-L37`, `Source: backend/env_example:L4`) — and
 listens on the port supplied by configuration, `3000` by default
-(`Source: backend/src/main.ts:L33`, `Source: backend/env_example:L2`). The
+(`Source: backend/src/main.ts:L56`, `Source: backend/env_example:L2`). The
 backend reads and writes domain data in MongoDB through Mongoose, with the
-connection assembled at startup (`Source: backend/src/app.module.ts:L25-L27`).
+connection assembled at startup (`Source: backend/src/app.module.ts:L44-L46`).
 When an ingredient photo is submitted, the backend calls Google Cloud Vision to
 label the image; this dependency is optional and degrades gracefully when its
 credentials are absent (`Source: backend/src/ai/ai.service.ts:L53-L56`).
@@ -170,12 +170,12 @@ All feature modules are assembled in the root `AppModule`. It imports the global
 `ConfigModule`, wires Mongoose asynchronously through `MongooseConfigService`,
 and registers the feature modules `AuthModule`, `SessionModule`, `UsersModule`,
 `IngridientModule`, `PantryModule`, `RecipeModule`, and `AiModule`
-(`Source: backend/src/app.module.ts:L18-L35`). Several feature modules import
+(`Source: backend/src/app.module.ts:L33-L62`). Several feature modules import
 one another directly. `AiModule` imports `IngridientModule` so the vision
 service can resolve recognized labels to stored ingredients
 (`Source: backend/src/ai/ai.module.ts:L4,L7`); `AuthModule` imports both
 `UsersModule` and `SessionModule` to validate credentials and manage refresh
-sessions (`Source: backend/src/auth/auth.module.ts:L6-L7,L14-L15`); and
+sessions (`Source: backend/src/auth/auth.module.ts:L6-L7,L24-L25`); and
 `RecipeModule` imports `UsersModule` and `PantryModule` to read user data and
 pantry contents during recipe matching
 (`Source: backend/src/recipe/recipe.module.ts:L5-L6,L9`).
@@ -216,14 +216,14 @@ graph TD
 ```
 
 *Diagram: backend module dependencies. Caption sources —
-`backend/src/app.module.ts:L18-L35`, `backend/src/ai/ai.module.ts:L4,L7`,
-`backend/src/auth/auth.module.ts:L6-L7,L14-L15`,
+`backend/src/app.module.ts:L33-L62`, `backend/src/ai/ai.module.ts:L4,L7`,
+`backend/src/auth/auth.module.ts:L6-L7,L24-L25`,
 `backend/src/recipe/recipe.module.ts:L5-L6,L9`.* Solid
 edges are NestJS module imports; the dotted edges indicate that the guarded
 controllers in those modules depend at runtime on the `jwt` Passport strategy
 that `AuthModule` registers — they apply `@UseGuards(AuthGuard('jwt'))` rather
 than importing `AuthModule` directly
-(`Source: backend/src/users/users.controller.ts:L26-L27`). See
+(`Source: backend/src/users/users.controller.ts:L41-L46`). See
 [Cross-Cutting Concerns](#5-cross-cutting-concerns) for the guard details.
 
 ### Request lifecycle
@@ -260,7 +260,7 @@ The served path is `/api/recipe` with no `/v1/` segment: although
 `RecipeController` declares `version: '1'`
 (`Source: backend/src/recipe/recipe.controller.ts:L31-L33`), `main.ts` never
 calls `app.enableVersioning()`, so the version property is not URI-effective and
-no version segment is added (`Source: backend/src/main.ts:L10-L34`).
+no version segment is added (`Source: backend/src/main.ts:L21-L57`).
 The controller delegates to the service
 (`Source: backend/src/recipe/recipe.controller.ts:L50-L72`), the service forwards
 to the repository contract (`Source: backend/src/recipe/recipe.service.ts:L47-L61`),
@@ -326,19 +326,19 @@ configured once during bootstrap and then implicitly affect every request.
 
 - **CORS.** Cross-origin requests are enabled globally when the application is
   created with `NestFactory.create(AppModule, { cors: true })`
-  (`Source: backend/src/main.ts:L11`).
+  (`Source: backend/src/main.ts:L23`).
 - **Global validation.** A single `ValidationPipe` is registered for the whole
   app with shared validation options, so incoming DTOs are validated everywhere
-  (`Source: backend/src/main.ts:L21`). Because `class-validator` is wired into
+  (`Source: backend/src/main.ts:L40`). Because `class-validator` is wired into
   Nest's container via `useContainer(...)`, validators can themselves use
-  dependency injection (`Source: backend/src/main.ts:L12`).
+  dependency injection (`Source: backend/src/main.ts:L25`).
 - **Configuration.** `ConfigModule.forRoot(...)` is registered as global and
   loads the database, auth, and app configuration namespaces from `.env`
-  (`Source: backend/src/app.module.ts:L20-L24`). The global API prefix is read
-  from this configuration (`Source: backend/src/main.ts:L14-L19`).
+  (`Source: backend/src/app.module.ts:L37-L43`). The global API prefix is read
+  from this configuration (`Source: backend/src/main.ts:L32-L37`).
 - **Authentication guards.** Protected controllers apply
   `@UseGuards(AuthGuard('jwt'))` together with `@ApiBearerAuth()`; the users
-  controller is one example (`Source: backend/src/users/users.controller.ts:L26-L27`)
+  controller is one example (`Source: backend/src/users/users.controller.ts:L41-L46`)
   and the recipe controller applies the same pair
   (`Source: backend/src/recipe/recipe.controller.ts:L27-L28`). The guard resolves
   one of three Passport strategies that live in `backend/src/auth/strategies/` —
@@ -380,7 +380,7 @@ optional Google Cloud Vision service.
 
 The database connection is configured asynchronously. `AppModule` registers
 `MongooseModule.forRootAsync({ useClass: MongooseConfigService })`
-(`Source: backend/src/app.module.ts:L25-L27`), and `MongooseConfigService`
+(`Source: backend/src/app.module.ts:L44-L46`), and `MongooseConfigService`
 implements `MongooseOptionsFactory`, assembling the connection options from the
 `database` configuration namespace — returning the `uri`, `dbName`, `user`, and
 `pass` derived from `configService.get('database')`
@@ -420,25 +420,25 @@ Each side has a single, well-defined startup path.
 The `bootstrap()` function brings the application up in order:
 
 1. Create the Nest application from `AppModule` with CORS enabled
-   (`Source: backend/src/main.ts:L11`).
+   (`Source: backend/src/main.ts:L23`).
 2. Wire `class-validator` into Nest's DI container so validators can inject
-   providers (`Source: backend/src/main.ts:L12`).
+   providers (`Source: backend/src/main.ts:L25`).
 3. Read configuration and apply the global API prefix, excluding the root path
-   `/` (`Source: backend/src/main.ts:L14-L19`).
+   `/` (`Source: backend/src/main.ts:L32-L37`).
 4. Register the global `ValidationPipe`
-   (`Source: backend/src/main.ts:L21`).
+   (`Source: backend/src/main.ts:L40`).
 5. Build the Swagger document (title `API`, bearer auth) and mount the UI
-   (`Source: backend/src/main.ts:L23-L31`).
-6. Listen on the configured port (`Source: backend/src/main.ts:L33`).
+   (`Source: backend/src/main.ts:L43-L53`).
+6. Listen on the configured port (`Source: backend/src/main.ts:L56`).
 
 The Swagger UI is mounted at `docs` via `SwaggerModule.setup('docs', ...)`, which
 serves it at `/docs` — the global API prefix is **not** applied to the Swagger
-route (`Source: backend/src/main.ts:L31`).
+route (`Source: backend/src/main.ts:L53`).
 
 > **KNOWN ISSUE:** The Swagger UI is served at `/docs`, not at `/api/docs`. Some
 > task wording refers to `/api/docs`; the actual path is `/docs` because the
 > global prefix does not apply to the Swagger route
-> (`Source: backend/src/main.ts:L14-L19`, `Source: backend/src/main.ts:L31`).
+> (`Source: backend/src/main.ts:L32-L37`, `Source: backend/src/main.ts:L53`).
 > Endpoint-level detail is deferred to [./API_REFERENCE.md](./API_REFERENCE.md).
 
 ### Mobile — `mobile/lib/main.dart`

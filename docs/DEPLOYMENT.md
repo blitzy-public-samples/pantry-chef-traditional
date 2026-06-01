@@ -61,7 +61,7 @@ in the repository (`Source: backend/env_example:L1-L23`).
 | `NODE_ENV` | `development` | Node runtime environment (`Source: backend/env_example:L1`) |
 | `APP_PORT` | `3000` | Port the NestJS app listens on; matches the published container port `3000:3000` (`Source: backend/env_example:L2`, `Source: backend/docker-compose.yml:L24-L25`) |
 | `APP_NAME` | `"NestJS API"` | Application name used in bootstrap/metadata (`Source: backend/env_example:L3`) |
-| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/*` with no `/v1/` segment because `enableVersioning()` is never called (`Source: backend/env_example:L4`, `Source: backend/src/main.ts:L10-L34`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
+| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/*` with no `/v1/` segment because `enableVersioning()` is never called (`Source: backend/env_example:L4`, `Source: backend/src/main.ts:L21-L57`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
 | `DATABASE_TYPE` | `mongodb` | Persistence engine selector (`Source: backend/env_example:L6`) |
 | `DATABASE_PORT` | `27017` | MongoDB port; matches the published container port `27017:27017` (`Source: backend/env_example:L7`, `Source: backend/docker-compose.yml:L11-L12`) |
 | `DATABASE_USERNAME` | `admin` | MongoDB username — default credential (`Source: backend/env_example:L8`) |

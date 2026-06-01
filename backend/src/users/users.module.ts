@@ -25,11 +25,11 @@ import { DocumentUserPersistenceModule } from './infrastructure/document/documen
   // Persistence layer: binds the abstract `UserRepository` to its Mongoose
   // implementation and is re-exported below.
   imports: [DocumentUserPersistenceModule],
-  // HTTP layer: exposes the versioned `/v1/users` REST routes.
+  // HTTP layer: exposes `/api/users` routes (version:'1' inactive; no enableVersioning()).
   controllers: [UsersController],
   // Application layer: user CRUD, bcrypt hashing, preferences and favorites.
   providers: [UsersService],
-  // Re-exported so AuthModule/SessionModule consume users via this boundary.
+  // Re-exported so AuthModule consumes UsersService via this DI boundary.
   exports: [UsersService, DocumentUserPersistenceModule],
 })
 export class UsersModule {}

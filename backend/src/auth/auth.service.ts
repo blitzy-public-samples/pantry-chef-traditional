@@ -25,7 +25,7 @@ import { SessionService } from 'src/session/session.service';
  * Orchestrates authentication business logic for the application.
  *
  * Coordinates credential validation, access/refresh token issuance and
- * rotation, session creation and revocation, profile updates, and account
+ * re-issuance, session creation and revocation, profile updates, and account
  * deletion by delegating to the JWT, users, session, and configuration
  * collaborators it receives via constructor injection.
  */
@@ -269,11 +269,14 @@ export class AuthService {
   }
 
   /**
-   * Issues a rotated access/refresh token pair for an existing session.
+   * Issues a new access/refresh token pair for an existing session. The same
+   * session is reused and re-signed; this method does NOT persist a
+   * refresh-token identifier or revoke the previous refresh JWT, so prior
+   * refresh tokens remain valid until they expire or the session is deleted.
    *
    * @param data - An object carrying the `sessionId` to refresh
    *   (`Pick<JwtRefreshPayloadType, 'sessionId'>`).
-   * @returns A promise resolving to the rotated token pair payload
+   * @returns A promise resolving to the new token pair payload
    *   (`Omit<LoginResponseType, 'user'>`): token, refreshToken, tokenExpires.
    * @throws UnauthorizedException when the referenced session does not exist.
    */

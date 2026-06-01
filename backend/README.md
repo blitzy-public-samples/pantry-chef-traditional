@@ -65,15 +65,15 @@ README that documents its controllers, services, DTOs, entities, and repositorie
 
 Seven feature modules are wired into the root module — `AuthModule`, `SessionModule`,
 `UsersModule`, `IngridientModule`, `PantryModule`, `RecipeModule`, and `AiModule`.
-`Source: backend/src/app.module.ts:L28-L34` The database module is not a feature module;
+`Source: backend/src/app.module.ts:L50-L56` The database module is not a feature module;
 it integrates through `MongooseModule.forRootAsync` using `MongooseConfigService`.
-`Source: backend/src/app.module.ts:L25-L27`
+`Source: backend/src/app.module.ts:L44-L46`
 
 ## API surface
 
 REST routes are served under the global prefix `api`, which is applied at bootstrap
 via `app.setGlobalPrefix(...)` — for example, the recipe collection is reachable at
-`GET /api/recipe`. `Source: backend/src/main.ts:L14-L15`
+`GET /api/recipe`. `Source: backend/src/main.ts:L32-L37`
 
 The served paths do **not** contain a `/v1/` segment. Although the controllers declare
 `version: '1'` (for example `Source: backend/src/recipe/recipe.controller.ts:L32`),
@@ -81,10 +81,10 @@ The served paths do **not** contain a `/v1/` segment. Although the controllers d
 `/v1/` prefix is emitted. `Source: backend/src/main.ts`
 
 The interactive Swagger/OpenAPI UI is served at **`/docs`** —
-`SwaggerModule.setup('docs', ...)`. `Source: backend/src/main.ts:L31` Note the
+`SwaggerModule.setup('docs', ...)`. `Source: backend/src/main.ts:L53` Note the
 divergence from prompt wording that references `/api/docs`: because the global `api`
 prefix is not applied to the Swagger route, the UI lives at `/docs`, not `/api/docs`.
-`Source: backend/src/main.ts:L14-L15`
+`Source: backend/src/main.ts:L32-L37`
 
 The complete endpoint catalog (request/response shapes, query parameters, status codes)
 lives in the dedicated reference, [`../docs/API_REFERENCE.md`](../docs/API_REFERENCE.md).
@@ -169,10 +169,11 @@ service-account key placed at `src/config/ai.json`. To provision it
 4. Copy `ai.json` into `src/config`.
 
 This integration is **optional**. When `ai.json` is absent the backend degrades
-gracefully: the AI vision endpoint still responds, but ingredient recognition is
-disabled. `Source: backend/src/ai/README.md` See [`src/ai/README.md`](src/ai/README.md)
-for the module internals and [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md) for the
-end-to-end provisioning workflow.
+gracefully: `existsSync(keyPath)` fails, `isGoogleVisionEnabled` is set to `false`,
+and the AI vision endpoint still responds but returns an empty result (`{}`) instead
+of recognized ingredients. `Source: backend/src/ai/ai.service.ts:L53-L56,L64-L67`
+See [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md) for the end-to-end provisioning
+workflow.
 
 ## SECURITY NOTE
 
