@@ -7,6 +7,12 @@ import 'package:pantry_chef/features/pantry/domain/usecases/index.dart';
 part 'pantry_item_edit_event.dart';
 part 'pantry_item_edit_state.dart';
 
+/// BLoC backing the single pantry item edit form.
+///
+/// Seeded from the current item's [id], [location], [quantity] and
+/// [expirationDate]. The [quantity] argument is a double and is
+/// stored in state as a string via quantity.toString().
+/// Handles draft edits plus save (update) and delete actions.
 class PantryItemEditBloc extends Bloc<PantryItemEditEvent, PantryItemEditState> {
   PantryItemEditBloc({
     required String id,
@@ -22,6 +28,8 @@ class PantryItemEditBloc extends Bloc<PantryItemEditEvent, PantryItemEditState> 
           ),
         ) {
     on<DataChanged>((event, emit) {
+      // Update draft form fields; clear quantityError when a
+      // non-null quantity is provided.
       emit(
         state.copyWith(
           location: event.location,
@@ -33,6 +41,10 @@ class PantryItemEditBloc extends Bloc<PantryItemEditEvent, PantryItemEditState> 
     });
 
     on<ChangedDataSaved>((_, emit) async {
+      // Validate quantity is non-empty: set quantityError and
+      // return early when empty. Otherwise emit isFetching, build
+      // an UpdatePantryItemDto, run PantryItemUpdateUsecase, store
+      // the returned item, and clear isFetching in finally.
       if (state.quantity == '') {
         emit(state.copyWith(quantityError: true));
         return;
@@ -55,6 +67,8 @@ class PantryItemEditBloc extends Bloc<PantryItemEditEvent, PantryItemEditState> 
     });
 
     on<DeleteConfirmed>((_, emit) async {
+      // Emit isFetching, run PantryItemDeleteUsecase(id), set
+      // deleted on success, and clear isFetching in finally.
       emit(state.copyWith(isFetching: true));
       try {
         PantryItemDeleteUsecase useCase = PantryItemDeleteUsecase();
