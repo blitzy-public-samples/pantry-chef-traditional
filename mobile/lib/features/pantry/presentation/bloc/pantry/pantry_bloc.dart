@@ -8,16 +8,24 @@ import 'package:pantry_chef/features/pantry/domain/usecases/pantry_items_fetch.u
 part 'pantry_event.dart';
 part 'pantry_state.dart';
 
+/// Manages the pantry item collection for the pantry feature.
+///
+/// Mixes in [HydratedMixin] and calls `hydrate()` in its
+/// constructor, so the pantry list is persisted to and restored
+/// from storage across app launches.
+/// Source: pantry_bloc.dart:L11
 class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
   PantryBloc() : super(PantryState()) {
     hydrate();
 
+    // Loads items via FetchPantryItemsUsecase and emits the result.
     on<PantryItemsFetched>((_, emit) async {
       FetchPantryItemsUsecase useCase = FetchPantryItemsUsecase();
       List<PantryItem> result = await useCase();
       emit(state.copyWith(items: result));
     });
 
+    // Adds via AddToPantryUsecase, then prepends it to the list.
     on<PantryItemAdded>((event, emit) async {
       AddToPantryUsecase useCase = AddToPantryUsecase();
       PantryItem result = await useCase(event.dto);
@@ -25,6 +33,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
       emit(state.copyWith(items: [result, ...items]));
     });
 
+    // Replaces the matching item by index in a copied list.
     on<PantryItemUpdated>((event, emit) {
       List<PantryItem> updatedList = List.from(state.items!);
       int index = updatedList.indexWhere((el) => el.id == event.item.id);
@@ -33,14 +42,20 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
     });
 
     on<PantryItemDeleted>((event, emit) {
+      // Removes the item whose id matches event.id from the list.
       emit(state.copyWith(items: state.items!.where((el) => el.id != event.id).toList()));
     });
 
+    // Resets the state to an empty PantryState().
     on<PantryListReseted>((_, emit) {
       emit(PantryState());
     });
   }
 
+  /// Rebuilds [PantryState] from persisted [json], mapping each
+  /// entry via `PantryItem.fromJson`. Returns an empty list when
+  /// no items are present.
+  /// Source: pantry_bloc.dart:L45
   @override
   PantryState? fromJson(Map<String, dynamic> json) {
     return PantryState(
@@ -48,6 +63,8 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
     );
   }
 
+  /// Serializes [state] (its `items`) to a JSON map for storage.
+  /// Source: pantry_bloc.dart:L52
   @override
   Map<String, dynamic>? toJson(PantryState state) {
     return {
