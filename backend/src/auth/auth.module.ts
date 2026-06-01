@@ -9,6 +9,16 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AnonymousStrategy } from './strategies/anonymous.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
+/**
+ * NestJS module that wires the authentication feature. Imports `UsersModule` and
+ * `SessionModule` for account and session data, enables `PassportModule` for Passport
+ * integration, and registers `JwtModule` for JWT signing and verification. Exposes
+ * `AuthController` and provides `AuthService` together with the `jwt`, `jwt-refresh`, and
+ * `anonymous` Passport strategies.
+ *
+ * `JwtModule.register({})` supplies an empty default configuration because signing options
+ * (secret and expiry) are passed per-call in `AuthService.getTokensData`.
+ */
 @Module({
   imports: [
     UsersModule,
