@@ -7,7 +7,19 @@ import 'package:pantry_chef/features/recipe/domain/usecases/index.dart';
 part 'recipe_event.dart';
 part 'recipe_state.dart';
 
+/// BLoC managing the recipe browsing, detail, and pantry-aware matches state
+/// for the Recipe feature.
+///
+/// Despite importing `hydrated_bloc`, this class extends plain
+/// `Bloc<RecipeEvent, RecipeState>` and does NOT persist state across app
+/// restarts. The four registered handlers cover the full feature flow:
+/// `RecipeListFetched` runs `GetRecipeListUsecase`, `RecipeMatching` runs
+/// `RecipeMatchingUsecase` with a default `RecipeFiltersDto()`,
+/// `RecipeDetailedSelected` records the selected `id`, and
+/// `RecipeListReseted` returns to a fresh `RecipeState()`.
 class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
+  /// Initializes the BLoC with an empty `RecipeState()` and registers
+  /// handlers for all four `RecipeEvent` variants.
   RecipeBloc() : super(RecipeState()) {
     on<RecipeListFetched>((_, emit) async {
       emit(state.copyWith(isFetching: true));

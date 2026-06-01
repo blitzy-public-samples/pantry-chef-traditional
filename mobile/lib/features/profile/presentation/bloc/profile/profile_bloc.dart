@@ -11,7 +11,26 @@ import 'package:pantry_chef/features/recipe/domain/usecases/index.dart';
 part 'profile_event.dart';
 part 'profile_state.dart';
 
+/// BLoC for the profile feature, managing user profile and favorite recipes state.
+///
+/// Extends [Bloc] with [HydratedMixin] (functionally equivalent to a
+/// `HydratedBloc<ProfileEvent, ProfileState>`) so the emitted state is
+/// automatically persisted to and rehydrated from [HydratedBloc.storage].
+/// Storage is configured globally in `mobile/lib/main.dart` (lines 14-16) via
+/// `HydratedStorage.build(storageDirectory: await getTemporaryDirectory())`
+/// from `path_provider`.
+///
+/// The constructor calls [hydrate] to restore previously serialized state
+/// from storage on instantiation. Reacts to [ProfileFetched],
+/// [FavoriteRecipesFetched], [FavoriteRecipesListUpdated], [Logout], and
+/// [ProfileDataReseted] events; the [Logout] event carries a [BuildContext]
+/// because [LogoutUsecase] needs it for sibling-BLoC resets and
+/// `Navigator.pushNamedAndRemoveUntil`.
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> with HydratedMixin {
+  /// Creates a [ProfileBloc] and registers handlers for all five events.
+  ///
+  /// Immediately calls [hydrate] to restore any persisted state from
+  /// [HydratedBloc.storage] before the first event is dispatched.
   ProfileBloc() : super(ProfileState()) {
     hydrate();
 
@@ -69,6 +88,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> with HydratedMixin {
     });
   }
 
+  /// Deserializes persisted hydrated state into a [ProfileState].
+  ///
+  /// Restores `userProfile` via [Profile.fromJson] and `favoriteRecipes` by
+  /// mapping each JSON list entry through [Recipe.fromJson]. Returns a
+  /// [ProfileState] with `null`-tolerant fields when the corresponding JSON
+  /// keys are absent. Called by [HydratedMixin] on construction.
   @override
   ProfileState? fromJson(Map<String, dynamic> json) {
     return ProfileState(
@@ -79,6 +104,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> with HydratedMixin {
     );
   }
 
+  /// Serializes the current [ProfileState] for persistence to
+  /// [HydratedBloc.storage].
+  ///
+  /// Calls `state.userProfile?.toJson()` for the embedded profile and writes
+  /// `state.favoriteRecipes` as the raw recipes list. Called by [HydratedMixin]
+  /// on every state emission.
   @override
   Map<String, dynamic>? toJson(ProfileState state) {
     return {

@@ -8,9 +8,26 @@ import 'package:pantry_chef/features/recipe/domain/models/recipe.dart';
 import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+// NOTE: 'ingridientList' field and 'InstractionItem' type names are preserved verbatim
+// (match the backend Recipe schema / instraction_item.dart). Do not rename.
+/// `StatelessWidget` rendering the recipe detail screen.
+///
+/// Resolves the currently-selected recipe via
+/// `RecipeBloc.state.items!.firstWhere((el) => el.id == state.detailedItemId)`
+/// and renders the `ingridientList` as `'<name>, <amount> <unit>'` lines,
+/// followed by the `instructions` (typed `List<InstractionItem>`) rendered as
+/// `'<step>. <description>'` lines. The content is wrapped in a
+/// `PlatformScaffold` with the shared `getAppBarWidget` and a `SafeArea`-bound
+/// `SingleChildScrollView` using `CommonConstants.pagePadding` for horizontal
+/// padding and 24 px of vertical padding.
 class RecipeDetailed extends StatelessWidget {
+  /// Creates the recipe detail screen widget.
   const RecipeDetailed({super.key});
 
+  /// Composes the detail layout with the shared app bar, the localized
+  /// "Ingredients" section listing `ingridientList` entries, and the
+  /// localized "Instructions" section listing `instructions` (typed
+  /// `List<InstractionItem>`) step descriptions.
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<RecipeBloc, RecipeState>(

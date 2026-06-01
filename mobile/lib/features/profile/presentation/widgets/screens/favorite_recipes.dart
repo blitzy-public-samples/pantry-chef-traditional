@@ -9,9 +9,24 @@ import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/profile/presentation/bloc/profile/profile_bloc.dart';
 import 'package:pantry_chef/features/recipe/presentation/widgets/recipe_card.dart';
 
+/// Favorite recipes list screen.
+///
+/// Reached via `Navigation.favoriteRecipes` from [ProfileMain]. Uses a
+/// `BlocBuilder<ProfileBloc, ProfileState>` that renders one of three
+/// branches:
+///   1. **Loading** — when `state.favoriteRecipes == null`, dispatches
+///      [FavoriteRecipesFetched] from inside the builder callback and shows a
+///      `ShimmerList(cardHeight: 200)`. This lazy-fetch pattern means the
+///      screen triggers its own data load on first render.
+///   2. **Empty** — when the list is empty, shows a centered `Icons.list_alt`
+///      and a localized empty-state message.
+///   3. **Populated** — renders a `ListView.builder` of [RecipeCard] widgets
+///      with `isFavorite: true`.
 class FavoriteRecipes extends StatelessWidget {
+  /// Creates the [FavoriteRecipes] list screen.
   const FavoriteRecipes({super.key});
 
+  /// Builds the favorites list with loading / empty / populated branches.
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(

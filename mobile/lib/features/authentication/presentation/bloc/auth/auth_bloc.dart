@@ -11,7 +11,15 @@ import 'package:pantry_chef/features/authentication/domain/usecases/signup.useca
 part 'auth_event.dart';
 part 'auth_state.dart';
 
+/// State machine driving the login and signup screens.
+///
+/// Handles three events: AuthFormValueChanged (form input mutation), LoginActionSent (submit
+/// login), and SignupActionSend (submit signup). Validates email via RegExps.email and signup
+/// password length (>= 6) before dispatching the use case. Catches DioException with status
+/// 422 (StatusCodes.unprocessableEntity) and maps field errors from response.data['errors']
+/// into AuthState.errorMessage via the Nullable<String> sentinel wrapper.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  /// Initializes the bloc with a default AuthState() and registers the three event handlers.
   AuthBloc() : super(AuthState()) {
     on<AuthFormValueChanged>((event, emit) {
       emit(

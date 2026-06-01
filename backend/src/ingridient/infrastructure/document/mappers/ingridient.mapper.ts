@@ -1,7 +1,27 @@
+// NOTE: 'Ingridient', 'IngridientMapper', 'IngridientSchemaClass' spellings
+// preserved verbatim across the backend codebase. Do not rename.
 import { Ingridient } from '../../../domain/ingrident';
 import { IngridientSchemaClass } from '../entities/ingridient.schema';
 
+/**
+ * Maps IngridientSchemaClass (Mongoose document) to the Ingridient
+ * domain entity (defined in ../../../domain/ingrident.ts — note the
+ * additional typo in the filename) and back.
+ *
+ * Spellings preserved verbatim across the backend codebase.
+ */
 export class IngridientMapper {
+  /**
+   * Convert a Mongoose IngridientSchemaClass document into the Ingridient
+   * domain entity (spelling preserved verbatim).
+   *
+   * Stringifies `_id` into `Ingridient.id`. Copies `name`, `category`
+   * (Reference), `quantity`, `unit` (Reference, may be null), `expirationDate`,
+   * `imageUrl`, `confidence`, timestamps, and `deletedAt` as-is.
+   *
+   * @param raw Hydrated IngridientSchemaClass document from Mongoose.
+   * @returns Ingridient domain entity.
+   */
   static toDomain(raw: IngridientSchemaClass): Ingridient {
     const ingridient = new Ingridient();
 
@@ -24,6 +44,17 @@ export class IngridientMapper {
     return ingridient;
   }
 
+  /**
+   * Convert an Ingridient domain entity into a partial IngridientSchemaClass
+   * payload for Mongoose persistence (spelling preserved verbatim).
+   *
+   * When `ingridient.id` is a non-empty string, assigns it to `_id` to
+   * support upserts. Otherwise relies on Mongoose to generate one. Flattens
+   * `Reference` shapes for `category` and `unit`.
+   *
+   * @param ingridient Ingridient domain entity.
+   * @returns Partial IngridientSchemaClass suitable for `new Model(payload)`.
+   */
   static toPersistence(ingridient: Ingridient): Partial<IngridientSchemaClass> {
     const ingridientEntity: Partial<IngridientSchemaClass> = {};
 

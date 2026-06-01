@@ -20,10 +20,36 @@ import 'package:collection/collection.dart';
 import 'package:pantry_chef/features/pantry/data/dto/create_pantry_item.dto.dart';
 import 'package:pantry_chef/features/pantry/presentation/bloc/pantry/pantry_bloc.dart';
 
+/// Confirm-and-edit form for adding an ingredient to the user's pantry. May be
+/// invoked with a pre-detected [detectedIngredient] (typically from
+/// [IngredientCameraDetecting] after AI vision recognition) or with `null` for
+/// fully manual entry. Provides a locally-scoped [IngredientAddBloc] (seeded
+/// with [detectedIngredient]) and immediately dispatches `CategoriesAndUnitsFetched`
+/// to load category/unit reference data. Renders fields for ingredient name,
+/// category, quantity, unit, expiration date, and `location` (`fridge` /
+/// `freezer` / `pantry` from `ingredientLocation`). The submit button stays
+/// disabled until `ingredientName`, `quantity`, and `expirationDate` are all
+/// non-null. On submit: when no `selectedIngredient` is present the form
+/// dispatches `IngredientCreated()` on the local [IngredientAddBloc] which
+/// creates the ingredient server-side and then forwards a `PantryItemAdded`
+/// event to the upstream [PantryBloc]; otherwise the form dispatches
+/// `PantryItemAdded` directly using the pre-selected ingredient. After the
+/// [PantryBloc] reports `items` changed, the loader overlay hides and the
+/// route stack pops back to the first route. The pantry DTO uses the field
+/// name `ingridient` (backend spelling preserved verbatim across the monorepo)
+/// in both submit paths.
 class IngredientAddingForm extends StatefulWidget {
+  /// Optional pre-detected ingredient (typically from AI vision in
+  /// [IngredientCameraDetecting]). When non-null this value seeds the form's
+  /// [IngredientAddBloc] initial state with `selectedIngredient`,
+  /// `ingredientName`, and `categoryId` taken from it. When null the form
+  /// starts empty for manual entry.
   final Ingredient? detectedIngredient;
+  /// Creates the form. Pass [detectedIngredient] to pre-fill from AI vision
+  /// results, or omit for fully manual entry.
   const IngredientAddingForm({super.key, this.detectedIngredient});
 
+  /// Standard Flutter override returning the private state object.
   @override
   State<IngredientAddingForm> createState() => _IngredientAddingFormState();
 }

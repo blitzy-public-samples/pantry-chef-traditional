@@ -1,8 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+// NOTE: 'ingridientList' (field name in RecipeSchemaClass and seed payloads) and
+// NOTE: 'IngridientList' (the embedded subdocument class) spellings preserved verbatim.
+// NOTE: Do not rename.
 import { RecipeSchemaClass } from 'src/recipe/infrastructure/document/entities/recipe.schema';
 
+/**
+ * Seed service for Recipes.
+ *
+ * Drops the Recipes collection and re-inserts 4 seed recipes: Spaghetti
+ * Bolognese, Greek Salad, Pizza Margherita, Caesar Salad. Each recipe
+ * embeds an `ingridientList` (spelling preserved verbatim) referencing
+ * Ingridient catalog ObjectIds and an `instructions` array.
+ *
+ * Destructive on every run — see backend/src/database/README.md
+ * § Known Limitations.
+ */
 @Injectable()
 export class RecipeSeedService {
   constructor(
@@ -10,10 +24,27 @@ export class RecipeSeedService {
     private readonly model: Model<RecipeSchemaClass>,
   ) {}
 
+  /**
+   * Drop the Recipes collection.
+   *
+   * @returns Promise<void>
+   */
   async dropCollection() {
     await this.model.collection.drop();
   }
 
+  // TODO(prod): Seed runner drops collections (dropCollection) before reseeding.
+  // TODO(prod): Gate behind explicit flag before production.
+  /**
+   * Drop the Recipes collection and re-insert the four seed recipes via
+   * insertMany.
+   *
+   * Seed payloads reference Ingridient ObjectIds in their `ingridientList`
+   * (spelling preserved verbatim) field; therefore this service must run
+   * AFTER IngridientSeedService (orchestrated by run-seed.ts).
+   *
+   * @returns Promise<void>
+   */
   async run() {
     await this.dropCollection();
 

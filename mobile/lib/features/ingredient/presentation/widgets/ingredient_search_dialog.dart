@@ -8,14 +8,30 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pantry_chef/features/ingredient/presentation/bloc/ingredient_add/ingredient_add_bloc.dart';
 import 'package:pantry_chef/features/ingredient/presentation/widgets/ingredient_search_result_item.dart';
 
+/// Modal bottom-sheet ingredient search UI presented from [IngredientSearchField]
+/// via `showModalBottomSheet`. Dispatches [IngredientSearch] events on its owning
+/// [IngredientAddBloc] (passed in via [bloc]): first as
+/// `IngredientSearch(query: '', page: 1)` from `initState`, then on every
+/// text-field change and again when the user scrolls within
+/// `CommonConstants.fetchScrollOffset` (150 px) of the bottom while
+/// `isNextPageAvailable && !isFetching`. Returns one of two results via
+/// `Navigator.of(context).pop(...)`: an [Ingredient] when the user taps a
+/// result row, or the raw query [String] when the user taps "Use this name"
+/// in the empty-state. Caller (`IngredientSearchField.onChaged`) discriminates.
 class SearchDialog extends StatefulWidget {
+  /// The upstream [IngredientAddBloc] whose `searchResult` state this dialog
+  /// reads via `BlocBuilder(buildWhen: prev.searchResult != curr.searchResult)`
+  /// and whose [IngredientSearch] events this dialog dispatches.
   final IngredientAddBloc bloc;
 
+  /// Creates a [SearchDialog] bound to the supplied [bloc]; [bloc] is required
+  /// because the dialog drives its search-event stream and reads its state.
   const SearchDialog({
     super.key,
     required this.bloc,
   });
 
+  /// Standard Flutter override returning the private state object.
   @override
   State<SearchDialog> createState() => _SearchDialogState();
 }

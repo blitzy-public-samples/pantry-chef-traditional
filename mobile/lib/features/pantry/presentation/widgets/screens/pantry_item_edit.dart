@@ -18,11 +18,62 @@ import 'package:collection/collection.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:pantry_chef/features/pantry/presentation/bloc/pantry/pantry_bloc.dart';
 
+/// Per-item edit screen for a single [PantryItem].
+///
+/// Creates a fresh [PantryItemEditBloc] (seeded with the item's `id`,
+/// `quantity`, `location`, `expirationDate`) via [BlocProvider]
+/// (Source: L40-L46) and wires three [BlocListener]s in a [MultiBlocListener]:
+///
+/// * **Loader overlay** (L49-L58) — toggles `context.loaderOverlay` based on
+///   `isFetching` state changes.
+/// * **Update success** (L59-L65) — when `state.updatedItem` becomes non-null,
+///   dispatches `PantryItemUpdated(item: state.updatedItem!)` to the parent
+///   [PantryBloc] and pops the route.
+/// * **Delete success** (L66-L72) — when `state.deleted` becomes `true`,
+///   dispatches `PantryItemDeleted(id: state.id)` to the parent [PantryBloc]
+///   and pops the route.
+///
+/// The body renders a form composed of `TextFieldInput` (quantity + readonly
+/// unit), `DatePickerField` (expirationDate), `SelectField` (location
+/// populated from the `ingredientLocation` constant in
+/// `mobile/lib/core/constants/ingredient_location.dart:L1`), and an
+/// `ActionButton` ("Save") that dispatches `ChangedDataSaved`. The app bar's
+/// trailing delete icon opens a `ConfirmationDialog` via the private
+/// [_showDeleteDialog] helper.
 class PantryItemEdit extends StatelessWidget {
+  /// The [PantryItem] being edited.
+  ///
+  /// Values are used to seed the bloc's initial state via the
+  /// [BlocProvider.create] factory at L40-L46:
+  /// * `item.id` — primary key; also captured by the bloc so the deleted
+  ///   listener can dispatch `PantryItemDeleted(id: state.id)`.
+  /// * `item.quantity` — initial numeric quantity.
+  /// * `item.location` — initial location enum string (one of
+  ///   `'fridge'`, `'freezer'`, `'pantry'`).
+  /// * `item.expirationDate` — ISO-8601 string used by the date picker as
+  ///   both `initialDate` and `firstDate`.
+  ///
+  /// The readonly unit field reads `item.ingridient.unit.name` (spelling
+  /// preserved verbatim) and is not editable through this screen.
   final PantryItem item;
 
+  /// Const constructor.
+  ///
+  /// Requires the [PantryItem] to edit, which is passed as route `arguments`
+  /// when the user taps the edit affordance on a [PantryItemCard].
   const PantryItemEdit({super.key, required this.item});
 
+  /// Displays the platform-adaptive confirmation dialog for delete.
+  ///
+  /// Uses `showPlatformDialog<bool>` from `flutter_platform_widgets` to render
+  /// a [ConfirmationDialog] (Source:
+  /// `mobile/lib/core/presentation/widgets/confirmation_dialog.dart`). On
+  /// confirm (`result == true`), dispatches `DeleteConfirmed()` to the
+  /// ancestor [PantryItemEditBloc]. On dismiss or cancel, no event is
+  /// dispatched.
+  ///
+  /// The dialog content is localized via
+  /// `AppLocalizations.of(context)!.deletepantryItemText`.
   void _showDeleteDialog(BuildContext context) async {
     bool? result = await showPlatformDialog<bool>(
       context: context,
@@ -35,6 +86,31 @@ class PantryItemEdit extends StatelessWidget {
     }
   }
 
+  /// Builds the [BlocProvider] + [MultiBlocListener] + form layout.
+  ///
+  /// The [BlocProvider] is the entry point that creates the ephemeral
+  /// [PantryItemEditBloc] seeded with the item's persisted values. The
+  /// [MultiBlocListener] orchestrates side effects:
+  ///
+  /// 1. Loader overlay show/hide based on `isFetching` (L49-L58).
+  /// 2. Parent [PantryBloc] notification + route pop on `updatedItem`
+  ///    becoming non-null (L59-L65).
+  /// 3. Parent [PantryBloc] notification + route pop on `deleted` becoming
+  ///    `true` (L66-L72).
+  ///
+  /// The form body composes:
+  /// * `TextFieldInput` for quantity, keyed via [BlocBuilder] on
+  ///   `quantity`/`quantityError` (L102-L118).
+  /// * Readonly unit `TextFieldInput` derived from `item.ingridient.unit.name`
+  ///   (spelling preserved) at L125-L130.
+  /// * `DatePickerField` for `expirationDate`, keyed on the bloc state
+  ///   (L137-L148).
+  /// * `SelectField` for location, populated from the `ingredientLocation`
+  ///   constant (L150-L164).
+  /// * `ActionButton` "Save" dispatching `ChangedDataSaved()` (L167-L172).
+  ///
+  /// The app bar includes a trailing red delete `IconButton` that opens the
+  /// confirmation dialog via [_showDeleteDialog].
   @override
   Widget build(BuildContext context) {
     return BlocProvider(

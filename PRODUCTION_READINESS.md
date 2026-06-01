@@ -1,0 +1,497 @@
+# Production Readiness Checklist
+
+## Overview
+
+PantryChef is currently a **dev-grade** monorepo: it boots cleanly for local
+development but is not yet safe to deploy to production. The backend container
+runs in watch mode and compiles TypeScript on the fly, MongoDB credentials are
+hardcoded into `docker-compose.yml`, CORS is wide open, JWT secrets ship with
+placeholder values, the refresh-token lifetime is set to roughly ten years, and
+there is no CI/CD pipeline, observability stack, or release signing for the
+Flutter client. None of these are accidental omissions in the application
+logic — they are the expected state of a project that has reached
+feature-complete development but has not yet been hardened for production.
+
+This document enumerates every gap that blocks a production deployment, grouped
+into the eleven categories below, and gives a concrete, actionable remediation
+path for each. For system-level context — the request path from the Flutter
+client through the NestJS backend to MongoDB and Google Cloud Vision, the
+technology choices, and the cross-cutting concerns — see
+[ARCHITECTURE.md](ARCHITECTURE.md). For the persistence model, including the
+soft-delete (`deletedAt`) contract referenced repeatedly below, see
+[DATA_MODEL.md](DATA_MODEL.md).
+
+> **Important — minimal-change clause.** This checklist *documents* gaps; it
+> does **not** fix them. No production code, configuration value, environment
+> default, or seed data is modified by this engagement. As each source module is
+> processed, its files receive the corresponding inline markers (`// TODO(prod):`
+> for production gaps, `// NOTE:` for intentional decisions, `// FIXME:` for
+> genuine bugs); every in-scope source file across the backend and the mobile
+> client has been annotated with these markers as part of this engagement.
+> The remediation steps here describe the recommended path without applying it.
+
+**Legend.** Each category carries a status indicator:
+
+| Indicator | Meaning |
+|-----------|---------|
+| ❌ | Not started — hard blocker for production |
+| ⚠️ | Partial — placeholders or scaffolding exist; improvement needed |
+| ✅ | Production-ready |
+
+## Status Categories
+
+| Category | Key Items | Status |
+|----------|-----------|--------|
+| Build & Runtime | Container runs `npm run dev`; TypeScript not compiled to /dist; Flutter release builds not configured; route versioning inert (`version: '1'` declared but `enableVersioning()` not called — `/api/v1/*` returns 404, e2e suite red) | ❌ |
+| Secrets Management | MongoDB credentials and JWT secrets hardcoded; no secrets manager; refresh TTL 3650d | ❌ |
+| Networking & TLS | Open CORS (`cors: true`); no reverse proxy / TLS termination | ❌ |
+| Infrastructure & Orchestration | Docker Compose for dev only; no Kubernetes / managed service; no DB backup | ❌ |
+| File Storage | `FILE_DRIVER=local` placeholder; AWS_* env vars empty; S3 driver not implemented | ⚠️ |
+| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired; plaintext-password update path on `PATCH /users`; no email verification; `@Exclude` not enforced (password hash + Ingridient fields leak in responses); malformed input returns 500 not 422 | ❌ |
+| Observability | No structured logging; no `/metrics`; no tracing; no alerting | ❌ |
+| CI/CD | No pipeline configured (no GitHub Actions, GitLab CI, etc.) | ❌ |
+| Database | Seed runner runs unconditionally; no migration versioning; only one collection index on each schema; destructive users `softDelete`; ignored list filters; unbounded user arrays; hardcoded ingredient reference data | ⚠️ |
+| Testing | Limited E2E coverage (auth specs only); no unit tests for `matches()` | ⚠️ |
+| Mobile Release | No App Store / Play Store signing configs; no release pipeline; baseUrl is local IP `192.168.2.20` | ❌ |
+
+## Build & Runtime
+
+The backend container is configured for development, not production. Its single
+`CMD` installs dependencies at container start and then launches Nest in watch
+mode, recompiling TypeScript on the fly — slow to boot, memory-hungry, and
+dependent on having dev tooling and source present at runtime.
+
+> 🚧 The Dockerfile runs `CMD npm i && npm run dev`, i.e. watch-mode startup
+> with on-the-fly TypeScript compilation. This is unsafe and slow for
+> production. *Source: backend/Dockerfile:L13.*
+
+The fix does not require new tooling — the scripts already exist. The backend
+`package.json` defines `"build": "nest build"` and `"start:prod": "node dist/main"`,
+but the container uses neither; it uses `"dev": "nest start --watch"` instead.
+*Source: backend/package.json:L9, L12, L14.*
+
+> 🚧 Adopt a multi-stage Dockerfile: a build stage that runs `nest build` to
+> emit `dist/`, and a slim runtime stage that runs `node dist/main` with
+> `NODE_ENV=production`, no source maps, no watch, and production-only
+> dependencies (`npm ci --omit=dev`).
+
+On the client side, no release build is configured. `mobile/pubspec.yaml`
+still carries the scaffold description "A new Flutter project." and no
+release/flavor configuration. *Source: mobile/pubspec.yaml:L2.*
+
+> 🚧 Produce signed release artifacts with the production API base URL injected
+> at compile time, e.g.
+> `flutter build apk --release --dart-define=API_BASE_URL=https://api.pantry-chef.com/api`
+> (and the equivalent `ipa` / `web` builds). The compile-time define is read by
+> `EnvConfig.apiBaseUrl`. *Source: mobile/lib/env_config.dart:L2.*
+
+> 🚧 **Route versioning is declared but inert.** Every feature controller declares
+> `@Controller({ path: '<feature>', version: '1' })`, but `main.ts` only calls
+> `app.setGlobalPrefix('api')` and **never calls `app.enableVersioning()`**. NestJS
+> ignores controller versions unless versioning is enabled, so all routes resolve at
+> `/api/<feature>/*` with **no** `/v1/` segment — a request to `/api/v1/<feature>/*`
+> returns 404. The documentation (module READMEs, `ARCHITECTURE.md`) now reflects the
+> actually-served `/api/*` paths. Before production, pick one contract and make it
+> consistent: either call `app.enableVersioning({ type: VersioningType.URI })` so the
+> declared `version: '1'` takes effect at `/api/v1/*`, **or** drop the `version: '1'`
+> argument from the controllers. Either way, align the e2e suite (see § Testing).
+> *Source: backend/src/main.ts:L10-L35; backend/src/auth/auth.controller.ts:L38-L41.*
+
+## Secrets Management
+
+Every secret in the repository is a development placeholder, and several are
+committed in plaintext. None of them are safe to carry into production.
+
+> 🚧 The Mongo root credentials are hardcoded in Compose as
+> `MONGO_INITDB_ROOT_USERNAME: admin` and `MONGO_INITDB_ROOT_PASSWORD: 123456`.
+> Move these to a secrets manager (AWS Secrets Manager, HashiCorp Vault,
+> Kubernetes Secrets) and inject them at runtime rather than baking them into
+> the image or the Compose file. *Source: backend/docker-compose.yml:L9-L10.*
+
+> 🚧 The environment template ships default signing secrets:
+> `AUTH_JWT_SECRET=secret` and `AUTH_REFRESH_SECRET=secret_for_refresh`. These
+> must be replaced with high-entropy values, stored externally, and rotated on
+> a schedule. *Source: backend/env_example:L20, L22.*
+
+> 🚧 The refresh-token lifetime is `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d`
+> (~10 years). A stolen refresh token would remain valid for a decade. Reduce
+> to a sensible window (e.g. `30d`) and pair it with refresh-token rotation and
+> revocation on logout. *Source: backend/env_example:L23.*
+
+> 🚧 Google Cloud Vision credentials must be loaded from a secrets manager, not
+> committed to `src/config/ai.json`. The AI service today resolves the key file
+> relative to its own directory and degrades gracefully when it is absent
+> (setting `isGoogleVisionEnabled = false`), which is fine for local dev but
+> must be replaced by an explicit, managed credential source for production.
+> *Source: backend/src/ai/ai.service.ts.*
+
+## Networking & TLS
+
+The HTTP edge is unhardened. CORS is fully open and there is no transport
+encryption in front of the Node process.
+
+> 🚧 The application is created with `{ cors: true }`, which reflects **any**
+> origin. Replace this with an explicit allowlist, e.g.
+> `{ cors: { origin: ['https://app.pantry-chef.com'] } }`, scoped to the real
+> client origins. *Source: backend/src/main.ts.*
+
+> 🚧 No TLS termination is configured. Place a reverse proxy (NGINX, AWS ALB, or
+> Cloudflare) in front of the NestJS service, terminate TLS there with a valid
+> certificate, and redirect HTTP→HTTPS.
+
+Beyond TLS, the proxy layer should add standard security headers — HSTS,
+`X-Frame-Options`, and `X-Content-Type-Options` — none of which are emitted by
+the application today (see also **Security Hardening** for Helmet).
+
+## Infrastructure & Orchestration
+
+The deployment topology is a single-host Docker Compose stack intended for a
+developer laptop, with no high-availability or durability guarantees.
+
+> 🚧 `backend/docker-compose.yml` is suitable for local development only.
+> Replace it with a managed container orchestration platform — Kubernetes,
+> AWS ECS, or Google Cloud Run — that provides health checks, rolling
+> deployments, autoscaling, and restart policies beyond a single host.
+> *Source: backend/docker-compose.yml.*
+
+> 🚧 MongoDB runs as one container with a bind-mounted data directory
+> (`./data/db:/data/db`) — a single point of failure with no replication, no
+> automated backups, and no point-in-time recovery. Move to MongoDB Atlas or a
+> self-managed replica set with automated snapshots.
+> *Source: backend/docker-compose.yml:L14.*
+
+Recommended high-availability target: a minimum three-node replica set, daily
+automated snapshots, and at least 7-day point-in-time recovery, fronted by the
+managed orchestrator above.
+
+## File Storage
+
+File storage is the one category that is *partially* prepared: the
+configuration surface anticipates S3, but no driver implements it.
+
+> 🚧 The environment template declares `FILE_DRIVER=local` with a comment noting
+> support for `s3` and `s3-presigned`, but the S3 driver is **not implemented**
+> in the codebase — only the env-var placeholders exist
+> (`ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, `AWS_S3_REGION`,
+> `AWS_DEFAULT_S3_BUCKET`, all empty).
+> *Source: backend/env_example:L13-L18.*
+
+For production, implement the S3 driver behind the existing `FILE_DRIVER`
+switch using those four env vars, then set `FILE_DRIVER=s3` (or `s3-presigned`).
+Local disk storage in production is fragile: it is single-node, has no CDN, and
+offers no lifecycle/expiry policies. S3 (object storage) fronted by CloudFront
+(CDN) is the recommended path. This category is ⚠️ rather than ❌ because the
+configuration contract already exists; only the driver implementation is
+missing.
+
+
+## Security Hardening
+
+This is the highest-density gap category. The API has no abuse controls, the AI
+endpoint is unauthenticated, an upload validation filter is disabled, a
+password-reset flow is half-built, response serialisation leaks the password
+hash, and malformed input crashes with a 500 instead of a clean 422.
+
+> 🚧 **No rate limiting.** There is no throttling on any endpoint. Install
+> `@nestjs/throttler` and apply `@Throttle()` to the auth surface (login,
+> register, refresh) to blunt brute-force and credential-stuffing attacks.
+
+> 🚧 **No Helmet middleware.** The bootstrap sets no security headers. Add
+> `helmet` to the NestJS startup to emit CSP, HSTS, `X-Content-Type-Options`,
+> and related headers. *Source: backend/src/main.ts.*
+
+> 🚧 **`@Exclude` is not enforced — password hash and other fields leak in responses.**
+> `UserSchemaClass.password` carries `@Exclude({ toPlainOnly: true })`, and four
+> `Ingridient` fields (`unit`, `expirationDate`, `imageUrl`, `confidence`) carry the
+> same decorator, but **no `ClassSerializerInterceptor` is registered** — neither
+> `app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))` in
+> `main.ts` nor an `APP_INTERCEPTOR` provider in `app.module.ts`. Without it,
+> class-transformer never runs, so the bcrypt **password hash is returned on every
+> authenticated profile fetch** (`GET /api/auth/me`, `GET /api/users/me`) and the
+> "excluded" Ingridient fields are returned by `GET /api/ingredient`. This is an
+> offline brute-force / credential-stuffing surface. Register a global
+> `ClassSerializerInterceptor` and verify password omission before production.
+> *Source: backend/src/main.ts:L10-L35; backend/src/app.module.ts:L18-L38; backend/src/users/infrastructure/document/entities/user.schema.ts:L82-L84; backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L40-L54.*
+
+> 🚧 **Malformed input returns HTTP 500 instead of 422.** Two input paths crash
+> rather than rejecting cleanly: (1) `lowerCaseTransformer` runs
+> `params.value?.toLowerCase().trim()` — the `?.` guards `null`/`undefined` but not
+> objects, so a NoSQL-injection-shaped login body such as
+> `{"email":{"$gt":""},"password":{"$gt":""}}` throws a `TypeError` → 500 (the
+> injection is **rejected**, no token issued, **no auth bypass** — just an ungraceful
+> failure); (2) `CreatePantryIngridientDto.ingridient` is typed `Ingridient` with only
+> `@IsNotEmpty()` (no `@ValidateNested()`/`@Type()`), so a wrong-type body (e.g.
+> `ingridient` as a string) passes validation and then crashes in
+> `IngridientMapper.toPersistence` → 500. Harden the transformer to
+> `typeof value === 'string' ? value.toLowerCase().trim() : value`, and add
+> `@ValidateNested()` + `@Type(() => Ingridient)` to the pantry DTO so malformed
+> payloads return 422.
+> *Source: backend/src/utils/transformers/lower-case.transformer.ts; backend/src/pantry/dto/create-pantry-ingridient.dto.ts.*
+
+> 🚧 **AI endpoint is unguarded.** `AiController` is declared with
+> `@Controller('ai')` and `@Post('vision')` but carries **no**
+> `@UseGuards(AuthGuard('jwt'))`. The endpoint accepts a 10 MB image upload
+> (`limits: { fileSize: 10 * 1024 * 1024 }`) from anonymous clients — a clear
+> abuse and cost vector against Google Cloud Vision. Add `@ApiBearerAuth()` and
+> `@UseGuards(AuthGuard('jwt'))` to the controller.
+> *Source: backend/src/ai/ai.controller.ts.*
+
+> 🚧 **MIME-type filter is commented out.** The `FileInterceptor` contains a
+> disabled `fileFilter` that would reject anything other than JPG/JPEG/PNG.
+> Uncomment it and verify it handles edge cases such as a mismatched extension
+> versus actual content type. *Source: backend/src/ai/ai.controller.ts.*
+
+> 🚧 **Password-reset endpoints are unwired.** The DTOs
+> `AuthForgotPasswordDto` and `AuthResetPasswordDto` exist, but `AuthController`
+> exposes only seven routes (login, register, `GET me`, refresh, logout,
+> `PATCH me`, `DELETE me`) and **no** `forgot-password` or `reset-password`
+> route. Add the two endpoints plus the matching service methods (token
+> issuance, email delivery, hash verification).
+> *Source: backend/src/auth/dto/auth-forgot-password.dto.ts; backend/src/auth/dto/auth-reset-password.dto.ts; backend/src/auth/auth.controller.ts.*
+
+> 🚧 **Plaintext-password update path on `PATCH /api/users`.** `UsersService.create`
+> bcrypt-hashes the password, but `UsersService.update` forwards the payload to
+> `UsersDocumentRepository.update` without re-hashing. The intended password-change
+> flow runs through `AuthService.update` (which verifies the old password upstream),
+> but a direct authenticated call to `PATCH /api/users` carrying a `password`
+> field would persist that value in plaintext. Either add a re-hash step in
+> `UsersService.update` or drop the `password` field from `UpdateUserDto`. Surfaced
+> locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
+> Limitations. *Source: backend/src/users/users.service.ts; backend/src/users/dto/update-user.dto.ts.*
+
+> 🚧 **No email-verification flow.** `AuthConfirmEmailDto` exists under
+> `backend/src/auth/dto/` but no controller endpoint consumes it, and
+> `UserSchemaClass` carries no `emailConfirmed` flag — accounts are usable
+> immediately after registration. Wire a confirmation endpoint and add the flag
+> before production. Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/auth/dto/auth-confirm-email.dto.ts; backend/src/users/infrastructure/document/entities/user.schema.ts.*
+
+Each of these is now flagged at its source location with a `// TODO(prod):`
+marker per the project's tag taxonomy; the AI gaps are additionally documented in
+[backend/src/ai/README.md](backend/src/ai/README.md) and the auth gap in
+[backend/src/auth/README.md](backend/src/auth/README.md).
+
+## Observability
+
+The service is effectively a black box at runtime. There is no structured
+logging, metrics, tracing, or alerting — confirmed by the absence of any
+corresponding dependency in `backend/package.json` (no `pino`, `winston`,
+`@willsoto/nestjs-prometheus`, or OpenTelemetry packages).
+
+> 🚧 **No structured logging.** Adopt Pino or Winston and ship JSON logs to a
+> central aggregator (CloudWatch, Datadog, or Loki) with request correlation
+> IDs.
+
+> 🚧 **No metrics endpoint.** There is no Prometheus `/metrics`. Install
+> `@willsoto/nestjs-prometheus` and instrument the hot paths — request count,
+> latency histograms, error rate, recipe-match query count, and AI-vision call
+> count.
+
+> 🚧 **No distributed tracing.** Add the OpenTelemetry SDK and export spans to a
+> trace backend (Tempo, Jaeger, or Honeycomb) so a single request can be
+> followed from controller through repository to MongoDB and Google Cloud
+> Vision.
+
+> 🚧 **No alerting.** Define SLOs for p95 latency, error rate, and MongoDB
+> connection-pool saturation, and wire alerts to PagerDuty or OpsGenie.
+
+## CI/CD
+
+There is no automation in the repository at all.
+
+> 🚧 No `.github/workflows/`, no `.gitlab-ci.yml`, and no `Jenkinsfile` exist
+> anywhere in the tree — the CI/CD pipeline is entirely absent.
+
+Recommended pipeline: lint (`npm run lint` + `flutter analyze`) → type-check
+(`tsc --noEmit`) → unit tests (Jest for the backend, `flutter test` for the
+client) → build the backend Docker image → push to a registry → deploy to
+staging → manual approval gate → deploy to production. Add Dependabot or
+Renovate for automated dependency updates and security patching.
+
+## Database
+
+The persistence layer works for development but lacks the safety rails needed at
+production scale. See [DATA_MODEL.md](DATA_MODEL.md) for the full schema and the
+soft-delete (`deletedAt`) contract that the items below relate to.
+
+> 🚧 **The seed runner is unconditional and destructive.** `run-seed.ts` invokes
+> `UserSeedService.run()`, then `IngridientSeedService.run()` (spelling
+> preserved verbatim), then
+> `RecipeSeedService.run()`, then `PantrySeedService.run()` on every invocation
+> of `npm run seed:run:document`; the seed services drop their collections
+> before reseeding. Gate this behind an explicit flag (e.g. `--force-reseed`)
+> so it can never run by accident in production.
+> *Source: backend/src/database/seeds/run-seed.ts.*
+
+> 🚧 **No migration versioning.** There is no `migrate-mongo` or
+> `mongoose-migrate`; schema changes are applied implicitly through Mongoose's
+> loose schema mode. Add a migration framework and version every change so
+> deployments are reproducible and reversible.
+
+> 🚧 **Minimal indexing.** Each schema declares a single index —
+> `SessionSchema.index({ user: 1 })`,
+> `PantryIngridientSchema.index({ userId: 1 })` (spelling preserved verbatim),
+> and
+> `RecipeSchema.index({ title: 1 })`. The recipe matching pipeline filters on
+> `ingridientList.ingridient` (spelling preserved verbatim) with `$nin` and on
+> `tags` with `$all`, neither of which is indexed, so matching will degrade as
+> the recipe corpus grows. Add a compound index covering `(deletedAt, tags)` and
+> consider a text index on `title` for fuzzy search.
+> *Source: backend/src/session/infrastructure/document/entities/session.schema.ts; backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts; backend/src/recipe/infrastructure/document/entities/recipe.schema.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts, L113.*
+
+> 🚧 **Destructive `softDelete` in the users repository.** Like the pantry
+> repository, `UsersDocumentRepository.softDelete` calls `deleteOne`, physically
+> removing the user document rather than writing a `deletedAt` timestamp — a
+> violation of the soft-delete contract in [DATA_MODEL.md](DATA_MODEL.md).
+> Implement a true soft-delete (`updateOne({ deletedAt: new Date() })`). Per the
+> AAP minimal-change clause this is preserved as-is and documented in prose only
+> (no inline `// FIXME:` in the users folder). Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/users/infrastructure/document/repositories/user.repository.ts.*
+
+> 🚧 **`findManyWithPagination` ignores `filterOptions`.** The users document
+> repository destructures the query input but hardcodes the Mongo `where` clause
+> to `{}`, so user-list filtering silently has no effect. Honor `filterOptions`
+> in the query (or remove it from the contract) before production. Surfaced
+> locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
+> Limitations. *Source: backend/src/users/infrastructure/document/repositories/user.repository.ts.*
+
+> 🚧 **Unbounded `favoriteRecipes[]` and `recentSearches[]` arrays.**
+> `UserSchemaClass` stores these as arrays with no server-side cap or rotation,
+> so documents can grow without bound over a user's lifetime. Add a cap or
+> rotation policy. Surfaced locally in
+> [backend/src/users/README.md](backend/src/users/README.md) § Known Limitations.
+> *Source: backend/src/users/infrastructure/document/entities/user.schema.ts.*
+
+> 🚧 **Hardcoded ingredient reference data (`/creation-data`).** The `Ingridient`
+> (spelling preserved verbatim) controller returns its 5 categories and 9 units
+> from a hardcoded array inside the controller method — not seedable, not
+> configurable, and not localizable; adding a category requires a code deploy.
+> Move the reference data into a dedicated collection or config to enable i18n
+> and operator-controlled extension. Surfaced locally in
+> [backend/src/ingridient/README.md](backend/src/ingridient/README.md) § Known
+> Limitations. *Source: backend/src/ingridient/ingridient.controller.ts.*
+
+> 🚧 **`Reference.id` type/value mismatch.** The shared `Reference` type declares
+> `id: string`, but the hardcoded ingredient reference data emits integer ids
+> (e.g. `{ id: 1, name: 'spice' }`), and downstream code coerces as needed.
+> Reconcile the type with the emitted values (or normalize the data) before
+> production. Surfaced locally in
+> [backend/src/ingridient/README.md](backend/src/ingridient/README.md) § Known
+> Limitations. *Source: backend/src/common/types.ts; backend/src/ingridient/ingridient.controller.ts.*
+
+A related correctness issue lives in the pantry repository: `softDelete` calls
+`deleteOne`, physically removing the document instead of setting `deletedAt`,
+which violates the soft-delete contract documented in
+[DATA_MODEL.md](DATA_MODEL.md). It is preserved as-is and is flagged with
+`// FIXME:` and `// TODO(prod):` at its source.
+*Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts.*
+
+This category is ⚠️ rather than ❌ because the database is functional and
+indexed for its current single-index queries; the blockers are operational
+(seed gating, migrations, scale indexing) rather than a non-functioning store.
+
+## Testing
+
+Automated test coverage is thin and concentrated on a single feature.
+
+> 🚧 **Backend coverage is auth-only.** `backend/test/` contains the Jest E2E
+> harness (`jest-e2e.json`), a single auth spec (`user/auth.e2e-spec.ts`), and
+> shared constants. There are **no** unit tests for the recipe matching
+> algorithm `RecipeDocumentRepository.matches()`. Add unit tests against an
+> in-memory Mongo server that assert the documented `matchScore`, `isQuickMake`,
+> and `isAlmostThere` derivations.
+> *Source: backend/test/user/auth.e2e-spec.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts.*
+
+> 🚧 **The existing e2e suite is red — it targets `/api/v1/auth/*` but the runtime
+> serves `/api/auth/*`.** All six auth e2e specs fail with `got 404` because they
+> request versioned paths while the controller `version: '1'` is inert (see § Build
+> & Runtime — `enableVersioning()` is never called). This is a pre-existing routing
+> contract mismatch, not a regression. Fix by either enabling versioning in `main.ts`
+> or updating both the specs and the controllers to the unversioned `/api/*` paths,
+> then keep the suite green in CI. *Source: backend/test/user/auth.e2e-spec.ts:L4-L106; backend/src/main.ts:L10-L35.*
+
+> 🚧 **No integration tests for the AI vision endpoint**, and no tests covering
+> pantry CRUD against the destructive `softDelete` behavior described above.
+
+> 🚧 **AI ingredient-resolution correctness defects.** `AiService.detectIngredientsFromBuffer`
+> scans all Vision labels without breaking, so the **last** matching dictionary term wins
+> (not the first); and when no label matches, the filter is `null`, so the unfiltered lookup
+> returns the first non-deleted `Ingridient` (spelling preserved verbatim) instead of `{}`.
+> Both are flagged inline with `// FIXME:` (documented, not fixed) and must be corrected so a
+> no-match returns `{}`. Surfaced locally in [backend/src/ai/README.md](backend/src/ai/README.md)
+> § Known Limitations and § Production Readiness Status.
+> *Source: backend/src/ai/ai.service.ts:L130; backend/src/ai/ai.service.ts:L149.*
+
+> 🚧 **Mobile tests are the default smoke test.** `mobile/test/widget_test.dart`
+> still contains only the generated "Counter increments smoke test". Add BLoC
+> unit tests, golden tests for key screens, and an integration test for the
+> camera → vision → ingredient-resolution flow.
+> *Source: mobile/test/widget_test.dart:L13.*
+
+This category is ⚠️: a real (if narrow) E2E harness exists, so the foundation is
+present; the gap is breadth of coverage, especially around the matching pipeline.
+
+## Mobile Release
+
+The Flutter client has no production release configuration on any platform.
+
+> 🚧 **Local API base URL baked in.** `EnvConfig.apiBaseUrl` defaults to
+> `http://192.168.2.20:3000/api`, a private LAN address. Production builds must
+> override it via `--dart-define API_BASE_URL=https://api.pantry-chef.com/api`.
+> *Source: mobile/lib/env_config.dart:L2.*
+
+> 🚧 **No iOS signing config.** There is no `mobile/ios/Runner/Runner.entitlements`
+> and no associated provisioning profile/App Store signing set up in the Xcode
+> project (`mobile/ios/Runner.xcodeproj`).
+
+> 🚧 **No Play Store signing config.** `mobile/android/app/build.gradle` signs
+> release builds with the **debug** keystore
+> (`signingConfig = signingConfigs.debug`, annotated "Signing with the debug
+> keys for now"). A production keystore and a `release` signing config are
+> required. *Source: mobile/android/app/build.gradle:L36-L37.*
+
+> 🚧 **Placeholder PWA manifest.** `mobile/web/manifest.json` carries scaffold
+> values — `name: "pantry_chef"` and `description: "A new Flutter project."` —
+> that should be reviewed for production (name, description, theme color,
+> icons). *Source: mobile/web/manifest.json:L2, L8.*
+
+> 🚧 **No mobile CD pipeline.** There is no Fastlane, Codemagic, or Bitrise
+> integration to build, sign, and publish the app to the App Store and Play
+> Store.
+
+
+## Summary Table — Gap to Module Mapping
+
+The table below maps each code-level gap surfaced in this central checklist to
+the module README that documents it and the inline annotation that flags it at
+the source — the end-to-end traceability for the engagement. These annotations
+and READMEs are in place across every in-scope module. A developer reading a
+single module can then find its local context; an operator scanning for blockers
+reads this document.
+
+| Gap | Module README | Inline Annotation |
+|-----|---------------|-------------------|
+| Recipe `_id` matching only / no unit normalization / no quantity check | [backend/src/recipe/README.md](backend/src/recipe/README.md) | `// TODO(prod):` block comment above `matches()` in `recipe.repository.ts` |
+| AI MIME filter commented out | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.controller.ts` |
+| AI endpoint no JWT guard | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` above `AiController` class |
+| AI small ingredient dictionary | [backend/src/ai/README.md](backend/src/ai/README.md) | `// TODO(prod):` at `ai.service.ts` |
+| AI last-match / null-filter resolution defect | [backend/src/ai/README.md](backend/src/ai/README.md) | `// FIXME:` at `ai.service.ts:L130` (loop does not break) and `:L149` (null filter) |
+| Pantry destructive `softDelete` | [backend/src/pantry/README.md](backend/src/pantry/README.md) | `// FIXME:` + `// TODO(prod):` at `pantryIngridient.repository.ts` |
+| Auth password reset unwired | [backend/src/auth/README.md](backend/src/auth/README.md) | (No inline — a missing endpoint cannot be flagged in code) |
+| Seed runner destructive | [backend/src/database/README.md](backend/src/database/README.md) | `// TODO(prod):` at each seed service `run()` method |
+| Preserved spelling variants | [backend/src/ingridient/README.md](backend/src/ingridient/README.md), [backend/src/pantry/README.md](backend/src/pantry/README.md), [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` at first occurrence in each affected file |
+| `Recipe.copyWith` no-op on `inFavorite` | [mobile/lib/features/recipe/README.md](mobile/lib/features/recipe/README.md) | `// NOTE:` + `// FIXME:` at `recipe.dart:L83-L108` |
+| Destructive users `softDelete` (`deleteOne`) | [backend/src/users/README.md](backend/src/users/README.md) | Prose only in users folder per AAP §0.8.1 (no inline `// FIXME:`) |
+| Plaintext-password update path on `PATCH /users` | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose; flagged under Security Hardening above |
+| `findManyWithPagination` ignores `filterOptions` | [backend/src/users/README.md](backend/src/users/README.md) | JSDoc note on the repository method |
+| Unbounded `favoriteRecipes[]` / `recentSearches[]` | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose (schema fields exempt from inline JSDoc) |
+| No email-verification flow | [backend/src/users/README.md](backend/src/users/README.md) | Documented in prose; flagged under Security Hardening above |
+| Hardcoded ingredient reference data (`/creation-data`) | [backend/src/ingridient/README.md](backend/src/ingridient/README.md) | Documented in prose; JSDoc note on the controller method |
+| `Reference.id` string-vs-integer mismatch | [backend/src/ingridient/README.md](backend/src/ingridient/README.md) | Documented in prose; see [DATA_MODEL.md](DATA_MODEL.md) § Reference Type |
+
+> **Note on preserved spellings.** The identifiers `Ingridient`,
+> `InstractionItem`, and the `singup` route are intentional, stable contracts
+> across the codebase (spelling preserved verbatim). They are documented, never
+> "corrected," in keeping with the minimal-change clause.
