@@ -52,7 +52,7 @@ export class PreferencesDto {
 }
 
 /**
- * Validation contract for `POST /api/v1/users`.
+ * Validation contract for `POST /api/users`.
  *
  * Handled by `UsersController.create` → `UsersService.create`. The `password`
  * field carries the plaintext password; `UsersService.create` hashes it via

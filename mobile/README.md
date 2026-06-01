@@ -25,7 +25,7 @@ The PantryChef mobile client is a Flutter app delivering pantry management and r
 
 ## Architecture Fit
 
-The client follows **clean architecture per feature**: each feature splits into `domain/` (contracts, use cases, entities), `data/` (Dio clients, DTOs, repository implementations), and `presentation/` (BLoC, screens, widgets). The shared `lib/core/` layer supplies the cross-cutting infrastructure every feature uses — `dio_client.dart` for authenticated HTTP, `service_locator.dart` for GetIt, `shared_preferences_helper.dart` for JWT persistence, and `navigation.dart` for routes. On a `401`, `DioClient` refreshes via `POST /api/v1/auth/refresh` and retries. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full request path.
+The client follows **clean architecture per feature**: each feature splits into `domain/` (contracts, use cases, entities), `data/` (Dio clients, DTOs, repository implementations), and `presentation/` (BLoC, screens, widgets). The shared `lib/core/` layer supplies the cross-cutting infrastructure every feature uses — `dio_client.dart` for authenticated HTTP, `service_locator.dart` for GetIt, `shared_preferences_helper.dart` for JWT persistence, and `navigation.dart` for routes. On a `401`, `DioClient` refreshes via `POST /api/auth/refresh` and retries. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full request path.
 
 ## Dependencies
 
@@ -85,32 +85,32 @@ Dev dependencies from `mobile/pubspec.yaml:L58-L76`:
 - **App bootstrap** — `main()` runs async steps in `runZonedGuarded`: bind engine → preserve splash → build `HydratedBloc.storage` → lock portrait → `setupLocator()` → `runApp` (Source: `mobile/lib/main.dart:L23-L32`).
 - **Authentication** — sign up via `Navigation.singup` (spelling preserved verbatim), log in, persist JWT access + refresh tokens, auto-refresh on `401`.
 - **Pantry management** — add items manually or via camera, edit, and browse a hydrated list of `PantryIngridient` records (spelling preserved verbatim).
-- **Recipe browsing and matching** — list and filter recipes, request matches via `GET /api/v1/recipe/matches`, view detail using `InstractionItem` from `instraction_item.dart` (spelling preserved verbatim), toggle favorite (see [`lib/features/recipe/README.md`](lib/features/recipe/README.md)).
+- **Recipe browsing and matching** — list and filter recipes, request matches via `GET /api/recipe/matches`, view detail using `InstractionItem` from `instraction_item.dart` (spelling preserved verbatim), toggle favorite (see [`lib/features/recipe/README.md`](lib/features/recipe/README.md)).
 - **AI ingredient capture** — photograph an item, upload to `POST /api/ai/vision`, confirm the label-detection result, persist.
-- **Profile** — edit preferences, allergies, disliked ingredients, cooking time; sync favorites; log out via `POST /api/v1/auth/logout` (see [`lib/features/profile/README.md`](lib/features/profile/README.md)).
+- **Profile** — edit preferences, allergies, disliked ingredients, cooking time; sync favorites; log out via `POST /api/auth/logout` (see [`lib/features/profile/README.md`](lib/features/profile/README.md)).
 
 ## API / Endpoint Reference
 
-This mobile-side reference lists the **backend endpoints consumed** by the client. Versioned feature controllers declare `version: '1'`, so under the global `/api` prefix they resolve at `/api/v1/<feature>/*`; the unversioned `AiController` (`@Controller('ai')`) resolves at `/api/ai/vision`.
+This mobile-side reference lists the **backend endpoints consumed** by the client. Feature controllers declare `version: '1'`, but that argument is **inert at runtime** because the backend's `main.ts` never calls `app.enableVersioning()`, so under the global `/api` prefix they resolve at `/api/<feature>/*` with **no** `/v1/` segment; the unversioned `AiController` (`@Controller('ai')`) resolves at `/api/ai/vision`. The mobile `Endpoints` constants match this — they build URLs like `$apiBaseUrl/auth/email/login` with no `/v1/` (Source: `mobile/lib/core/constants/endpoints.dart`).
 
 | Method | Path | Consumed By |
 | --- | --- | --- |
-| `POST` | `/api/v1/auth/email/login` | `lib/features/authentication/` |
-| `POST` | `/api/v1/auth/email/register` | `lib/features/authentication/` |
-| `GET` | `/api/v1/auth/me` | `lib/features/authentication/`, `lib/features/profile/` |
-| `POST` | `/api/v1/auth/refresh` | `lib/core/utils/dio_client.dart` (interceptor on 401) |
-| `POST` | `/api/v1/auth/logout` | `lib/features/authentication/`, `lib/features/profile/` |
-| `PATCH` | `/api/v1/users` | `lib/features/profile/` (`ProfileApi.updateProfile`) |
-| `GET` | `/api/v1/recipe` | `lib/features/recipe/` |
-| `GET` | `/api/v1/recipe/matches` | `lib/features/recipe/` (pantry-aware matching) |
-| `GET` | `/api/v1/recipe/:id` | `lib/features/recipe/` |
-| `GET` | `/api/v1/pantry` | `lib/features/pantry/` |
-| `POST` | `/api/v1/pantry` | `lib/features/pantry/` |
-| `PATCH` | `/api/v1/pantry/:id` | `lib/features/pantry/` |
-| `DELETE` | `/api/v1/pantry/:id` | `lib/features/pantry/` |
-| `GET` | `/api/v1/ingredient/creation-data` | `lib/features/ingredient/` (categories + units reference data) |
-| `GET` | `/api/v1/ingredient` | `lib/features/ingredient/` |
-| `POST` | `/api/v1/ingredient` | `lib/features/ingredient/` |
+| `POST` | `/api/auth/email/login` | `lib/features/authentication/` |
+| `POST` | `/api/auth/email/register` | `lib/features/authentication/` |
+| `GET` | `/api/auth/me` | `lib/features/authentication/`, `lib/features/profile/` |
+| `POST` | `/api/auth/refresh` | `lib/core/utils/dio_client.dart` (interceptor on 401) |
+| `POST` | `/api/auth/logout` | `lib/features/authentication/`, `lib/features/profile/` |
+| `PATCH` | `/api/users` | `lib/features/profile/` (`ProfileApi.updateProfile`) |
+| `GET` | `/api/recipe` | `lib/features/recipe/` |
+| `GET` | `/api/recipe/matches` | `lib/features/recipe/` (pantry-aware matching) |
+| `GET` | `/api/recipe/:id` | `lib/features/recipe/` |
+| `GET` | `/api/pantry` | `lib/features/pantry/` |
+| `POST` | `/api/pantry` | `lib/features/pantry/` |
+| `PATCH` | `/api/pantry/:id` | `lib/features/pantry/` |
+| `DELETE` | `/api/pantry/:id` | `lib/features/pantry/` |
+| `GET` | `/api/ingredient/creation-data` | `lib/features/ingredient/` (categories + units reference data) |
+| `GET` | `/api/ingredient` | `lib/features/ingredient/` |
+| `POST` | `/api/ingredient` | `lib/features/ingredient/` |
 | `POST` | `/api/ai/vision` | `lib/features/ingredient/` (multipart image upload; **endpoint is unguarded** — see Known Limitations) |
 
 ## Data Flows
@@ -190,7 +190,7 @@ flutter gen-l10n
 
 > ⚠️ **API base URL default is a LAN IP** — `EnvConfig.apiBaseUrl` defaults to `http://192.168.2.20:3000/api` (Source: `mobile/lib/env_config.dart:L11`), unreachable off the developer's network. Production builds MUST override it via `--dart-define=API_BASE_URL=...`.
 
-> ⚠️ **API versioning** — versioned feature controllers declare `version: '1'`, so their routes resolve under `/api/v1/<feature>` (e.g. `/api/v1/recipe/matches`); the unversioned `AiController` (`@Controller('ai')`) resolves under `/api/ai`.
+> ⚠️ **API versioning is inert** — feature controllers declare `version: '1'`, but the backend never calls `app.enableVersioning()`, so the version argument is a no-op. Their routes resolve under `/api/<feature>` (e.g. `/api/recipe/matches`, not `/api/v1/recipe/matches`); the unversioned `AiController` (`@Controller('ai')`) resolves under `/api/ai`. Requests to any `/api/v1/*` path return 404.
 
 > ⚠️ **Preserved spelling variants** — stable identifiers that must NOT be corrected: `singup` (route — `navigation.dart:L28`), `InstractionItem` (`instraction_item.dart:L13`), and `ingridientList` (`Recipe` field — `recipe.dart:L34`).
 

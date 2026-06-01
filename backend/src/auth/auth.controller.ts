@@ -21,7 +21,7 @@ import { NullableType } from '../utils/types/nullable.type';
 import { User } from 'src/users/domain/user';
 
 /**
- * Controller routing /api/v1/auth/* requests to AuthService.
+ * Controller routing /api/auth/* requests to AuthService.
  *
  * The controller exposes seven routes. Five are guarded by AuthGuard('jwt')
  * or AuthGuard('jwt-refresh') (GET /me, POST /refresh, POST /logout,
@@ -43,7 +43,7 @@ export class AuthController {
   constructor(private readonly service: AuthService) {}
 
   /**
-   * POST /api/v1/auth/email/login — email + password login.
+   * POST /api/auth/email/login — email + password login.
    *
    * Unguarded endpoint; declares no @UseGuards. Returns the access + refresh
    * token pair plus a token expiry timestamp. The authenticated user payload
@@ -62,7 +62,7 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/email/register — email + password registration.
+   * POST /api/auth/email/register — email + password registration.
    *
    * Unguarded endpoint; declares no @UseGuards. Creates a new user via
    * UsersService and issues an initial access + refresh token pair.
@@ -80,7 +80,7 @@ export class AuthController {
   }
 
   /**
-   * GET /api/v1/auth/me — return the currently authenticated user.
+   * GET /api/auth/me — return the currently authenticated user.
    *
    * Requires a valid access token via AuthGuard('jwt'). The JWT payload's
    * `id` is used to fetch the latest user record from UsersService.
@@ -97,7 +97,7 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/refresh — re-issue access + refresh tokens.
+   * POST /api/auth/refresh — re-issue access + refresh tokens.
    *
    * Requires a valid refresh token via AuthGuard('jwt-refresh'). The refresh
    * token must carry a `sessionId` claim and the corresponding session must
@@ -119,7 +119,7 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/logout — invalidate the current session.
+   * POST /api/auth/logout — invalidate the current session.
    *
    * Requires a valid access token via AuthGuard('jwt'). Soft-deletes the
    * session identified by `request.user.sessionId`, preventing subsequent
@@ -139,7 +139,7 @@ export class AuthController {
   }
 
   /**
-   * PATCH /api/v1/auth/me — update the authenticated user's profile.
+   * PATCH /api/auth/me — update the authenticated user's profile.
    *
    * Requires a valid access token via AuthGuard('jwt'). If `password` is
    * being changed, `oldPassword` must also be supplied and must match the
@@ -163,7 +163,7 @@ export class AuthController {
   }
 
   /**
-   * DELETE /api/v1/auth/me — delete the authenticated user account.
+   * DELETE /api/auth/me — delete the authenticated user account.
    *
    * Requires a valid access token via AuthGuard('jwt'). Delegates to
    * UsersService.softDelete which, despite its name, calls deleteOne and

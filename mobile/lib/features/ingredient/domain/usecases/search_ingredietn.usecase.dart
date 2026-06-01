@@ -19,7 +19,7 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 /// Every call constructs a fresh [IngredientRepositoryImpl] (no dependency
 /// injection, no caching) and delegates to
 /// [IngredientRepository.searchIngredient], which targets the backend
-/// ingredient collection route `GET /api/v1/ingredient` (the
+/// ingredient collection route `GET /api/ingredient` (the
 /// `Endpoints.ingredient` constant) with [SearchDto] fields sent as Dio
 /// query parameters.
 class SearchIngredientUsecase implements UseCaseWithParams<List<Ingredient>, SearchDto> {

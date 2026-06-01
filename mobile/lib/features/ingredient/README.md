@@ -2,7 +2,7 @@
 
 ## Module Purpose
 
-The ingredient feature is the mobile module for ingredient discovery, manual creation, and AI-assisted recognition. It owns the full flow: camera capture, upload to the backend AI vision endpoint, Google Cloud Vision label detection, ingredient resolution against the backend's MongoDB `Ingridient` (spelling preserved verbatim from the backend schema) collection, user confirmation, and persistence as a pantry entry. The module follows mobile clean architecture (domain/data/presentation) and integrates with two backend modules: the `IngridientController` (spelling preserved verbatim) at `/api/v1/ingredient/*` and the `AiController` at `/api/ai/vision`. The mobile-vs-backend spelling divergence is intentional and is detailed in §9.
+The ingredient feature is the mobile module for ingredient discovery, manual creation, and AI-assisted recognition. It owns the full flow: camera capture, upload to the backend AI vision endpoint, Google Cloud Vision label detection, ingredient resolution against the backend's MongoDB `Ingridient` (spelling preserved verbatim from the backend schema) collection, user confirmation, and persistence as a pantry entry. The module follows mobile clean architecture (domain/data/presentation) and integrates with two backend modules: the `IngridientController` (spelling preserved verbatim) at `/api/ingredient/*` and the `AiController` at `/api/ai/vision`. The mobile-vs-backend spelling divergence is intentional and is detailed in §9.
 
 ## Key Components
 
@@ -77,20 +77,20 @@ All versions verified against `mobile/pubspec.yaml`.
 - **Open camera, capture image** of a pantry item (Source: `ingredient_camera_detecting.dart:L43-L44`; `:L145-L146` emits `PictureTaken`).
 - **Upload to backend AI vision** (multipart, field `image`) via `IngredientApi.processImage` → `${Endpoints.ai}/vision` (Source: `data/api/ingredient.api.dart:L31-L41`).
 - **Receive ingredient suggestion** from Google Cloud Vision plus a server-side dictionary lookup (`IngridientService.findManyWithPagination`, spelling preserved verbatim); the client maps the resolved `Ingridient` JSON (or `{}`) via `Ingredient.fromJson`.
-- **Confirm + persist** (POST `/api/v1/ingredient` via `IngredientApi.createIngredient`; Source: `data/api/ingredient.api.dart:L26-L29`).
-- **Search existing ingredients** (paginated GET `/api/v1/ingredient` with `SearchDto`); the dialog fetches the next page within `CommonConstants.fetchScrollOffset=150` of the bottom (Source: `ingredient_search_dialog.dart:L29-L43`).
+- **Confirm + persist** (POST `/api/ingredient` via `IngredientApi.createIngredient`; Source: `data/api/ingredient.api.dart:L26-L29`).
+- **Search existing ingredients** (paginated GET `/api/ingredient` with `SearchDto`); the dialog fetches the next page within `CommonConstants.fetchScrollOffset=150` of the bottom (Source: `ingredient_search_dialog.dart:L29-L43`).
 - **Create ingredient manually** when AI detection fails — a fallback button routes to `Navigation.ingredientAdding` (Source: `ingredient_camera_detecting.dart:L83,L154`).
 
 ## API / Endpoint Reference
 
-> The feature consumes two backend controllers: `IngridientController` (spelling preserved verbatim) at `/api/v1/ingredient/*`, and `AiController` at `/api/ai/vision` — the latter declares `@Controller('ai')` with no `version` parameter, so it has no `/v1` segment (Source: `backend/src/ai/ai.controller.ts:L22`). See the backend's own [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md).
+> The feature consumes two backend controllers: `IngridientController` (spelling preserved verbatim) at `/api/ingredient/*`, and `AiController` at `/api/ai/vision` — the latter declares `@Controller('ai')` with no `version` parameter, so it has no `/v1` segment (Source: `backend/src/ai/ai.controller.ts:L22`). See the backend's own [`../../../../backend/src/ingridient/README.md`](../../../../backend/src/ingridient/README.md).
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| GET | `/api/v1/ingredient/creation-data` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Categories + units reference data. **Note:** lists are hardcoded in `IngridientController.getCreationData` (5 categories, 9 units) — see `backend/src/ingridient/ingridient.controller.ts:L62-L93`. |
-| GET | `/api/v1/ingredient` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Paginated ingredient list (`SearchDto` query params). Used by `SearchDialog` infinite scroll. |
-| GET | `/api/v1/ingredient/:id` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Fetch single ingredient by id. Not currently called from this feature but available on the contract. |
-| POST | `/api/v1/ingredient` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Create a new Ingridient (spelling preserved verbatim). Mobile sends `CreateIngredientDto` body. |
+| GET | `/api/ingredient/creation-data` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Categories + units reference data. **Note:** lists are hardcoded in `IngridientController.getCreationData` (5 categories, 9 units) — see `backend/src/ingridient/ingridient.controller.ts:L62-L93`. |
+| GET | `/api/ingredient` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Paginated ingredient list (`SearchDto` query params). Used by `SearchDialog` infinite scroll. |
+| GET | `/api/ingredient/:id` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Fetch single ingredient by id. Not currently called from this feature but available on the contract. |
+| POST | `/api/ingredient` | `@UseGuards(AuthGuard('jwt'))` (class-level) | Create a new Ingridient (spelling preserved verbatim). Mobile sends `CreateIngredientDto` body. |
 | POST | `/api/ai/vision` | **NONE — UNGUARDED** | Multipart image upload (form field `image`, ≤10MB) returning a resolved Ingridient or `{}`. See [`../../../../backend/src/ai/README.md`](../../../../backend/src/ai/README.md) for the upstream gap. |
 
 ## Data Flows
@@ -128,8 +128,8 @@ sequenceDiagram
 | Variable / Constant | Value | Source | Notes |
 | --- | --- | --- | --- |
 | `API_BASE_URL` (compile-time `--dart-define`) | default `http://192.168.2.20:3000/api` | `mobile/lib/env_config.dart:L11` | Developer LAN IP; override for production via `flutter run --dart-define=API_BASE_URL=https://…`. |
-| `Endpoints.ingredient` | `$apiBaseUrl/ingredient` | `mobile/lib/core/constants/endpoints.dart:L80` | Routes to backend `/api/v1/ingredient`. |
-| `Endpoints.ingredientCreationData` | `$ingredient/creation-data` | `mobile/lib/core/constants/endpoints.dart:L85` | Routes to backend `/api/v1/ingredient/creation-data`. |
+| `Endpoints.ingredient` | `$apiBaseUrl/ingredient` | `mobile/lib/core/constants/endpoints.dart:L80` | Routes to backend `/api/ingredient`. |
+| `Endpoints.ingredientCreationData` | `$ingredient/creation-data` | `mobile/lib/core/constants/endpoints.dart:L85` | Routes to backend `/api/ingredient/creation-data`. |
 | `Endpoints.ai` | `$apiBaseUrl/ai` | `mobile/lib/core/constants/endpoints.dart:L99` | Mobile appends `/vision` for the upload (Source: `data/api/ingredient.api.dart:L35`). |
 | iOS camera permission | `NSCameraUsageDescription = "Application using camera for ingredient identification"` | `mobile/ios/Runner/Info.plist` | Required for camera access on iOS. |
 | Android camera permission | `<uses-permission android:name="android.permission.CAMERA" />` | `mobile/android/app/src/main/AndroidManifest.xml` | Required for camera access on Android. |

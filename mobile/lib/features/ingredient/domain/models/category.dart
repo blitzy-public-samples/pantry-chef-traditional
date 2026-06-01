@@ -4,7 +4,7 @@ part 'category.g.dart';
 
 /// Lightweight reference data model representing an ingredient category.
 ///
-/// Categories are server-defined constants fetched via `GET /api/v1/ingredient/creation-data`.
+/// Categories are server-defined constants fetched via `GET /api/ingredient/creation-data`.
 /// Currently 5 categories are hardcoded server-side: `spice`, `vegetable`, `fruit`, `dairy`,
 /// `protein` (see `backend/src/ingridient/ingridient.controller.ts:L42-L72`, where the backend
 /// uses the verbatim-preserved spelling `Ingridient` — spelling preserved verbatim from the

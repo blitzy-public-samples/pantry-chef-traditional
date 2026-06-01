@@ -76,15 +76,15 @@ Dev-time only: `json_serializable: ^6.7.1` (Source: `mobile/pubspec.yaml:L62`) g
 
 ## API / Endpoint Reference
 
-All URLs are built from `Endpoints.apiBaseUrl` (default `http://192.168.2.20:3000/api`). `AuthController` declares `@Controller({ path: 'auth', version: '1' })` (Source: `backend/src/auth/auth.controller.ts:L40`), so under the global `api` prefix (Source: `backend/src/main.ts:L14-L19`) the effective paths are `/api/v1/auth/<route>`.
+All URLs are built from `Endpoints.apiBaseUrl` (default `http://192.168.2.20:3000/api`). `AuthController` declares `@Controller({ path: 'auth', version: '1' })` (Source: `backend/src/auth/auth.controller.ts:L40`), but the `version: '1'` argument is **inert at runtime** because `main.ts` never calls `app.enableVersioning()` (Source: `backend/src/main.ts:L10-L35`), so under the global `api` prefix the effective paths are `/api/auth/<route>` with no `/v1/` segment (a request to `/api/v1/auth/<route>` returns 404).
 
 | Method | Path | Guard | Consumed By This Feature | Description |
 |--------|------|-------|--------------------------|-------------|
-| `POST` | `/api/v1/auth/email/login` | none | ✅ Direct (`AuthenticationApi.login`) | Email + password login; returns `{ token, refreshToken }`. URL: `mobile/lib/core/constants/endpoints.dart:L46`. |
-| `POST` | `/api/v1/auth/email/register` | none | ✅ Direct (`AuthenticationApi.signup`) | Email + password registration; returns `{ token, refreshToken }`. URL: `mobile/lib/core/constants/endpoints.dart:L52`. |
-| `POST` | `/api/v1/auth/refresh` | `AuthGuard('jwt-refresh')` | 🔄 Cross-cutting (`DioClient._refreshToken` on 401/419) | Issues a fresh access + refresh token pair. URL: `mobile/lib/core/constants/endpoints.dart:L41`. |
-| `GET` | `/api/v1/auth/me` | `AuthGuard('jwt')` | ❌ Profile feature | Current-user profile. URL: `mobile/lib/core/constants/endpoints.dart:L60`. |
-| `POST` | `/api/v1/auth/logout` | `AuthGuard('jwt-refresh')` | ❌ Profile feature | Server-side session invalidation. URL: `mobile/lib/core/constants/endpoints.dart:L56`. |
+| `POST` | `/api/auth/email/login` | none | ✅ Direct (`AuthenticationApi.login`) | Email + password login; returns `{ token, refreshToken }`. URL: `mobile/lib/core/constants/endpoints.dart:L46`. |
+| `POST` | `/api/auth/email/register` | none | ✅ Direct (`AuthenticationApi.signup`) | Email + password registration; returns `{ token, refreshToken }`. URL: `mobile/lib/core/constants/endpoints.dart:L52`. |
+| `POST` | `/api/auth/refresh` | `AuthGuard('jwt-refresh')` | 🔄 Cross-cutting (`DioClient._refreshToken` on 401/419) | Issues a fresh access + refresh token pair. URL: `mobile/lib/core/constants/endpoints.dart:L41`. |
+| `GET` | `/api/auth/me` | `AuthGuard('jwt')` | ❌ Profile feature | Current-user profile. URL: `mobile/lib/core/constants/endpoints.dart:L60`. |
+| `POST` | `/api/auth/logout` | `AuthGuard('jwt-refresh')` | ❌ Profile feature | Server-side session invalidation. URL: `mobile/lib/core/constants/endpoints.dart:L56`. |
 
 ## Data Flows
 
@@ -105,7 +105,7 @@ sequenceDiagram
     Bloc->>UC: call(AuthDto)
     UC->>Repo: login(AuthDto)
     Repo->>Dio: dio.post(Endpoints.login)
-    Dio->>API: POST /api/v1/auth/email/login
+    Dio->>API: POST /api/auth/email/login
     API-->>Dio: { token, refreshToken }
     Dio-->>Repo: Response
     Repo-->>UC: AuthResponse
@@ -140,4 +140,4 @@ If a later request returns 401 or the custom `tokenExpired` (419), the `DioClien
 
 > 🚧 **Refresh token TTL is `3650d` (~10 years)** per backend defaults (`backend/env_example:L23`, `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d`) — far too long for production. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Secrets Management.
 
-> 🚧 **No rate limiting on the auth endpoints** — `POST /api/v1/auth/email/login` and `/api/v1/auth/email/register` are unprotected against brute force; the backend should add `@nestjs/throttler`. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Security Hardening.
+> 🚧 **No rate limiting on the auth endpoints** — `POST /api/auth/email/login` and `/api/auth/email/register` are unprotected against brute force; the backend should add `@nestjs/throttler`. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Security Hardening.

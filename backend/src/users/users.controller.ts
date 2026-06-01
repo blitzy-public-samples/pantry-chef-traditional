@@ -24,7 +24,7 @@ import { User } from './domain/user';
 import { UsersService } from './users.service';
 
 /**
- * Controller routing `/api/v1/users/*` requests to {@link UsersService}.
+ * Controller routing `/api/users/*` requests to {@link UsersService}.
  *
  * All endpoints are protected by `AuthGuard('jwt')` applied at the class
  * level, so `request.user` (populated by `JwtStrategy`) is available in
@@ -46,7 +46,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   /**
-   * `POST /api/v1/users` — Create a new user record.
+   * `POST /api/users` — Create a new user record.
    *
    * Delegates to {@link UsersService.create}, which hashes the password
    * via bcryptjs before persisting and rejects duplicate emails with a
@@ -63,7 +63,7 @@ export class UsersController {
   }
 
   /**
-   * `GET /api/v1/users` — Paginated list of users.
+   * `GET /api/users` — Paginated list of users.
    *
    * Page and limit default to `1` and `10` respectively when omitted.
    * `limit` is capped at `50` per the project's pagination convention.
@@ -99,7 +99,7 @@ export class UsersController {
   }
 
   /**
-   * `GET /api/v1/users/me` — Fetch the authenticated user's profile.
+   * `GET /api/users/me` — Fetch the authenticated user's profile.
    *
    * Reads `request.user.id` populated by `JwtStrategy` and delegates to
    * {@link UsersService.findOne}. Returns `null` if the user no longer
@@ -116,7 +116,7 @@ export class UsersController {
   }
 
   /**
-   * `PATCH /api/v1/users` — Partially update the authenticated user.
+   * `PATCH /api/users` — Partially update the authenticated user.
    *
    * Uses `request.user.id` as the target id; the body is an
    * {@link UpdateUserDto} (a `PartialType(CreateUserDto)`). Note that
@@ -139,7 +139,7 @@ export class UsersController {
   }
 
   /**
-   * `DELETE /api/v1/users/:id` — "Soft"-delete a user by id.
+   * `DELETE /api/users/:id` — "Soft"-delete a user by id.
    *
    * Per README § Known Limitations, the underlying repository
    * implementation ({@link UsersDocumentRepository.softDelete}) currently

@@ -4,7 +4,7 @@
 
 ## Module Purpose
 
-The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0`; its package identity is `blitzy-backend` `0.0.1`, marked `private` and `UNLICENSED` (Source: `backend/package.json:L2-L7,L26`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — plus a global `ConfigModule` and an async `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). Most controllers declare `version: '1'` in their `@Controller` decorator, so under the global `/api` prefix their routes resolve at `/api/v1/<feature>/*` (for example `/api/v1/auth/*`); the unversioned `AiController` (`@Controller('ai')`) resolves at `/api/ai/*`. Swagger is served at `/docs` (Source: `backend/src/main.ts:L14-L31`).
+The backend is the HTTP API server for **PantryChef**, built with NestJS `^10.0.0`; its package identity is `blitzy-backend` `0.0.1`, marked `private` and `UNLICENSED` (Source: `backend/package.json:L2-L7,L26`). The root `AppModule` composes seven feature modules — auth, session, users, ingridient (spelling preserved verbatim throughout the backend codebase), pantry, recipe, and ai — plus a global `ConfigModule` and an async `MongooseModule` (Source: `backend/src/app.module.ts:L18-L35`). Most controllers declare `version: '1'` in their `@Controller` decorator, but this is **inert at runtime** because `main.ts` never calls `app.enableVersioning()` (Source: `backend/src/main.ts:L10-L35`); under the global `/api` prefix their routes therefore resolve at `/api/<feature>/*` with **no** version segment (for example `/api/auth/*`). The unversioned `AiController` (`@Controller('ai')`) likewise resolves at `/api/ai/*`. Swagger is served at `/docs` (Source: `backend/src/main.ts:L14-L31`).
 
 ## Key Components
 
@@ -110,7 +110,7 @@ Key dev dependencies from `backend/package.json:L46-L75`:
 - **NestJS bootstrap** — `bootstrap()` initializes the app, applies global validation, and starts the listener (Source: `backend/src/main.ts:L10-L35`).
 - **Modular composition** — `AppModule` aggregates the seven feature modules via DI (Source: `backend/src/app.module.ts:L28-L34`).
 - **OpenAPI/Swagger surface** — Swagger UI at `/docs` (Source: `backend/src/main.ts:L23-L31`).
-- **Global prefix** — `setGlobalPrefix('api', { exclude: ['/'] })`. Most feature controllers declare `version: '1'`, so their routes resolve under `/api/v1/<feature>`; the unversioned `AiController` resolves under `/api/ai` — see the API Reference note (Source: `backend/src/main.ts:L14-L19`).
+- **Global prefix** — `setGlobalPrefix('api', { exclude: ['/'] })`. Most feature controllers declare `version: '1'`, but the version is **inert** because `main.ts` does not call `app.enableVersioning()`, so their routes resolve under `/api/<feature>` (no version segment); the unversioned `AiController` resolves under `/api/ai` — see the API Reference note (Source: `backend/src/main.ts:L14-L19`).
 - **Containerized dev stack** — `docker-compose up` runs MongoDB + NestJS with bind-mounted source (Source: `backend/docker-compose.yml:L1-L30`).
 - **Seed runner** — `npm run seed:run:document` seeds User → Ingridient → Recipe → Pantry (Source: `backend/package.json:L16`).
 
@@ -123,10 +123,12 @@ Only root-level and cross-cutting endpoints are listed here; per-feature endpoin
 | `GET` | `/` | None | Returns the literal `'Hello World!'` from `AppService.getHello()` — boilerplate, retained as-is (Source: `backend/src/app.controller.ts:L8-L11`) |
 | `GET` | `/docs` | None | Swagger UI mounted by `SwaggerModule.setup('docs', app, document)` (Source: `backend/src/main.ts:L31`) |
 | `GET` | `/docs-json` | None | OpenAPI JSON spec (Nest Swagger default) |
-| (feature routes) | `/api/v1/<feature>/*` | varies | auth, users, pantry, ingridient, recipe controllers declare `version: '1'`, so routes resolve under `/api/v1/<feature>`; see `src/<feature>/README.md` |
+| (feature routes) | `/api/<feature>/*` | varies | auth, users, pantry, ingridient, recipe controllers declare `version: '1'`, but the version is inert (no `enableVersioning()`), so routes resolve under `/api/<feature>` with no version segment; see `src/<feature>/README.md` |
 | ai | `/api/ai/vision` | None | `AiController` declares no `version`; route is `/api/ai/vision`; see `src/ai/README.md` |
 
-**Note:** the global prefix is `/api` (default `API_PREFIX`). Versioned feature controllers set `version: '1'` (e.g. `@Controller({ path: 'auth', version: '1' })`), so e.g. auth resolves at `/api/v1/auth/*`; the unversioned `@Controller('ai')` resolves at `POST /api/ai/vision`.
+**Note:** the global prefix is `/api` (default `API_PREFIX`). Feature controllers set `version: '1'` (e.g. `@Controller({ path: 'auth', version: '1' })`), but this has **no runtime effect** because `main.ts` does not call `app.enableVersioning()` — so auth resolves at `/api/auth/*` (not `/api/v1/auth/*`), and the unversioned `@Controller('ai')` resolves at `POST /api/ai/vision`.
+
+> ⚠️ **Route versioning is inert.** The `version: '1'` argument on the feature `@Controller(...)` decorators is currently a no-op: NestJS only honours controller versions when `app.enableVersioning()` is called, and `main.ts` does not call it (Source: `backend/src/main.ts:L10-L35`). All documented endpoint paths below therefore resolve under `/api/<feature>/*` with no `/v1/` segment; a request to `/api/v1/<feature>/*` returns 404. The repository's own e2e suite still targets `/api/v1/auth/*` and is consequently red — see [PRODUCTION_READINESS.md](../PRODUCTION_READINESS.md) § Testing.
 
 ## Data Flows
 
@@ -216,7 +218,7 @@ Scripts are defined in `backend/package.json:L8-L23`:
 
 > ⚠️ **Refresh token TTL ~10 years** — `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` far exceeds a sane production window (e.g. 30 days with rotation); see [`src/auth/README.md`](src/auth/README.md) (Source: `backend/env_example:L23`).
 
-> ⚠️ **Spelling preserved verbatim** — `backend/src/ingridient/` and identifiers like `IngridientModule`, `IngridientService`, `PantryIngridient`, and `IngridientList` keep their spelling verbatim across the backend; the URL path `/api/v1/ingredient` uses the conventional spelling. These are stable contracts and must not be "fixed".
+> ⚠️ **Spelling preserved verbatim** — `backend/src/ingridient/` and identifiers like `IngridientModule`, `IngridientService`, `PantryIngridient`, and `IngridientList` keep their spelling verbatim across the backend; the URL path `/api/ingredient` uses the conventional spelling. These are stable contracts and must not be "fixed".
 
 ## Production Readiness Status
 

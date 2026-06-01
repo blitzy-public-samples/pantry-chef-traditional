@@ -29,7 +29,7 @@ class IngredientApi {
   /// form.
   ///
   /// Sends a GET request to `Endpoints.ingredientCreationData`
-  /// (`/api/v1/ingredient/creation-data` on the backend). Returns the raw JSON
+  /// (`/api/ingredient/creation-data` on the backend). Returns the raw JSON
   /// map containing `categories` and `units` arrays; `IngredientRepositoryImpl`
   /// is responsible for mapping the result into an [IngredientAddData].
   Future<Map<String, dynamic>> getCategoriesAndUnits() async {
@@ -39,7 +39,7 @@ class IngredientApi {
 
   /// Performs a paginated ingredient search against the backend.
   ///
-  /// Sends a GET request to `Endpoints.ingredient` (`/api/v1/ingredient`) with
+  /// Sends a GET request to `Endpoints.ingredient` (`/api/ingredient`) with
   /// `dto.toJson()` as `queryParameters` (page, limit, search, order). Returns
   /// the inner `data` array from the paginated envelope (`response.data!['data']`).
   /// The caller is responsible for mapping each element to an `Ingredient`.
@@ -50,7 +50,7 @@ class IngredientApi {
 
   /// Creates a new ingredient by POSTing a serialized [CreateIngredientDto].
   ///
-  /// Sends a POST request to `Endpoints.ingredient` (`/api/v1/ingredient`) with
+  /// Sends a POST request to `Endpoints.ingredient` (`/api/ingredient`) with
   /// `dto.toJson()` as the body. Returns the raw JSON of the persisted record;
   /// the backend response field naming follows the `Ingridient` schema spelling
   /// preserved verbatim from the backend `IngridientSchemaClass`. The caller is

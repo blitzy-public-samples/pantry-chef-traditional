@@ -4,7 +4,7 @@ part 'unit.g.dart';
 
 /// Lightweight reference data model representing a unit of measurement.
 ///
-/// Units are server-defined constants fetched via `GET /api/v1/ingredient/creation-data`
+/// Units are server-defined constants fetched via `GET /api/ingredient/creation-data`
 /// alongside categories. Currently 9 units are hardcoded server-side: `kg`, `g`, `lb`, `oz`,
 /// `ml`, `l`, `cup`, `tbsp`, `tsp` (see `backend/src/ingridient/ingridient.controller.ts`).
 ///

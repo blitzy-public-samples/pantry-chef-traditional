@@ -3,7 +3,7 @@ import 'package:pantry_chef/features/ingredient/domain/models/ingredient.dart';
 
 part 'create_pantry_item.dto.g.dart';
 
-/// JSON-serializable request payload for `POST /api/v1/pantry`.
+/// JSON-serializable request payload for `POST /api/pantry`.
 ///
 /// Marked `@JsonSerializable()`; the generated `toJson` helper lives in
 /// `create_pantry_item.dto.g.dart`. The embedded [Ingredient] field uses a

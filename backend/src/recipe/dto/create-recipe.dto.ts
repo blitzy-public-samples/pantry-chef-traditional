@@ -77,7 +77,7 @@ export class InstructionDto {
 }
 
 /**
- * Validation contract for POST /api/v1/recipe.
+ * Validation contract for POST /api/recipe.
  *
  * Validates required fields and the embedded `ingridientList` array
  * (spelling preserved verbatim throughout the backend codebase). Nested

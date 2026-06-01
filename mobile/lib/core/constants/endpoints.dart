@@ -35,9 +35,12 @@ class Endpoints {
   ///
   /// Invoked by `DioClient._refreshDio` (in `mobile/lib/core/utils/dio_client.dart`)
   /// when the primary `dio` interceptor sees a 401 (`StatusCodes.unauthorized`) or
-  /// 419 (`StatusCodes.tokenExpired`) response. Targets the backend's versioned
-  /// auth route `/api/v1/auth/refresh` — the `auth` controller declares
-  /// `@Controller({ path: 'auth', version: '1' })` under the global `api` prefix.
+  /// 419 (`StatusCodes.tokenExpired`) response. Targets the backend's
+  /// auth route `/api/auth/refresh`. The `auth` controller declares
+  /// `@Controller({ path: 'auth', version: '1' })`, but that `version: '1'` is
+  /// inert at runtime because the backend never calls `app.enableVersioning()`,
+  /// so the effective path carries no `/v1/` segment — matching this constant's
+  /// value `$apiBaseUrl/auth/refresh`.
   /// See `../../../../ARCHITECTURE.md` § JWT Authentication Flow.
   static const String refreshToken = '$apiBaseUrl/auth/refresh';
   /// Email-login endpoint (HTTP POST).

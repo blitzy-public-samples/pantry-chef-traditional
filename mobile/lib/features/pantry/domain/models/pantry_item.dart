@@ -27,7 +27,7 @@ class PantryItem {
   ///
   /// Typed as [String] because Mongoose serializes `_id` to its hex-string
   /// representation. Used as the path parameter in `PATCH` and `DELETE`
-  /// requests against `/api/v1/pantry/:id`.
+  /// requests against `/api/pantry/:id`.
   final String id;
   /// The embedded ingredient — field name `ingridient` is preserved verbatim
   /// from the backend `PantryIngridient` schema. Do not rename.

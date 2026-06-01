@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'recipe_filters.dto.g.dart';
 
-/// DTO for the backend's `/api/v1/recipe/matches` endpoint filter set.
+/// DTO for the backend's `/api/recipe/matches` endpoint filter set.
 ///
 /// The backend's `FilterType` post-filter step reads exactly these two
 /// flags (see [ARCHITECTURE.md](../../../../../../ARCHITECTURE.md)

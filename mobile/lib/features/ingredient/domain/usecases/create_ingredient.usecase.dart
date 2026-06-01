@@ -38,7 +38,7 @@ class CreateIngredientUsecase implements UseCaseWithParams<Ingredient, CreateIng
   /// (see
   /// `mobile/lib/features/ingredient/domain/repositories/ingredient.repository.dart:L12`);
   /// do not rename. The concrete `IngredientRepositoryImpl` issues
-  /// `POST /api/v1/ingredient` via Dio.
+  /// `POST /api/ingredient` via Dio.
   @override
   Future<Ingredient> call(CreateIngredientDto dto) {
     IngredientRepository repo = IngredientRepositoryImpl();

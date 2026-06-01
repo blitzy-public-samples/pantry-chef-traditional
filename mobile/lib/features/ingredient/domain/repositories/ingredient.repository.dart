@@ -33,7 +33,7 @@ abstract class IngredientRepository {
   ///
   /// Returns a [Future] resolving to an [IngredientAddData] aggregate holding a
   /// `List<Category>` and a `List<Unit>`. The concrete implementation hits
-  /// `GET /api/v1/ingredient/creation-data` on the backend; the response payload
+  /// `GET /api/ingredient/creation-data` on the backend; the response payload
   /// is `{ categories: [...], units: [...] }` with both lists currently hardcoded
   /// server-side (5 categories and 9 units in `backend/src/ingridient/ingridient.controller.ts`,
   /// with the backend `Ingridient` spelling preserved verbatim).
@@ -44,7 +44,7 @@ abstract class IngredientRepository {
   /// The [dto] carries the substring query, pagination cursors (`page`, `limit`),
   /// and an optional `List<OrderDto>?` for sort order. Returns a [Future] resolving
   /// to a `List<Ingredient>` — an empty list when no matches are found. The concrete
-  /// implementation hits `GET /api/v1/ingredient` with [dto] serialized as query
+  /// implementation hits `GET /api/ingredient` with [dto] serialized as query
   /// parameters and maps each element of the raw `List<dynamic>` response through
   /// `Ingredient.fromJson`.
   Future<List<Ingredient>> searchIngredient(SearchDto dto);
@@ -62,7 +62,7 @@ abstract class IngredientRepository {
   /// `Mappers.categoryToJson`, `quantity`, `unit` via `Mappers.unitToJson`, optional
   /// `imageUrl`, optional `expirationDate`, `confidence` default `1`). Returns a
   /// [Future] resolving to the persisted [Ingredient] with the server-assigned `id`
-  /// and `createdAt`. The concrete implementation hits `POST /api/v1/ingredient`.
+  /// and `createdAt`. The concrete implementation hits `POST /api/ingredient`.
   Future<Ingredient> createingredient(CreateIngredientDto dto);
 
   /// Uploads a captured photo to the backend AI vision endpoint and returns the

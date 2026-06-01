@@ -91,16 +91,16 @@ None. `core/` is the foundational layer; feature modules depend on it, not the r
 | Constant | Value / Resolution | Purpose |
 |----------|--------------------|---------|
 | `Endpoints.apiBaseUrl` | `EnvConfig.apiBaseUrl` (compile-time `--dart-define`, default `http://192.168.2.20:3000/api`) | Root URL for all backend calls |
-| `Endpoints.refreshToken` | `/api/v1/auth/refresh` | Used by `_refreshDio` on 401/`tokenExpired` |
-| `Endpoints.login` | `/api/v1/auth/email/login` | Email login |
-| `Endpoints.signup` | `/api/v1/auth/email/register` | Email register |
-| `Endpoints.logout` | `/api/v1/auth/logout` | Logout |
-| `Endpoints.profile` | `/api/v1/auth/me` | Current user profile |
-| `Endpoints.updateProfile` | `/api/v1/users` | Update user profile |
-| `Endpoints.recipe` | `/api/v1/recipe` | Recipe module root |
-| `Endpoints.ingredient` | `/api/v1/ingredient` | Ingredient module root |
-| `Endpoints.ingredientCreationData` | `/api/v1/ingredient/creation-data` | Category/unit reference data |
-| `Endpoints.pantry` | `/api/v1/pantry` | Pantry module root |
+| `Endpoints.refreshToken` | `/api/auth/refresh` | Used by `_refreshDio` on 401/`tokenExpired` |
+| `Endpoints.login` | `/api/auth/email/login` | Email login |
+| `Endpoints.signup` | `/api/auth/email/register` | Email register |
+| `Endpoints.logout` | `/api/auth/logout` | Logout |
+| `Endpoints.profile` | `/api/auth/me` | Current user profile |
+| `Endpoints.updateProfile` | `/api/users` | Update user profile |
+| `Endpoints.recipe` | `/api/recipe` | Recipe module root |
+| `Endpoints.ingredient` | `/api/ingredient` | Ingredient module root |
+| `Endpoints.ingredientCreationData` | `/api/ingredient/creation-data` | Category/unit reference data |
+| `Endpoints.pantry` | `/api/pantry` | Pantry module root |
 | `Endpoints.ai` | `/api/ai` | AI vision module root |
 | `Endpoints.connectionTimeout` | `Duration(seconds: 30)` | Dio connect timeout |
 | `Endpoints.receiveTimeout` | `Duration(seconds: 15)` | Dio receive timeout |
@@ -132,7 +132,7 @@ All values resolve at compile time or from constants — `core/` has no runtime 
 |----------|---------|--------|-------|
 | `API_BASE_URL` (compile-time `--dart-define`) | `http://192.168.2.20:3000/api` | `mobile/lib/env_config.dart:L11` | Developer LAN IP; override for production |
 | `Endpoints.apiBaseUrl` | resolves from `EnvConfig.apiBaseUrl` | `mobile/lib/core/constants/endpoints.dart:L6` | Indirection layer |
-| `Endpoints.refreshToken` | `/api/v1/auth/refresh` | `mobile/lib/core/constants/endpoints.dart:L11` | Triggered on 401/419 |
+| `Endpoints.refreshToken` | `/api/auth/refresh` | `mobile/lib/core/constants/endpoints.dart:L11` | Triggered on 401/419 |
 | `Endpoints.connectionTimeout` | `Duration(seconds: 30)` | `mobile/lib/core/constants/endpoints.dart:L8` | Dio connect timeout |
 | `Endpoints.receiveTimeout` | `Duration(seconds: 15)` | `mobile/lib/core/constants/endpoints.dart:L7` | Dio receive timeout |
 | `StatusCodes.unauthorized` | `401` | `mobile/lib/core/constants/status_codes.dart:L9` | Standard HTTP 401 |
@@ -157,7 +157,7 @@ All values resolve at compile time or from constants — `core/` has no runtime 
 
 ## Production Readiness Status
 
-> 🚧 **Single-flight refresh** — add a token-lock semaphore to `DioClient` so concurrent `401` responses coalesce into a single `/api/v1/auth/refresh` call. Maps to [../../../PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § Security Hardening.
+> 🚧 **Single-flight refresh** — add a token-lock semaphore to `DioClient` so concurrent `401` responses coalesce into a single `/api/auth/refresh` call. Maps to [../../../PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § Security Hardening.
 
 > 🚧 **HydratedBloc storage location** — switch from `getTemporaryDirectory()` to `getApplicationSupportDirectory()` (also from `path_provider`) for release builds; update `mobile/lib/main.dart:L27-L29`. Maps to [../../../PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § Mobile Release.
 

@@ -12,7 +12,7 @@
  * - IngridientSchemaClass.category (spelling preserved verbatim)
  * - IngridientSchemaClass.unit
  * - Hardcoded creation-data arrays returned by
- *   GET /api/v1/ingredient/creation-data
+ *   GET /api/ingredient/creation-data
  *   (Source: backend/src/ingridient/ingridient.controller.ts:L52-L71)
  *
  * @example

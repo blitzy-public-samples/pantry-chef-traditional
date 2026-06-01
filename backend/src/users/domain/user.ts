@@ -9,9 +9,14 @@
  * `dislikedIngredients`, `cookingTime`).
  *
  * `password` is optional because the Mongoose schema applies
- * `@Exclude({ toPlainOnly: true })` on the password field — it is omitted from JSON
- * responses but IS populated when the document is hydrated from MongoDB (for example,
- * during the `bcrypt.compare` step in `AuthService.validateLogin`).
+ * `@Exclude({ toPlainOnly: true })` on the password field. NOTE: that decorator is
+ * DECLARED but NOT enforced at runtime — no `ClassSerializerInterceptor` is registered
+ * (neither `useGlobalInterceptors` in `main.ts` nor an `APP_INTERCEPTOR` provider in
+ * `app.module.ts`), so class-transformer never strips it. The bcrypt password hash is
+ * therefore returned in JSON responses today (e.g. `GET /api/auth/me`, `GET /api/users/me`).
+ * See `../../../../PRODUCTION_READINESS.md` § Security Hardening. The field IS populated
+ * when the document is hydrated from MongoDB (for example, during the `bcrypt.compare`
+ * step in `AuthService.validateLogin`).
  *
  * `id` is typed `number | string` for compatibility, but in practice
  * `UsersDocumentRepository` (via `UserMapper.toDomain`) always produces a string via

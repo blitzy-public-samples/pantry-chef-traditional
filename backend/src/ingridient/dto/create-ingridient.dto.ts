@@ -14,7 +14,7 @@ import {
 import { Reference } from 'src/common/types';
 
 /**
- * Validation contract for `POST /api/v1/ingredient` create requests.
+ * Validation contract for `POST /api/ingredient` create requests.
  *
  * Spelling 'Ingridient' preserved verbatim across the backend codebase
  * (the URL path uses correct 'ingredient' spelling).

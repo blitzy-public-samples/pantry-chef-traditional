@@ -112,9 +112,9 @@ Five concerns cut across every feature module.
 
 ### JWT Authentication Flow
 
-1. A client signs in by posting to `POST /api/v1/auth/email/login` with an
+1. A client signs in by posting to `POST /api/auth/email/login` with an
    `AuthEmailLoginDto` carrying email and password (Source: backend/src/auth/auth.controller.ts:L56-L62).
-   The mobile signup screen reaches the sibling `POST /api/v1/auth/email/register`
+   The mobile signup screen reaches the sibling `POST /api/auth/email/register`
    endpoint after navigating through the `Navigation.singup` route (spelling
    preserved verbatim — the route constant is intentionally misspelled and must
    not be renamed) (Source: backend/src/auth/auth.controller.ts:L74-L80).
@@ -128,13 +128,13 @@ Five concerns cut across every feature module.
    error interceptor delegates to a dedicated `_refreshDio` instance that carries
    no auth interceptor, so the refresh call itself cannot recurse
    (Source: mobile/lib/core/utils/dio_client.dart:L44-L51,L55-L69).
-5. `_refreshDio` posts the refresh token to `POST /api/v1/auth/refresh`, which is
+5. `_refreshDio` posts the refresh token to `POST /api/auth/refresh`, which is
    guarded by `AuthGuard('jwt-refresh')` — a `passport-jwt` strategy keyed on the
    separate `AUTH_REFRESH_SECRET`; on success it mints new access and refresh
    tokens, which the client persists before transparently retrying the original
    request (Source: backend/src/auth/auth.controller.ts:L111-L119; mobile/lib/core/utils/dio_client.dart:L71-L97).
 6. Session state lives in a dedicated `Session` collection so that
-   `POST /api/v1/auth/logout` can invalidate the refresh path by marking the
+   `POST /api/auth/logout` can invalidate the refresh path by marking the
    session's `deletedAt` (Source: backend/src/auth/auth.controller.ts:L131-L139).
 
 > ⚠️ The default `AUTH_REFRESH_TOKEN_EXPIRES_IN=3650d` (~10 years) shipped in
@@ -231,11 +231,16 @@ buffer to Google Cloud Vision (Source: backend/src/ai/ai.controller.ts:L65-L73).
 
 > ⚠️ The feature controllers declare a version
 > (`@Controller({ path: 'recipe', version: '1' })`, Source: backend/src/recipe/recipe.controller.ts:L31-L34),
-> so under the global `/api` prefix (Source: backend/src/main.ts:L10-L35) their
-> routes resolve at `/api/v1/<feature>/*` (for example `/api/v1/auth/refresh`),
-> matching the module READMEs. The unversioned `AiController` (`@Controller('ai')`)
-> resolves at `/api/ai/vision`. Operational hardening of the versioning strategy
-> is tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+> but that `version: '1'` argument is **inert at runtime**: NestJS only applies
+> controller versions when `app.enableVersioning()` is called, and `main.ts` never
+> calls it (Source: backend/src/main.ts:L10-L35). Under the global `/api` prefix the
+> routes therefore resolve at `/api/<feature>/*` with **no** `/v1/` segment (for
+> example `/api/auth/refresh`, not `/api/v1/auth/refresh`); a request to
+> `/api/v1/<feature>/*` returns 404. The unversioned `AiController`
+> (`@Controller('ai')`) resolves at `/api/ai/vision` like the others. Because the
+> version is a no-op, the repository's own e2e suite — which still targets
+> `/api/v1/auth/*` — is red. Enabling versioning (or aligning the e2e suite to
+> `/api/*`) is tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 ## Recipe Matching Pipeline
 

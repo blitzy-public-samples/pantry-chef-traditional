@@ -2,13 +2,13 @@
 
 ## Module Purpose
 
-The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/v1/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and deletion of the authenticated account (`DELETE /me` — physically destructive, see Known Limitations). Password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no endpoints consume them (see Known Limitations).
+The Auth module owns email-and-password authentication for PantryChef. `AuthController` exposes seven routes under `/api/auth/*` and delegates each one to `AuthService` (Source: backend/src/auth/auth.controller.ts). It issues and rotates JWT access and refresh token pairs through three Passport strategies — `jwt`, `jwt-refresh`, and `anonymous` — and supports current-user introspection (`GET /me`), profile update with old-password verification (`PATCH /me`), session-aware logout, and deletion of the authenticated account (`DELETE /me` — physically destructive, see Known Limitations). Password reset DTOs (`AuthForgotPasswordDto`, `AuthResetPasswordDto`) exist in `dto/` but no endpoints consume them (see Known Limitations).
 
 ## Key Components
 
 | Component | File | Responsibility |
 | --- | --- | --- |
-| `AuthController` | `auth.controller.ts` | 7 routes under `/api/v1/auth` (Source: auth.controller.ts) |
+| `AuthController` | `auth.controller.ts` | 7 routes under `/api/auth` (Source: auth.controller.ts) |
 | `AuthService` | `auth.service.ts` | Login validation, session creation, JWT issuance via JwtService, token re-issuance, profile update with `oldPassword` check, soft-delete delegation (Source: auth.service.ts) |
 | `AuthModule` | `auth.module.ts` | Composition root — imports UsersModule, SessionModule, PassportModule, JwtModule (Source: auth.module.ts) |
 | `JwtStrategy` | `strategies/jwt.strategy.ts` | Passport 'jwt' access-token strategy; secret from `configService.get('auth').secret` (Source: jwt.strategy.ts) |
@@ -72,15 +72,15 @@ Exact versions from `backend/package.json:L24-L75`:
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/email/login` | none (unguarded) | Email + password login (Source: auth.controller.ts) |
-| `POST` | `/api/v1/auth/email/register` | none (unguarded) | Email + password registration (Source: auth.controller.ts) |
-| `GET` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Get current authenticated user (Source: auth.controller.ts) |
-| `POST` | `/api/v1/auth/refresh` | `AuthGuard('jwt-refresh')` | Re-issue access + refresh tokens (Source: auth.controller.ts) |
-| `POST` | `/api/v1/auth/logout` | `AuthGuard('jwt')` | Invalidate the current session (Source: auth.controller.ts) |
-| `PATCH` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Update profile; `oldPassword` required for password change (Source: auth.controller.ts) |
-| `DELETE` | `/api/v1/auth/me` | `AuthGuard('jwt')` | Delete authenticated user account — **physically destructive** (`UsersService.softDelete` calls `deleteOne`); see [users README § Known Limitations](../users/README.md) (Source: auth.controller.ts:L165-L178) |
+| `POST` | `/api/auth/email/login` | none (unguarded) | Email + password login (Source: auth.controller.ts) |
+| `POST` | `/api/auth/email/register` | none (unguarded) | Email + password registration (Source: auth.controller.ts) |
+| `GET` | `/api/auth/me` | `AuthGuard('jwt')` | Get current authenticated user (Source: auth.controller.ts) |
+| `POST` | `/api/auth/refresh` | `AuthGuard('jwt-refresh')` | Re-issue access + refresh tokens (Source: auth.controller.ts) |
+| `POST` | `/api/auth/logout` | `AuthGuard('jwt')` | Invalidate the current session (Source: auth.controller.ts) |
+| `PATCH` | `/api/auth/me` | `AuthGuard('jwt')` | Update profile; `oldPassword` required for password change (Source: auth.controller.ts) |
+| `DELETE` | `/api/auth/me` | `AuthGuard('jwt')` | Delete authenticated user account — **physically destructive** (`UsersService.softDelete` calls `deleteOne`); see [users README § Known Limitations](../users/README.md) (Source: auth.controller.ts:L165-L178) |
 
-Routes derive from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts) plus the global `app.setGlobalPrefix('api')` in `backend/src/main.ts`, yielding `/api/v1/auth/<route>`. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object must be fetched separately via `GET /me`.
+Routes derive from `@Controller({ path: 'auth', version: '1' })` (Source: auth.controller.ts) plus the global `app.setGlobalPrefix('api')` in `backend/src/main.ts`, yielding `/api/auth/<route>`. Note the `version: '1'` argument is **inert at runtime**: NestJS only applies controller versions when `app.enableVersioning()` is called, and `main.ts` does not call it (Source: `backend/src/main.ts:L10-L35`), so the effective paths carry **no** `/v1/` segment — a request to `/api/v1/auth/<route>` returns 404. Login, register, and refresh return `Omit<LoginResponseType, 'user'>`, so the user object must be fetched separately via `GET /me`.
 
 ## Data Flows
 
@@ -132,6 +132,8 @@ The `authConfig` factory at `config/auth.config.ts` calls `validateConfig(proces
 
 ## Known Limitations and Implementation Gaps
 
+> ⚠️ **Route versioning is inert** — the controller declares `@Controller({ path: 'auth', version: '1' })`, but `main.ts` never calls `app.enableVersioning()` (Source: `backend/src/main.ts:L10-L35`), so the `version: '1'` argument has no runtime effect. The auth routes resolve at `/api/auth/*` (not `/api/v1/auth/*`); requests to `/api/v1/auth/*` return 404. The repository's own e2e suite still targets `/api/v1/auth/*` and is therefore red. See [PRODUCTION_READINESS.md](../../../PRODUCTION_READINESS.md) § Build & Runtime.
+
 > ⚠️ **Unwired password reset DTOs** — `dto/auth-forgot-password.dto.ts` exports `AuthForgotPasswordDto { email: string }` and `dto/auth-reset-password.dto.ts` exports `AuthResetPasswordDto { password: string; hash: string }`, but `auth.controller.ts` declares no `forgot-password` or `reset-password` endpoint. The corresponding `MailModule` import is commented at `auth.module.ts`.
 
 > ⚠️ **Refresh token TTL is `3650d` (~10 years)** — Source: `backend/env_example:L23`. This is unsafe for production: a stolen refresh token effectively grants permanent access until the session is explicitly soft-deleted via logout.
@@ -140,7 +142,7 @@ The `authConfig` factory at `config/auth.config.ts` calls `validateConfig(proces
 
 > ⚠️ **No rate limiting on `/email/login` or `/email/register`** — both endpoints are unauthenticated (no guard) and not protected by `@nestjs/throttler`, so brute-force protection is missing.
 
-> ⚠️ **`DELETE /api/v1/auth/me` is physically destructive, not a soft-delete.** Despite the method name, `UsersService.softDelete` calls `deleteOne` and permanently removes the user document — no `deletedAt` timestamp is set (Source: `backend/src/auth/auth.controller.ts:L165-L178`; `backend/src/users/infrastructure/document/repositories/user.repository.ts:L205-L206`). Existing `Session` documents are left untouched, so refresh tokens are not revoked. Mirrors the users module [README § Known Limitations](../users/README.md); tracked in [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md).
+> ⚠️ **`DELETE /api/auth/me` is physically destructive, not a soft-delete.** Despite the method name, `UsersService.softDelete` calls `deleteOne` and permanently removes the user document — no `deletedAt` timestamp is set (Source: `backend/src/auth/auth.controller.ts:L165-L178`; `backend/src/users/infrastructure/document/repositories/user.repository.ts:L205-L206`). Existing `Session` documents are left untouched, so refresh tokens are not revoked. Mirrors the users module [README § Known Limitations](../users/README.md); tracked in [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md).
 
 ## Production Readiness Status
 
@@ -148,7 +150,7 @@ See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) for t
 
 > 🚧 **Security Hardening** — add rate limiting on `/email/login`, `/email/register`, and `/refresh` via `@nestjs/throttler`. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Security Hardening.
 
-> 🚧 **Wire password reset endpoints** — implement `POST /api/v1/auth/forgot-password` (consumes `AuthForgotPasswordDto`) and `POST /api/v1/auth/reset-password` (consumes `AuthResetPasswordDto`). Uncomment `MailModule` at `auth.module.ts` and implement the email-delivery integration.
+> 🚧 **Wire password reset endpoints** — implement `POST /api/auth/forgot-password` (consumes `AuthForgotPasswordDto`) and `POST /api/auth/reset-password` (consumes `AuthResetPasswordDto`). Uncomment `MailModule` at `auth.module.ts` and implement the email-delivery integration.
 
 > 🚧 **Secrets Management** — rotate `AUTH_JWT_SECRET` and `AUTH_REFRESH_SECRET` to high-entropy values stored in a secrets manager (AWS Secrets Manager, HashiCorp Vault, Kubernetes Secrets). Reduce `AUTH_REFRESH_TOKEN_EXPIRES_IN` from `3650d` to a sensible window (e.g., `7d` – `30d`) with a documented rotation policy. See [`../../../PRODUCTION_READINESS.md`](../../../PRODUCTION_READINESS.md) § Secrets Management.
 

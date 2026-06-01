@@ -11,7 +11,7 @@ import 'package:pantry_chef/features/pantry/domain/repositories/pantry.repositor
 /// [UseCaseWithParams]<[PantryItem], [UpdatePantryItemDto]>. The single
 /// [UpdatePantryItemDto] parameter carries the pantry item's `id` in its
 /// body, so no separate id argument is required: the backend route is
-/// `PATCH /api/v1/pantry/:id` and the data layer reads the id from the DTO
+/// `PATCH /api/pantry/:id` and the data layer reads the id from the DTO
 /// to build that URL (Source: `update_pantry_item.dto.dart:L7`).
 ///
 /// Stateless and mirrors the sibling `AddToPantryUsecase`: it instantiates a

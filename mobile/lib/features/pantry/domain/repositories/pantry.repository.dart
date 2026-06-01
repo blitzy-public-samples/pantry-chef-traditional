@@ -29,7 +29,7 @@ abstract class PantryRepository {
   /// The backend resolves `userId` from the JWT bearer attached by
   /// `DioClient` and caps results at 50 records per page (pagination cap
   /// enforced server-side; the mobile client does not yet handle paging).
-  /// Maps to backend route `GET /api/v1/pantry`.
+  /// Maps to backend route `GET /api/pantry`.
   ///
   /// Throws `DioException` on network/HTTP errors (e.g., 401 Unauthorized
   /// when the access token is missing or expired).
@@ -42,7 +42,7 @@ abstract class PantryRepository {
   /// `expirationDate`. The backend assigns `id`, `createdAt`, and
   /// `updatedAt` server-side and returns the populated entity.
   ///
-  /// Maps to backend route `POST /api/v1/pantry`. Throws `DioException` on
+  /// Maps to backend route `POST /api/pantry`. Throws `DioException` on
   /// network/HTTP errors (400 validation, 401 unauthorized, etc.).
   Future<PantryItem> createPantryItem(CreatePantryItemDto dto);
 
@@ -50,7 +50,7 @@ abstract class PantryRepository {
   /// the URL path) plus the mutable fields `location`, `quantity`, and
   /// `expirationDate`.
   ///
-  /// Maps to backend route `PATCH /api/v1/pantry/:id`; `PantryApi` reads the
+  /// Maps to backend route `PATCH /api/pantry/:id`; `PantryApi` reads the
   /// id from `dto.id` and inserts it into the URL. Returns the updated
   /// [PantryItem] from the backend response.
   ///
@@ -60,7 +60,7 @@ abstract class PantryRepository {
 
   /// Deletes a pantry item by [id].
   ///
-  /// Maps to backend route `DELETE /api/v1/pantry/:id`.
+  /// Maps to backend route `DELETE /api/pantry/:id`.
   ///
   /// Note: the backend implementation method is named `softDelete` but it
   /// currently calls `deleteOne()` rather than setting a `deletedAt`

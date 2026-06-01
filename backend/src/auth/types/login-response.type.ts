@@ -7,7 +7,7 @@ import { User } from 'src/users/domain/user';
  * Carries the JWT access token, refresh token, token expiry timestamp,
  * and the authenticated User. Note that login/register/refresh endpoints
  * actually return `Omit<LoginResponseType, 'user'>` — the user object is
- * fetched separately via GET /api/v1/auth/me.
+ * fetched separately via GET /api/auth/me.
  *
  * Properties:
  * - `token`: JWT access token signed with AUTH_JWT_SECRET (15m default TTL).

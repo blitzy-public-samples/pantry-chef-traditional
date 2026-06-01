@@ -42,12 +42,12 @@ soft-delete (`deletedAt`) contract referenced repeatedly below, see
 
 | Category | Key Items | Status |
 |----------|-----------|--------|
-| Build & Runtime | Container runs `npm run dev`; TypeScript not compiled to /dist; Flutter release builds not configured | ❌ |
+| Build & Runtime | Container runs `npm run dev`; TypeScript not compiled to /dist; Flutter release builds not configured; route versioning inert (`version: '1'` declared but `enableVersioning()` not called — `/api/v1/*` returns 404, e2e suite red) | ❌ |
 | Secrets Management | MongoDB credentials and JWT secrets hardcoded; no secrets manager; refresh TTL 3650d | ❌ |
 | Networking & TLS | Open CORS (`cors: true`); no reverse proxy / TLS termination | ❌ |
 | Infrastructure & Orchestration | Docker Compose for dev only; no Kubernetes / managed service; no DB backup | ❌ |
 | File Storage | `FILE_DRIVER=local` placeholder; AWS_* env vars empty; S3 driver not implemented | ⚠️ |
-| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired; plaintext-password update path on `PATCH /users`; no email verification | ❌ |
+| Security Hardening | No rate limiting; no Helmet; no JWT guard on `/api/ai/vision`; MIME filter commented out; password reset endpoints unwired; plaintext-password update path on `PATCH /users`; no email verification; `@Exclude` not enforced (password hash + Ingridient fields leak in responses); malformed input returns 500 not 422 | ❌ |
 | Observability | No structured logging; no `/metrics`; no tracing; no alerting | ❌ |
 | CI/CD | No pipeline configured (no GitHub Actions, GitLab CI, etc.) | ❌ |
 | Database | Seed runner runs unconditionally; no migration versioning; only one collection index on each schema; destructive users `softDelete`; ignored list filters; unbounded user arrays; hardcoded ingredient reference data | ⚠️ |
@@ -84,6 +84,18 @@ release/flavor configuration. *Source: mobile/pubspec.yaml:L2.*
 > `flutter build apk --release --dart-define=API_BASE_URL=https://api.pantry-chef.com/api`
 > (and the equivalent `ipa` / `web` builds). The compile-time define is read by
 > `EnvConfig.apiBaseUrl`. *Source: mobile/lib/env_config.dart:L2.*
+
+> 🚧 **Route versioning is declared but inert.** Every feature controller declares
+> `@Controller({ path: '<feature>', version: '1' })`, but `main.ts` only calls
+> `app.setGlobalPrefix('api')` and **never calls `app.enableVersioning()`**. NestJS
+> ignores controller versions unless versioning is enabled, so all routes resolve at
+> `/api/<feature>/*` with **no** `/v1/` segment — a request to `/api/v1/<feature>/*`
+> returns 404. The documentation (module READMEs, `ARCHITECTURE.md`) now reflects the
+> actually-served `/api/*` paths. Before production, pick one contract and make it
+> consistent: either call `app.enableVersioning({ type: VersioningType.URI })` so the
+> declared `version: '1'` takes effect at `/api/v1/*`, **or** drop the `version: '1'`
+> argument from the controllers. Either way, align the e2e suite (see § Testing).
+> *Source: backend/src/main.ts:L10-L35; backend/src/auth/auth.controller.ts:L38-L41.*
 
 ## Secrets Management
 
@@ -176,8 +188,9 @@ missing.
 ## Security Hardening
 
 This is the highest-density gap category. The API has no abuse controls, the AI
-endpoint is unauthenticated, an upload validation filter is disabled, and a
-password-reset flow is half-built.
+endpoint is unauthenticated, an upload validation filter is disabled, a
+password-reset flow is half-built, response serialisation leaks the password
+hash, and malformed input crashes with a 500 instead of a clean 422.
 
 > 🚧 **No rate limiting.** There is no throttling on any endpoint. Install
 > `@nestjs/throttler` and apply `@Throttle()` to the auth surface (login,
@@ -186,6 +199,34 @@ password-reset flow is half-built.
 > 🚧 **No Helmet middleware.** The bootstrap sets no security headers. Add
 > `helmet` to the NestJS startup to emit CSP, HSTS, `X-Content-Type-Options`,
 > and related headers. *Source: backend/src/main.ts.*
+
+> 🚧 **`@Exclude` is not enforced — password hash and other fields leak in responses.**
+> `UserSchemaClass.password` carries `@Exclude({ toPlainOnly: true })`, and four
+> `Ingridient` fields (`unit`, `expirationDate`, `imageUrl`, `confidence`) carry the
+> same decorator, but **no `ClassSerializerInterceptor` is registered** — neither
+> `app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))` in
+> `main.ts` nor an `APP_INTERCEPTOR` provider in `app.module.ts`. Without it,
+> class-transformer never runs, so the bcrypt **password hash is returned on every
+> authenticated profile fetch** (`GET /api/auth/me`, `GET /api/users/me`) and the
+> "excluded" Ingridient fields are returned by `GET /api/ingredient`. This is an
+> offline brute-force / credential-stuffing surface. Register a global
+> `ClassSerializerInterceptor` and verify password omission before production.
+> *Source: backend/src/main.ts; backend/src/app.module.ts; backend/src/users/infrastructure/document/entities/user.schema.ts:L82-L84; backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L40-L54.*
+
+> 🚧 **Malformed input returns HTTP 500 instead of 422.** Two input paths crash
+> rather than rejecting cleanly: (1) `lowerCaseTransformer` runs
+> `params.value?.toLowerCase().trim()` — the `?.` guards `null`/`undefined` but not
+> objects, so a NoSQL-injection-shaped login body such as
+> `{"email":{"$gt":""},"password":{"$gt":""}}` throws a `TypeError` → 500 (the
+> injection is **rejected**, no token issued, **no auth bypass** — just an ungraceful
+> failure); (2) `CreatePantryIngridientDto.ingridient` is typed `Ingridient` with only
+> `@IsNotEmpty()` (no `@ValidateNested()`/`@Type()`), so a wrong-type body (e.g.
+> `ingridient` as a string) passes validation and then crashes in
+> `IngridientMapper.toPersistence` → 500. Harden the transformer to
+> `typeof value === 'string' ? value.toLowerCase().trim() : value`, and add
+> `@ValidateNested()` + `@Type(() => Ingridient)` to the pantry DTO so malformed
+> payloads return 422.
+> *Source: backend/src/utils/transformers/lower-case.transformer.ts; backend/src/pantry/dto/create-pantry-ingridient.dto.ts.*
 
 > 🚧 **AI endpoint is unguarded.** `AiController` is declared with
 > `@Controller('ai')` and `@Post('vision')` but carries **no**
@@ -208,11 +249,11 @@ password-reset flow is half-built.
 > issuance, email delivery, hash verification).
 > *Source: backend/src/auth/dto/auth-forgot-password.dto.ts; backend/src/auth/dto/auth-reset-password.dto.ts; backend/src/auth/auth.controller.ts.*
 
-> 🚧 **Plaintext-password update path on `PATCH /api/v1/users`.** `UsersService.create`
+> 🚧 **Plaintext-password update path on `PATCH /api/users`.** `UsersService.create`
 > bcrypt-hashes the password, but `UsersService.update` forwards the payload to
 > `UsersDocumentRepository.update` without re-hashing. The intended password-change
 > flow runs through `AuthService.update` (which verifies the old password upstream),
-> but a direct authenticated call to `PATCH /api/v1/users` carrying a `password`
+> but a direct authenticated call to `PATCH /api/users` carrying a `password`
 > field would persist that value in plaintext. Either add a re-hash step in
 > `UsersService.update` or drop the `password` field from `UpdateUserDto`. Surfaced
 > locally in [backend/src/users/README.md](backend/src/users/README.md) § Known
@@ -362,6 +403,14 @@ Automated test coverage is thin and concentrated on a single feature.
 > in-memory Mongo server that assert the documented `matchScore`, `isQuickMake`,
 > and `isAlmostThere` derivations.
 > *Source: backend/test/user/auth.e2e-spec.ts; backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts.*
+
+> 🚧 **The existing e2e suite is red — it targets `/api/v1/auth/*` but the runtime
+> serves `/api/auth/*`.** All six auth e2e specs fail with `got 404` because they
+> request versioned paths while the controller `version: '1'` is inert (see § Build
+> & Runtime — `enableVersioning()` is never called). This is a pre-existing routing
+> contract mismatch, not a regression. Fix by either enabling versioning in `main.ts`
+> or updating both the specs and the controllers to the unversioned `/api/*` paths,
+> then keep the suite green in CI. *Source: backend/test/user/auth.e2e-spec.ts; backend/src/main.ts:L10-L35.*
 
 > 🚧 **No integration tests for the AI vision endpoint**, and no tests covering
 > pantry CRUD against the destructive `softDelete` behavior described above.

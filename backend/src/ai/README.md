@@ -43,7 +43,7 @@ See [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md) § Full Request Path 
 
 ## API / Endpoint Reference
 
-> The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller declares `@Controller('ai')` with NO `version` parameter — unlike the versioned feature controllers (`auth`, `users`, `ingridient`, `pantry`, `recipe`) — so the route lives at **`/api/ai/vision`**.
+> The global API prefix is `/api` (Source: `backend/env_example:L4`). The controller declares `@Controller('ai')` with NO `version` parameter, so the route lives at **`/api/ai/vision`**. The other feature controllers (`auth`, `users`, `ingridient`, `pantry`, `recipe`) DO declare `version: '1'`, but that argument is **inert** because `main.ts` never calls `app.enableVersioning()` (Source: `backend/src/main.ts:L10-L35`) — so in practice every controller, this one included, resolves under `/api/<feature>` with no `/v1/` segment.
 
 | Method | Path | Guard | Description |
 | --- | --- | --- | --- |

@@ -62,21 +62,21 @@ This feature follows the mobile clean-architecture layering in [../../../../ARCH
 
 ## Primary Use Cases
 
-- **Load profile on app start** — `ProfileBloc.hydrate()` rehydrates persisted state via `fromJson`; if none is cached, the UI dispatches `ProfileFetched` → `GetProfileUsecase` → `ProfileRepositiryImpl.getProfile()` → `ProfileApi.getProfile()` → `GET /api/v1/auth/me` (Source: `profile_bloc.dart:L34-L41`).
+- **Load profile on app start** — `ProfileBloc.hydrate()` rehydrates persisted state via `fromJson`; if none is cached, the UI dispatches `ProfileFetched` → `GetProfileUsecase` → `ProfileRepositiryImpl.getProfile()` → `ProfileApi.getProfile()` → `GET /api/auth/me` (Source: `profile_bloc.dart:L34-L41`).
 - **View and edit preferences** — from `ProfileMain`, `Navigation.preferences` opens `PreferencesScreen`, presently a stub of `PlatformScaffold` plus an app bar only (Source: `preferences.dart:L15-L28`).
-- **Update profile / preferences** — updates go through `ProfileApi.updateProfile(ProfileUpdateDto)` → `PATCH /api/v1/users` using `toJsonWithoutNullFields()` for null-safe partial updates (Source: `profile.api.dart:L45-L46`).
-- **Manage favorite recipes** — `FavoriteRecipesListUpdated(recipeId, isFavorite)` drives `FavoriteRecipesUpdateUsecase`, which updates favorites server-side via `PATCH /api/v1/users` and fetches the added recipe via `RecipeRepositoryImpl.getRecipeById()` to enrich BLoC state (Source: `favorite_recipes_update.usecase.dart:L28-L34`).
+- **Update profile / preferences** — updates go through `ProfileApi.updateProfile(ProfileUpdateDto)` → `PATCH /api/users` using `toJsonWithoutNullFields()` for null-safe partial updates (Source: `profile.api.dart:L45-L46`).
+- **Manage favorite recipes** — `FavoriteRecipesListUpdated(recipeId, isFavorite)` drives `FavoriteRecipesUpdateUsecase`, which updates favorites server-side via `PATCH /api/users` and fetches the added recipe via `RecipeRepositoryImpl.getRecipeById()` to enrich BLoC state (Source: `favorite_recipes_update.usecase.dart:L28-L34`).
 - **View favorites list** — the `FavoriteRecipes` screen renders cached recipes with shimmer loading and empty states, lazily dispatching `FavoriteRecipesFetched` when the list is null (Source: `favorite_recipes.dart:L42-L44`).
-- **Logout** — `Logout(context)` → `LogoutUsecase`: (1) `POST /api/v1/auth/logout`; (2) `SharedPreferencesHelper.removeAccessToken()`/`removeRefreshToken()`; (3) reset events to `PantryBloc`, `RecipeBloc`, `ProfileBloc`, and `HomeBloc`; (4) `HydratedBloc.storage.clear()`; (5) `Navigator.pushNamedAndRemoveUntil(Navigation.authenticationStart, (_) => false)` (Source: `logout.usecase.dart:L50-L61`).
+- **Logout** — `Logout(context)` → `LogoutUsecase`: (1) `POST /api/auth/logout`; (2) `SharedPreferencesHelper.removeAccessToken()`/`removeRefreshToken()`; (3) reset events to `PantryBloc`, `RecipeBloc`, `ProfileBloc`, and `HomeBloc`; (4) `HydratedBloc.storage.clear()`; (5) `Navigator.pushNamedAndRemoveUntil(Navigation.authenticationStart, (_) => false)` (Source: `logout.usecase.dart:L50-L61`).
 - **Reset profile state** — the `ProfileDataReseted` event resets `ProfileState` to its empty default, invoked during logout teardown (Source: `profile_bloc.dart:L86-L88`).
 
 ## API / Endpoint Reference
 
 | Method | Path | Guard | Description |
 |--------|------|-------|-------------|
-| GET | `/api/v1/auth/me` | JWT (Bearer) | Returns the current `User` including embedded `Preferences` and the `favoriteRecipes` array. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L34-L37`, `mobile/lib/core/constants/endpoints.dart:L60`. |
-| PATCH | `/api/v1/users` | JWT (Bearer) | Updates the current user's mutable fields (`email`, `password`, `preferences`, `favoriteRecipes`). Body produced via `ProfileUpdateDto.toJsonWithoutNullFields()`. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L45-L46`, `mobile/lib/core/constants/endpoints.dart:L64`. |
-| POST | `/api/v1/auth/logout` | JWT (Bearer) | Invalidates the refresh session server-side. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L54-L55`, `mobile/lib/core/constants/endpoints.dart:L56`. |
+| GET | `/api/auth/me` | JWT (Bearer) | Returns the current `User` including embedded `Preferences` and the `favoriteRecipes` array. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L34-L37`, `mobile/lib/core/constants/endpoints.dart:L60`. |
+| PATCH | `/api/users` | JWT (Bearer) | Updates the current user's mutable fields (`email`, `password`, `preferences`, `favoriteRecipes`). Body produced via `ProfileUpdateDto.toJsonWithoutNullFields()`. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L45-L46`, `mobile/lib/core/constants/endpoints.dart:L64`. |
+| POST | `/api/auth/logout` | JWT (Bearer) | Invalidates the refresh session server-side. Source: `mobile/lib/features/profile/data/api/profile.api.dart:L54-L55`, `mobile/lib/core/constants/endpoints.dart:L56`. |
 
 ## Data Flows
 
@@ -86,10 +86,10 @@ flowchart TD
     B -- yes --> C[Emit hydrated ProfileState]
     B -- no --> D[ProfileFetched →<br/>GetProfileUsecase]
     D --> E[ProfileRepositiryImpl typo →<br/>ProfileApi via DioClient]
-    E --> F[GET /api/v1/auth/me]
+    E --> F[GET /api/auth/me]
     C --> G[FavoriteRecipesListUpdated]
-    G --> H[FavoriteRecipesUpdateUsecase →<br/>PATCH /api/v1/users + getRecipeById]
-    C --> I[Edit Preferences →<br/>PATCH /api/v1/users]
+    G --> H[FavoriteRecipesUpdateUsecase →<br/>PATCH /api/users + getRecipeById]
+    C --> I[Edit Preferences →<br/>PATCH /api/users]
     H --> J[toJson persists →<br/>HydratedStorage]
     I --> J
 ```
@@ -118,7 +118,7 @@ flowchart TD
 
 ## Production Readiness Status
 
-> 🚧 **No account deletion confirmation UX; no GDPR data export flow.** The `DELETE /api/v1/users/:id` endpoint exists but no UI is wired to call it, and there is no in-app data-export workflow for compliance. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Mobile Release.
+> 🚧 **No account deletion confirmation UX; no GDPR data export flow.** The `DELETE /api/users/:id` endpoint exists but no UI is wired to call it, and there is no in-app data-export workflow for compliance. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Mobile Release.
 
 > 🚧 **Logout storage rotation hardening.** While `HydratedBloc.storage.clear()` is invoked during logout, production should additionally rotate the storage namespace per user (e.g., a per-user storage directory or namespaced key prefix) to eliminate the risk of stale profile data leaking across users on a shared device. See [../../../../PRODUCTION_READINESS.md](../../../../PRODUCTION_READINESS.md) § Security Hardening.
 

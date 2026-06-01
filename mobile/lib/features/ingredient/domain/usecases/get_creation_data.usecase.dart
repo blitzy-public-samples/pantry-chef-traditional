@@ -32,7 +32,7 @@ class GetIngredientCategoriesAndUnitsUsecase implements UseCase<IngredientAddDat
   ///
   /// Delegates to [IngredientRepository.getCategoriesAndUnits] through a
   /// per-call [IngredientRepositoryImpl]; the concrete implementation issues
-  /// `GET /api/v1/ingredient/creation-data` (the URL keeps the correct
+  /// `GET /api/ingredient/creation-data` (the URL keeps the correct
   /// `ingredient` spelling even though the backend source spells it
   /// `Ingridient`). The returned categories and units are hardcoded
   /// server-side — see `backend/src/ingridient/ingridient.controller.ts:L41-L72`.

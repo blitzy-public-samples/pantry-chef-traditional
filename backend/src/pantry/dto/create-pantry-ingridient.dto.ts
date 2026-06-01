@@ -10,7 +10,7 @@ import {
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
 /**
- * Validation contract for POST /api/v1/pantry — Create a new pantry item.
+ * Validation contract for POST /api/pantry — Create a new pantry item.
  *
  * Requires an `ingridient` reference (spelling preserved verbatim), quantity,
  * unit, and a `location` (one of 'fridge' | 'freezer' | 'pantry'). The
@@ -23,6 +23,12 @@ import { Ingridient } from 'src/ingridient/domain/ingrident';
  * § Known Limitations.
  */
 export class CreatePantryIngridientDto {
+  // TODO(prod): `ingridient` has only @IsNotEmpty() — no @ValidateNested()/@Type(),
+  // so a wrong-type body (e.g. ingridient sent as a string) passes ValidationPipe
+  // and then crashes in IngridientMapper.toPersistence, returning HTTP 500 instead
+  // of a clean 422. Add @ValidateNested() + @Type(() => Ingridient). Document only;
+  // do not fix in this documentation pass. See ../../../PRODUCTION_READINESS.md
+  // § Security Hardening.
   @ApiProperty({ description: 'Ingredient details' })
   @IsNotEmpty()
   ingridient: Ingridient;

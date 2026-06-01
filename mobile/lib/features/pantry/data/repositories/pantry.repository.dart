@@ -72,7 +72,7 @@ class PantryRepositoryImpl implements PantryRepository {
   /// at `backend/src/pantry/infrastructure/document/repositories/`
   /// `pantryIngridient.repository.ts:L119-L123` calls `deleteOne()` —
   /// physically removing the document despite the soft-delete naming
-  /// convention. This mobile `DELETE /api/v1/pantry/:id` request therefore
+  /// convention. This mobile `DELETE /api/pantry/:id` request therefore
   /// performs a destructive removal. See
   /// `../../../../../../PRODUCTION_READINESS.md` § Database for the
   /// production-readiness gap and

@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'update_pantry_item.dto.g.dart';
 
-/// JSON-serializable request payload for `PATCH /api/v1/pantry/:id`.
+/// JSON-serializable request payload for `PATCH /api/pantry/:id`.
 ///
 /// Carries the target [id] together with the mutable fields ([location],
 /// [quantity], and [expirationDate]). Unlike [CreatePantryItemDto], this DTO

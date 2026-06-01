@@ -53,10 +53,15 @@ export class Preferences {
  * Notable field-level conventions (canonical reference:
  * `../../../../../../DATA_MODEL.md` § User):
  *  - `email` carries the `unique: true` index option.
- *  - `password` is decorated with `@Exclude({ toPlainOnly: true })`
- *    so it never appears in serialized JSON responses, but it IS
- *    populated when the document is hydrated from Mongo (e.g.,
- *    during the bcrypt comparison in `AuthService.validateLogin`).
+ *  - `password` is decorated with `@Exclude({ toPlainOnly: true })`.
+ *    NOTE: this decorator is DECLARED but NOT enforced at runtime —
+ *    no `ClassSerializerInterceptor` is registered (see `main.ts` and
+ *    `app.module.ts`), so class-transformer never strips the field and
+ *    the bcrypt hash currently DOES appear in serialized JSON responses
+ *    (e.g. `GET /api/auth/me`). See `../../../../../../PRODUCTION_READINESS.md`
+ *    § Security Hardening. The field IS populated when the document is
+ *    hydrated from Mongo (e.g., the bcrypt comparison in
+ *    `AuthService.validateLogin`).
  *  - `preferences` is an embedded `Preferences` subdocument with
  *    default empty arrays and `cookingTime: 0`.
  *  - `deletedAt` is the soft-delete timestamp slot — but note that

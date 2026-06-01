@@ -6,7 +6,7 @@ import { CreatePantryIngridientDto } from './create-pantry-ingridient.dto';
 import { Ingridient } from 'src/ingridient/domain/ingrident';
 
 /**
- * Validation contract for PATCH /api/v1/pantry/:id — Partially update a
+ * Validation contract for PATCH /api/pantry/:id — Partially update a
  * pantry item (spelling preserved verbatim).
  *
  * Extends PartialType(CreatePantryIngridientDto) and additionally declares

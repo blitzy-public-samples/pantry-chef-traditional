@@ -5,7 +5,7 @@ import 'package:pantry_chef/core/utils/mappers.dart';
 
 part 'create_ingredient.dto.g.dart';
 
-/// Data transfer object sent in the body of `POST /api/v1/ingredient` to create
+/// Data transfer object sent in the body of `POST /api/ingredient` to create
 /// a new Ingridient (spelling preserved verbatim on the backend).
 ///
 /// Serialized with `package:json_annotation`; the companion generated file

@@ -5,7 +5,7 @@ import 'package:pantry_chef/core/utils/service_locator.dart';
 import 'package:pantry_chef/features/pantry/data/dto/index.dart';
 
 /// Direct HTTP adapter for the pantry feature's CRUD operations against the
-/// backend `/api/v1/pantry/*` endpoints.
+/// backend `/api/pantry/*` endpoints.
 ///
 /// Resolves the shared [DioClient] via the GetIt service locator
 /// (`getIt<DioClient>().dio`) and reuses its authenticated [Dio] instance; see

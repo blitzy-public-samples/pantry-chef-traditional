@@ -4,7 +4,7 @@ import 'package:pantry_chef/features/ingredient/domain/models/unit.dart';
 
 part 'ingredient_add_data.g.dart';
 
-/// Aggregate of categories and units returned by `GET /api/v1/ingredient/creation-data`.
+/// Aggregate of categories and units returned by `GET /api/ingredient/creation-data`.
 ///
 /// Used to populate the ingredient-add form's dropdown pickers (category picker, unit picker).
 ///
@@ -39,7 +39,7 @@ class IngredientAddData {
   });
 
   /// Deserializes an [IngredientAddData] from the JSON response of
-  /// `GET /api/v1/ingredient/creation-data`.
+  /// `GET /api/ingredient/creation-data`.
   ///
   /// Expected response shape: `{ "categories": [{id, name}], "units": [{id, name}] }`.
   /// Delegates to the generated `_$IngredientAddDataFromJson` in `ingredient_add_data.g.dart`.

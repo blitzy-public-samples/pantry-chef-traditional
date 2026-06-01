@@ -63,7 +63,7 @@ erDiagram
     USER {
         ObjectId _id PK
         string email "unique"
-        string password "bcrypt, excluded"
+        string password "bcrypt; @Exclude declared but inert"
         Preferences preferences "embedded"
         string_array favoriteRecipes
         string_array recentSearches
@@ -89,10 +89,10 @@ erDiagram
         string name
         Reference category
         number quantity
-        Reference unit "excluded"
-        Date expirationDate "excluded"
-        string imageUrl "excluded"
-        number confidence "excluded"
+        Reference unit "@Exclude inert"
+        Date expirationDate "@Exclude inert"
+        string imageUrl "@Exclude inert"
+        number confidence "@Exclude inert"
         Date createdAt
         Date updatedAt
         Date deletedAt "nullable"
@@ -157,8 +157,8 @@ column cites the exact declaration lines.
 `User` is the identity root of the system. It stores the login email, the
 bcrypt-hashed password, the embedded recipe-matching `Preferences`, and two
 string arrays that capture the user's favourite recipes and recent searches. The
-password is never serialised to clients: `class-transformer`'s
-`@Exclude({ toPlainOnly: true })` strips it from every API response.
+`password` field carries `class-transformer`'s `@Exclude({ toPlainOnly: true })`,
+which is **intended** to strip it from every API response:
 
 ```typescript
 @Exclude({ toPlainOnly: true })
@@ -166,11 +166,19 @@ password is never serialised to clients: `class-transformer`'s
 password?: string;
 ```
 
+> ⚠️ **`@Exclude` is declared but NOT enforced at runtime.** The decorator only
+> takes effect when a `ClassSerializerInterceptor` is registered, but none is —
+> neither `app.useGlobalInterceptors(...)` in `main.ts` nor an `APP_INTERCEPTOR`
+> provider in `app.module.ts`. As a result, class-transformer never runs and the
+> bcrypt password hash **is currently returned** in JSON responses (e.g.
+> `GET /api/auth/me`, `GET /api/users/me`). This is a security gap tracked in
+> [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) § Security Hardening.
+
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
 | `_id` | `ObjectId` | Primary key, inherited from `EntityDocumentHelper`. | document-entity-helper.ts |
 | `email` | `string \| null` | Unique index; re-exposed via `@Expose({ toPlainOnly: true })`. | user.schema.ts:L75-L80 |
-| `password` | `string?` | bcrypt hash; `@Exclude({ toPlainOnly: true })` keeps it out of responses. | user.schema.ts:L82-L84 |
+| `password` | `string?` | bcrypt hash; `@Exclude({ toPlainOnly: true })` is declared but **not enforced** (no `ClassSerializerInterceptor`), so the hash is currently returned in responses — see ⚠️ above. | user.schema.ts:L82-L84 |
 | `preferences` | `Preferences` | Embedded subdocument; default `{ dietary: [], allergies: [], dislikedIngredients: [], cookingTime: 0 }`. | user.schema.ts:L86-L95 |
 | `favoriteRecipes` | `string[]` | Recipe id strings; default `[]`. | user.schema.ts:L97-L101 |
 | `recentSearches` | `string[]` | Recent search terms; default `[]`. | user.schema.ts:L103-L104 |
@@ -227,9 +235,16 @@ The `Ingridient` collection (spelling preserved verbatim from the codebase; the
 schema class is named `IngridientSchemaClass` and the file is `ingridient.schema.ts`)
 is the master catalogue of ingredients known to the system. Its `category` and
 `unit` fields use the `Reference` type — a denormalised `{ id, name }` pair — rather
-than a relation to a separate collection. Four fields are excluded from API
-serialisation via `@Exclude({ toPlainOnly: true })`: `unit`, `expirationDate`,
-`imageUrl`, and `confidence` (the AI-vision label-detection confidence score).
+than a relation to a separate collection. Four fields carry
+`@Exclude({ toPlainOnly: true })` — `unit`, `expirationDate`, `imageUrl`, and
+`confidence` (the AI-vision label-detection confidence score) — which is intended
+to drop them from API serialisation.
+
+> ⚠️ **These `@Exclude` decorators are declared but NOT enforced at runtime**, for
+> the same reason as `User.password`: no `ClassSerializerInterceptor` is registered
+> (see `main.ts` / `app.module.ts`). All four fields **are currently returned** by
+> `GET /api/ingredient`. Tracked in
+> [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) § Security Hardening.
 
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
@@ -237,10 +252,10 @@ serialisation via `@Exclude({ toPlainOnly: true })`: `unit`, `expirationDate`,
 | `name` | `string` | Human-readable ingredient name. | ingridient.schema.ts:L31-L32 |
 | `category` | `Reference` | `{ id, name }`; declared as `@Prop({ type: { id: Number, name: String } })`. | ingridient.schema.ts:L34-L35 |
 | `quantity` | `number?` | Optional quantity. | ingridient.schema.ts:L37-L38 |
-| `unit` | `Reference?` | `{ id, name }`; `@Exclude({ toPlainOnly: true })`. | ingridient.schema.ts:L40-L42 |
-| `expirationDate` | `Date?` | Excluded from serialisation. | ingridient.schema.ts:L44-L46 |
-| `imageUrl` | `string?` | Excluded from serialisation. | ingridient.schema.ts:L48-L50 |
-| `confidence` | `number` | AI-vision confidence; excluded from serialisation. | ingridient.schema.ts:L52-L54 |
+| `unit` | `Reference?` | `{ id, name }`; `@Exclude({ toPlainOnly: true })` declared but not enforced (see ⚠️ above) — currently returned. | ingridient.schema.ts:L40-L42 |
+| `expirationDate` | `Date?` | `@Exclude` declared but not enforced — currently returned. | ingridient.schema.ts:L44-L46 |
+| `imageUrl` | `string?` | `@Exclude` declared but not enforced — currently returned. | ingridient.schema.ts:L48-L50 |
+| `confidence` | `number` | AI-vision confidence; `@Exclude` declared but not enforced — currently returned. | ingridient.schema.ts:L52-L54 |
 | `createdAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L56-L57 |
 | `updatedAt` | `Date` | `@Prop({ default: now })`. | ingridient.schema.ts:L59-L60 |
 | `deletedAt` | `Date?` | Soft-delete marker; nullable. | ingridient.schema.ts:L62-L63 |
@@ -391,7 +406,7 @@ separate `categories` or `units` collection, the schema caches the human-readabl
 `name` alongside the `id`, so an ingredient document is self-describing without a
 join. The reference data itself (the catalogue of valid categories and units, each
 with an integer `id` and a display `name`) is hardcoded and served to clients by
-`GET /api/v1/ingredient/creation-data`
+`GET /api/ingredient/creation-data`
 (Source: backend/src/ingridient/ingridient.controller.ts:L62). Note that although
 the catalogue ids are integers, the `Reference.id` field is typed as `string`
 (Source: backend/src/common/types.ts:L22-L25).

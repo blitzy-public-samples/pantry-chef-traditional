@@ -30,7 +30,7 @@ import { UpdateIngridientDto } from './dto/update-ingridient.dto';
 import { CreateIngridientDto } from './dto/create-ingridient.dto';
 
 /**
- * Controller routing /api/v1/ingredient/* requests to IngridientService.
+ * Controller routing /api/ingredient/* requests to IngridientService.
  *
  * Spelling 'Ingridient' (class, module, file names) is preserved verbatim
  * across the backend codebase. The URL path uses the correct 'ingredient'
@@ -50,7 +50,7 @@ export class IngridientController {
   constructor(private readonly ingridientService: IngridientService) {}
 
   /**
-   * GET /api/v1/ingredient/creation-data — hardcoded reference data.
+   * GET /api/ingredient/creation-data — hardcoded reference data.
    *
    * Returns the 5 categories (spice, vegetable, fruit, dairy, protein) and
    * 9 units (kg, g, lb, oz, ml, l, cup, tbsp, tsp) used by ingridient
@@ -93,7 +93,7 @@ export class IngridientController {
   }
 
   /**
-   * POST /api/v1/ingredient — create a new Ingridient (spelling preserved verbatim).
+   * POST /api/ingredient — create a new Ingridient (spelling preserved verbatim).
    *
    * Validates `CreateIngridientDto` then delegates to `IngridientService.create()`.
    * Throws `UNPROCESSABLE_ENTITY` (422) if the name already exists.
@@ -112,7 +112,7 @@ export class IngridientController {
   }
 
   /**
-   * GET /api/v1/ingredient — list ingridients with pagination (spelling preserved verbatim).
+   * GET /api/ingredient — list ingridients with pagination (spelling preserved verbatim).
    *
    * Honors optional `query` (name filter), `sort` (orderBy/order), and
    * pagination (`page` default 1, `limit` default 10). The pagination cap
@@ -146,7 +146,7 @@ export class IngridientController {
   }
 
   /**
-   * GET /api/v1/ingredient/:id — fetch one Ingridient by id (spelling preserved verbatim).
+   * GET /api/ingredient/:id — fetch one Ingridient by id (spelling preserved verbatim).
    *
    * Returns `null` if the record is not found or has been soft-deleted.
    *
@@ -167,7 +167,7 @@ export class IngridientController {
   }
 
   /**
-   * PATCH /api/v1/ingredient/:id — partially update an Ingridient
+   * PATCH /api/ingredient/:id — partially update an Ingridient
    * (spelling preserved verbatim).
    *
    * Delegates to `IngridientService.update()` which throws
@@ -194,7 +194,7 @@ export class IngridientController {
   }
 
   /**
-   * DELETE /api/v1/ingredient/:id — soft-delete an Ingridient
+   * DELETE /api/ingredient/:id — soft-delete an Ingridient
    * (spelling preserved verbatim).
    *
    * Delegates to `IngridientService.softDelete()` which uses the proper
