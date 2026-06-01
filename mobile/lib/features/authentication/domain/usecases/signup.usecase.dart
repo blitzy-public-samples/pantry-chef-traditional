@@ -6,12 +6,33 @@ import 'package:pantry_chef/features/authentication/data/repositories/auth.repos
 import 'package:pantry_chef/features/authentication/domain/entities/auth_response.entity.dart';
 import 'package:pantry_chef/features/authentication/domain/repositories/auth.repository.dart';
 
+/// Registers (signs up) the user, then persists the tokens locally.
+///
+/// Implements the `UseCaseWithParams<void, AuthDto>` contract — the
+/// standard parameterized callable use case
+/// (Source: mobile/lib/core/utils/usercase.dart:L5-L7) — so it accepts
+/// an [AuthDto] of credentials and returns `Future<void>`, since its
+/// purpose is the side effect of registering and storing tokens.
 class SignupUsecase implements UseCaseWithParams<void, AuthDto> {
+  /// Signs up with [dto], then stores the issued session tokens.
+  ///
+  /// Resolves an [AuthRepository] implementation, awaits `signup([dto])`
+  /// for an `AuthResponse`, then saves `result.token` and
+  /// `result.refreshToken` through [SharedPreferencesHelper] obtained
+  /// from the [getIt] service locator
+  /// (Source: .../usecases/signup.usecase.dart:L11-L16).
   @override
   Future<void> call(AuthDto dto) async {
+    // Resolve the auth repository implementation via the domain contract.
     AuthRepository repo = AuthRepositoryImpl();
+    // Perform the signup request and await the AuthResponse tokens.
     AuthResponse result = await repo.signup(dto);
+    // Resolve the SharedPreferencesHelper from the getIt DI singleton.
+    // KNOWN ISSUE: the leading-underscore local name is preserved as-is
+    // and intentionally not renamed; it is a method-local, not a
+    // private field.
     SharedPreferencesHelper _sharedPreferencesHelper = getIt<SharedPreferencesHelper>();
+    // Persist access + refresh tokens for subsequent requests.
     _sharedPreferencesHelper.saveAccessToken(result.token);
     _sharedPreferencesHelper.saveRefreshToken(result.refreshToken);
   }
