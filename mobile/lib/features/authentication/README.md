@@ -84,7 +84,7 @@ All URLs are built from `Endpoints.apiBaseUrl` (default `http://192.168.2.20:300
 | `POST` | `/api/auth/email/register` | none | ✅ Direct (`AuthenticationApi.signup`) | Email + password registration; returns `{ token, refreshToken }`. URL: `mobile/lib/core/constants/endpoints.dart:L52`. |
 | `POST` | `/api/auth/refresh` | `AuthGuard('jwt-refresh')` | 🔄 Cross-cutting (`DioClient._refreshToken` on 401/419) | Issues a fresh access + refresh token pair. URL: `mobile/lib/core/constants/endpoints.dart:L41`. |
 | `GET` | `/api/auth/me` | `AuthGuard('jwt')` | ❌ Profile feature | Current-user profile. URL: `mobile/lib/core/constants/endpoints.dart:L60`. |
-| `POST` | `/api/auth/logout` | `AuthGuard('jwt-refresh')` | ❌ Profile feature | Server-side session invalidation. URL: `mobile/lib/core/constants/endpoints.dart:L56`. |
+| `POST` | `/api/auth/logout` | `AuthGuard('jwt')` | ❌ Profile feature | Server-side session invalidation. URL: `mobile/lib/core/constants/endpoints.dart:L56`. |
 
 ## Data Flows
 

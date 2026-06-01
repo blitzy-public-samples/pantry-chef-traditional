@@ -25,13 +25,6 @@ import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { FilterType } from './types/filter.types';
 
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
-@ApiTags('Recipe')
-@Controller({
-  path: 'recipe',
-  version: '1',
-})
 /**
  * Controller routing /api/recipe/* requests to RecipeService.
  *
@@ -39,6 +32,13 @@ import { FilterType } from './types/filter.types';
  * and are tagged for Swagger as 'Recipe' with bearer auth. The pantry-aware
  * GET /matches endpoint is the headline feature (see README.md § Data Flows).
  */
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@ApiTags('Recipe')
+@Controller({
+  path: 'recipe',
+  version: '1',
+})
 export class RecipeController {
   constructor(private readonly recipeService: RecipeService) {}
 

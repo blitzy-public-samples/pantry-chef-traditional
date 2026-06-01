@@ -5,7 +5,7 @@
 // [CreateIngredientUsecase], [GetIngredientCategoriesAndUnitsUsecase],
 // [SearchIngredientUsecase], and [ImageProcessingUsecase].
 //
-// Note: the source file `search_ingredietn.usecase.dart` keeps the verbatim
+// NOTE: the source file `search_ingredietn.usecase.dart` keeps the verbatim
 // spelling `ingredietn` (transposed letters) as a stable file-system contract;
 // the class it declares is correctly spelled [SearchIngredientUsecase].
 
