@@ -12,6 +12,15 @@ import 'package:pantry_chef/core/presentation/widgets/text_field_input.dart';
 import 'package:pantry_chef/core/utils/get_email_error_text.dart';
 import 'package:pantry_chef/features/authentication/presentation/bloc/auth/auth_bloc.dart';
 
+/// Login screen for the authentication flow.
+///
+/// Provides its own `AuthBloc` via `BlocProvider` and renders email and
+/// password fields built on the shared `TextFieldInput` widget. Dispatches
+/// `LoginActionSent` on submit, navigates to `Navigation.home` once
+/// `AuthState.success` becomes true, and toggles a loader overlay while
+/// `AuthState.isFetching` is true.
+///
+/// Source: .../login.dart:L15
 class Login extends StatelessWidget {
   const Login({super.key});
 
@@ -21,6 +30,9 @@ class Login extends StatelessWidget {
       create: (context) => AuthBloc(),
       child: MultiBlocListener(
         listeners: [
+          // On success, clears the entire back stack via
+          // pushNamedAndRemoveUntil so the user cannot return to login.
+          // Source: .../login.dart:L24
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.success != curr.success,
             listener: (context, state) {
@@ -29,6 +41,9 @@ class Login extends StatelessWidget {
               }
             },
           ),
+          // Toggles the loader overlay from `state.isFetching`;
+          // requires a loader-overlay ancestor above this widget.
+          // Source: .../login.dart:L32
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.isFetching != curr.isFetching,
             listener: (context, state) {
@@ -59,6 +74,12 @@ class Login extends StatelessWidget {
                       children: [
                         Column(
                           children: [
+                            // buildWhen rebuilds only on email,
+                            // errorMessage or emailWrongFormat changes.
+                            // Caps input at maxLength 50, shows errors via
+                            // getEmailErrorText, and dispatches
+                            // AuthFormValueChanged(email: ...) on change.
+                            // Source: .../login.dart:L62
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.email != curr.email ||
@@ -77,6 +98,12 @@ class Login extends StatelessWidget {
                               },
                             ),
                             const SizedBox(height: 24),
+                            // buildWhen rebuilds only on password or
+                            // errorMessage changes. Maps
+                            // ErrorMessage.incorrectPassword to localized
+                            // wrongPassword. Caps input at maxLength 10 and
+                            // dispatches AuthFormValueChanged(password: ...).
+                            // Source: .../login.dart:L80
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.password != curr.password || prev.errorMessage != curr.errorMessage,
@@ -96,6 +123,10 @@ class Login extends StatelessWidget {
                             )
                           ],
                         ),
+                        // ActionButton stays disabled (onPress null)
+                        // until both email and password are non-empty,
+                        // then dispatches LoginActionSent() on press.
+                        // Source: .../login.dart:L99
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
                             return ActionButton(
