@@ -40,7 +40,7 @@ Four conventions hold across all five schema classes:
 Mongoose `ObjectId` `_id` is the primary key for all five collections. Where a
 schema needs to reference catalogue data (an ingredient's category and unit) it
 uses the lightweight `Reference` type rather than a hard relation — see
-[Reference Type (id + name pair)](#reference-type-id--name-pair).
+[Reference Type (id and name pair)](#reference-type-id-and-name-pair).
 
 ## Entity-Relationship Diagram
 
@@ -346,7 +346,7 @@ timestamp middleware on every insert and update. In addition, most schema classe
 explicitly declare both fields with `@Prop({ default: now })`, so a default value
 is present even when a document is constructed outside Mongoose's normal write
 path. The exception is `SessionSchemaClass`, which declares only `createdAt`
-explicitly (Source: session.schema.ts:L19-L20) and relies on `timestamps: true`
+explicitly (Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L19-L20) and relies on `timestamps: true`
 to supply `updatedAt` at runtime.
 
 ```typescript
@@ -388,7 +388,7 @@ By contrast, the recipe repository honours the contract, issuing
 The same contrast is described from the architecture angle in
 [ARCHITECTURE.md → Soft-Delete Contract](ARCHITECTURE.md#soft-delete-contract).
 
-### Reference Type (id + name pair)
+### Reference Type (id and name pair)
 
 The shared `Reference` type alias — `{ id: string; name: string }` — is declared in
 `backend/src/common/types.ts` and used by `IngridientSchemaClass.category` and

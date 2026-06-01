@@ -8,6 +8,8 @@ import 'package:pantry_chef/features/recipe/domain/models/recipe.dart';
 import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+// NOTE: 'ingridientList' field and 'InstractionItem' type names are preserved verbatim
+// (match the backend Recipe schema / instraction_item.dart). Do not rename.
 /// `StatelessWidget` rendering the recipe detail screen.
 ///
 /// Resolves the currently-selected recipe via

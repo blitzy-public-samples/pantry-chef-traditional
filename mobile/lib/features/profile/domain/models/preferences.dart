@@ -29,6 +29,8 @@ class Preferences {
   /// Defaults to `[]` via the constructor. Consumed by the backend recipe
   /// matching pipeline as a `$all` filter against `Recipe.tags`.
   final List<String> dietary;
+  // NOTE: 'ingridientList' (referenced in the DartDoc below) is the backend Recipe
+  // field name, preserved verbatim on the backend. Do not rename in cross-references.
   /// Ingredient names (or IDs) the user is allergic to.
   ///
   /// Defaults to `[]`. Used by the backend recipe matching pre-filter as a

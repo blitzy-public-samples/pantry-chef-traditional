@@ -48,6 +48,8 @@ class Endpoints {
   /// Backend accepts `AuthEmailLoginDto { email, password }` and returns
   /// `{ token, refreshToken, tokenExpires, user }`.
   static const String login = '$apiBaseUrl/auth/email/login';
+  // NOTE: 'singup' (the route key Navigation.singup) is preserved verbatim elsewhere;
+  // this constant deliberately uses the correct 'signup' spelling. Do not conflate.
   /// Email-registration endpoint (HTTP POST). Backend path is `/auth/email/register`.
   ///
   /// This Dart constant uses the correct spelling `signup`, whereas the route key in
@@ -75,6 +77,8 @@ class Endpoints {
   static const String recipe = '$apiBaseUrl/recipe';
 
   // Ingredient
+  // NOTE: 'ingridient' appears in the cross-reference DartDoc below as the backend's
+  // filesystem dir name (spelling preserved verbatim); the HTTP route is '/ingredient'.
   /// Ingredient module root URL.
   ///
   /// Note: the backend's filesystem directory is `backend/src/ingridient/` (spelling

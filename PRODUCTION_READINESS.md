@@ -211,7 +211,7 @@ hash, and malformed input crashes with a 500 instead of a clean 422.
 > "excluded" Ingridient fields are returned by `GET /api/ingredient`. This is an
 > offline brute-force / credential-stuffing surface. Register a global
 > `ClassSerializerInterceptor` and verify password omission before production.
-> *Source: backend/src/main.ts; backend/src/app.module.ts; backend/src/users/infrastructure/document/entities/user.schema.ts:L82-L84; backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L40-L54.*
+> *Source: backend/src/main.ts:L10-L35; backend/src/app.module.ts:L18-L38; backend/src/users/infrastructure/document/entities/user.schema.ts:L82-L84; backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L40-L54.*
 
 > 🚧 **Malformed input returns HTTP 500 instead of 422.** Two input paths crash
 > rather than rejecting cleanly: (1) `lowerCaseTransformer` runs
@@ -410,7 +410,7 @@ Automated test coverage is thin and concentrated on a single feature.
 > & Runtime — `enableVersioning()` is never called). This is a pre-existing routing
 > contract mismatch, not a regression. Fix by either enabling versioning in `main.ts`
 > or updating both the specs and the controllers to the unversioned `/api/*` paths,
-> then keep the suite green in CI. *Source: backend/test/user/auth.e2e-spec.ts; backend/src/main.ts:L10-L35.*
+> then keep the suite green in CI. *Source: backend/test/user/auth.e2e-spec.ts:L4-L106; backend/src/main.ts:L10-L35.*
 
 > 🚧 **No integration tests for the AI vision endpoint**, and no tests covering
 > pantry CRUD against the destructive `softDelete` behavior described above.
