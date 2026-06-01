@@ -3,7 +3,28 @@ import { RecipeSchemaClass } from '../entities/recipe.schema';
 import { IngridientMapper } from 'src/ingridient/infrastructure/document/mappers/ingridient.mapper';
 import { IngridientSchemaClass } from 'src/ingridient/infrastructure/document/entities/ingridient.schema';
 
+/**
+ * Stateless converter between the persisted `RecipeSchemaClass` document and the
+ * domain `Recipe` entity. Exposes only static methods and performs no I/O or
+ * side effects, centralizing field-by-field mapping for the recipe document layer.
+ *
+ * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L6
+ */
 export class RecipeMapper {
+  /**
+   * Converts a persisted recipe document into a domain `Recipe` instance.
+   *
+   * Maps the nested `ingridientList`, resolving each embedded `ingridient` via
+   * `IngridientMapper.toDomain(...)` only when the reference is populated, and
+   * using `null` otherwise. Maps `instructions` and copies the scalar fields
+   * (`title`, `description`, `prepTime`, `cookTime`, `servings`, `difficulty`,
+   * `tags`, `imageUrl`, `matchScore`, `createdAt`, `updatedAt`, `deletedAt`).
+   *
+   * @param raw the `RecipeSchemaClass` document loaded from MongoDB
+   * @returns the mapped domain `Recipe`
+   *
+   * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L7-L47
+   */
   static toDomain(raw: RecipeSchemaClass): Recipe {
     const recipe = new Recipe();
     recipe.id = raw._id.toString();
@@ -46,6 +67,19 @@ export class RecipeMapper {
     return recipe;
   }
 
+  /**
+   * Converts a domain `Recipe` into a partial persistence document for writes.
+   *
+   * Assigns `_id` only when `recipe.id` is a string. Maps the nested
+   * `ingridientList` and `instructions` back to persistence form, delegating
+   * embedded ingredients to `IngridientMapper.toPersistence(...)` (cast to
+   * `IngridientSchemaClass`).
+   *
+   * @param recipe the domain `Recipe` to serialize
+   * @returns a `Partial<RecipeSchemaClass>` for database writes
+   *
+   * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L49-L83
+   */
   static toPersistence(recipe: Recipe): Partial<RecipeSchemaClass> {
     const recipeEntity: Partial<RecipeSchemaClass> = {};
 
