@@ -48,6 +48,11 @@ class RecipeCard extends StatelessWidget {
     return context.theme.appColors.brightRed;
   }
 
+  /// Builds the recipe card for the given [context].
+  ///
+  /// Renders the recipe image, title, the match-score progress bar
+  /// (colored via [_getProgressBarColor]), and a favorite toggle; the
+  /// whole surface is tappable and opens the recipe detail screen.
   @override
   Widget build(BuildContext context) {
     return Card(

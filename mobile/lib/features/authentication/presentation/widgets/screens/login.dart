@@ -24,6 +24,11 @@ import 'package:pantry_chef/features/authentication/presentation/bloc/auth/auth_
 class Login extends StatelessWidget {
   const Login({super.key});
 
+  /// Builds the login screen for the given [context].
+  ///
+  /// Provides an [AuthBloc] and renders the email and password fields;
+  /// dispatches `LoginActionSent` on submit, navigates to
+  /// [Navigation.home] on success, and overlays a loader while fetching.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(

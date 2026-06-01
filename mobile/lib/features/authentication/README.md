@@ -16,26 +16,27 @@ delegates the network exchange to dedicated use cases.
 On a successful login or signup, the access token and refresh token returned by
 the backend are persisted client-side through `SharedPreferences` using
 `saveAccessToken` and `saveRefreshToken`.
-Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L14-L16
-Source: mobile/lib/core/utils/shared_preferences_helper.dart:L12-L19
+Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L36-L37
+Source: mobile/lib/features/authentication/domain/usecases/signup.usecase.dart:L36-L37
+Source: mobile/lib/core/utils/shared_preferences_helper.dart:L26-L27,L38-L39
 
 ## Key components
 
 | Component | Layer | Responsibility | Source |
 |-----------|-------|----------------|--------|
-| `AuthBloc` | presentation | Orchestrates form changes, login, and signup; emits `AuthState`. | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L14 |
-| `AuthEvent` | presentation | Sealed event hierarchy: `AuthFormValueChanged`, `LoginActionSent`, `SignupActionSend`. | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_event.dart:L3-L22 |
-| `AuthState` | presentation | Immutable form/flow state (`email`, `password`, `errorMessage`, `success`, `emailWrongFormat`, `passwordToShort`, `isFetching`). | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_state.dart:L3-L10 |
-| `LoginUsecase` | domain | Calls `repo.login(dto)`, then persists the returned tokens. | Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L9-L17 |
-| `SignupUsecase` | domain | Calls `repo.signup(dto)`, then persists the returned tokens. | Source: mobile/lib/features/authentication/domain/usecases/signup.usecase.dart:L9-L17 |
-| `AuthRepository` (interface) | domain | Abstract `login`/`signup` contract returning `AuthResponse`. | Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L4-L8 |
-| `AuthResponse` (entity) | domain | Token-response model holding `token` + `refreshToken`. | Source: mobile/lib/features/authentication/domain/entities/auth_response.entity.dart:L6-L13 |
-| `AuthRepositoryImpl` | data | Concrete repository; calls `AuthenticationApi`, maps to `AuthResponse`. | Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L6-L19 |
-| `AuthenticationApi` | data | Dio-backed HTTP calls that POST to the login/register endpoints. | Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L7-L29 |
-| `AuthDto` | data | Request DTO carrying `email` + `password`. | Source: mobile/lib/features/authentication/data/dto/auth.dto.dart:L6-L13 |
-| `AuthenticationStart` | presentation | Landing screen; routes to the signup and login screens. | Source: mobile/lib/features/authentication/presentation/widgets/screens/authentication_start.dart:L10-L56 |
-| `Login` | presentation | Login form screen; dispatches `LoginActionSent`. | Source: mobile/lib/features/authentication/presentation/widgets/screens/login.dart:L15-L122 |
-| `Signup` | presentation | Signup form screen; dispatches `SignupActionSend`. | Source: mobile/lib/features/authentication/presentation/widgets/screens/signup.dart:L14-L121 |
+| `AuthBloc` | presentation | Orchestrates form changes, login, and signup; emits `AuthState`. | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L28-L110 |
+| `AuthEvent` | presentation | Sealed event hierarchy: `AuthFormValueChanged`, `LoginActionSent`, `SignupActionSend`. | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_event.dart:L4-L28 |
+| `AuthState` | presentation | Immutable form/flow state (`email`, `password`, `errorMessage`, `success`, `emailWrongFormat`, `passwordToShort`, `isFetching`). | Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_state.dart:L8-L22 |
+| `LoginUsecase` | domain | Calls `repo.login(dto)`, then persists the returned tokens. | Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L16-L38 |
+| `SignupUsecase` | domain | Calls `repo.signup(dto)`, then persists the returned tokens. | Source: mobile/lib/features/authentication/domain/usecases/signup.usecase.dart:L16-L38 |
+| `AuthRepository` (interface) | domain | Abstract `login`/`signup` contract returning `AuthResponse`. | Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L15-L26 |
+| `AuthResponse` (entity) | domain | Token-response model holding `token` + `refreshToken`. | Source: mobile/lib/features/authentication/domain/entities/auth_response.entity.dart:L12-L26 |
+| `AuthRepositoryImpl` | data | Concrete repository; calls `AuthenticationApi`, maps to `AuthResponse`. | Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L14-L42 |
+| `AuthenticationApi` | data | Dio-backed HTTP calls that POST to the login/register endpoints. | Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L14-L54 |
+| `AuthDto` | data | Request DTO carrying `email` + `password`. | Source: mobile/lib/features/authentication/data/dto/auth.dto.dart:L15-L30 |
+| `AuthenticationStart` | presentation | Landing screen; routes to the signup and login screens. | Source: mobile/lib/features/authentication/presentation/widgets/screens/authentication_start.dart:L20 |
+| `Login` | presentation | Login form screen; dispatches `LoginActionSent`. | Source: mobile/lib/features/authentication/presentation/widgets/screens/login.dart:L24 |
+| `Signup` | presentation | Signup form screen; dispatches `SignupActionSend`. | Source: mobile/lib/features/authentication/presentation/widgets/screens/signup.dart:L23 |
 
 ## Architecture fit
 
@@ -46,24 +47,24 @@ responsibilities across three layers under
 - **`domain/`** holds the framework-agnostic core: the `AuthResponse` entity, the
   abstract `AuthRepository` contract, and the `LoginUsecase`/`SignupUsecase` use
   cases.
-  Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L4-L8
+  Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L15-L26
 - **`data/`** holds the outward-facing implementation: `AuthenticationApi`
   (Dio), the `AuthDto` request DTO, and `AuthRepositoryImpl`, which satisfies the
   domain contract.
-  Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L6-L19
+  Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L14-L42
 - **`presentation/`** holds `AuthBloc` plus the `AuthenticationStart`, `Login`,
   and `Signup` screens.
-  Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L14
+  Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L28
 
 Cross-cutting dependencies are resolved through the `get_it` service locator: the
 `AuthenticationApi` obtains its `Dio` from `getIt<DioClient>()`, and the use cases
 read tokens out of `getIt<SharedPreferencesHelper>()`.
-Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L11
-Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L14
+Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L20
+Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L34
 
 Both use cases implement the shared `UseCaseWithParams<void, AuthDto>` contract,
 keeping the feature consistent with the rest of the codebase.
-Source: mobile/lib/core/utils/usercase.dart:L5-L7
+Source: mobile/lib/core/utils/usercase.dart:L22-L27
 
 For the full system picture (backend ↔ mobile ↔ MongoDB, cross-cutting concerns,
 and the bootstrap sequence), see [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md).
@@ -76,10 +77,10 @@ codegen (the generated `*.g.dart` parts are build output, not committed source).
 - **`AuthResponse`** — the token-response entity returned by the backend, holding
   a `token` (access token) and a `refreshToken`, both `final String`. It exposes
   a `factory AuthResponse.fromJson(...)` for decoding.
-  Source: mobile/lib/features/authentication/domain/entities/auth_response.entity.dart:L6-L13
+  Source: mobile/lib/features/authentication/domain/entities/auth_response.entity.dart:L12-L26
 - **`AuthDto`** — the login/register request DTO carrying a `final String email`
   and a `final String password`, with a `toJson()` used by `AuthenticationApi`.
-  Source: mobile/lib/features/authentication/data/dto/auth.dto.dart:L6-L13
+  Source: mobile/lib/features/authentication/data/dto/auth.dto.dart:L15-L30
 
 For the consolidated field tables across all backend and mobile models, see
 [docs/DATA_MODELS.md](../../../../docs/DATA_MODELS.md).
@@ -92,21 +93,23 @@ The feature consumes the backend authentication surface. Routes resolve under
 
 | Method | Path | Purpose | Source |
 |--------|------|---------|--------|
-| `POST` | `/api/auth/email/login` | Authenticate with email + password; returns a token pair. | Source: mobile/lib/core/constants/endpoints.dart:L12 |
-| `POST` | `/api/auth/email/register` | Register a new account with email + password. | Source: mobile/lib/core/constants/endpoints.dart:L13 |
-| `POST` | `/api/auth/refresh` | Exchange a refresh token for a new access token. | Source: mobile/lib/core/constants/endpoints.dart:L11 |
-| `POST` | `/api/auth/logout` | Invalidate the current session. | Source: mobile/lib/core/constants/endpoints.dart:L14 |
-| `GET` | `/api/auth/me` | Fetch the authenticated user profile. | Source: mobile/lib/core/constants/endpoints.dart:L15 |
+| `POST` | `/api/auth/email/login` | Authenticate with email + password; returns a token pair. | Source: mobile/lib/core/constants/endpoints.dart:L35 |
+| `POST` | `/api/auth/email/register` | Register a new account with email + password. | Source: mobile/lib/core/constants/endpoints.dart:L41 |
+| `POST` | `/api/auth/refresh` | Exchange a refresh token for a new access token. | Source: mobile/lib/core/constants/endpoints.dart:L32 |
+| `POST` | `/api/auth/logout` | Invalidate the current session. | Source: mobile/lib/core/constants/endpoints.dart:L44 |
+| `GET` | `/api/auth/me` | Fetch the authenticated user profile. | Source: mobile/lib/core/constants/endpoints.dart:L47 |
 
 The feature's own `AuthenticationApi` calls only `login` and `signup` — the login
 and register routes.
-Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L14-L28
+Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L29-L54
 The `refresh`, `logout`, and `me` constants belong to the wider auth surface used
 app-wide (for example, by the Dio refresh interceptor).
-Source: mobile/lib/core/constants/endpoints.dart:L11-L15
+Source: mobile/lib/core/constants/endpoints.dart:L32-L47
 
-Access tokens last 15 minutes and refresh tokens last 3650 days on the backend;
-the full REST contract (request/response DTOs, status codes, and guards) is the
+Access tokens last 15 minutes and refresh tokens last 3650 days on the backend.
+Source: backend/env_example:L21
+Source: backend/env_example:L23
+The full REST contract (request/response DTOs, status codes, and guards) is the
 authority and is documented in
 [docs/API_REFERENCE.md](../../../../docs/API_REFERENCE.md).
 
@@ -115,18 +118,18 @@ authority and is documented in
 - **API base URL.** Endpoint paths are built on `EnvConfig.apiBaseUrl`, a
   compile-time value resolved via
   `String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api')`.
-  Source: mobile/lib/env_config.dart:L2
+  Source: mobile/lib/env_config.dart:L23
   The `Endpoints` class composes every route on top of this base.
-  Source: mobile/lib/core/constants/endpoints.dart:L6
+  Source: mobile/lib/core/constants/endpoints.dart:L21
 - **Token persistence.** Access and refresh tokens are written through
   `SharedPreferencesHelper` (`saveAccessToken`/`saveRefreshToken`).
-  Source: mobile/lib/core/utils/shared_preferences_helper.dart:L12-L19
+  Source: mobile/lib/core/utils/shared_preferences_helper.dart:L26-L27,L38-L39
 - **Routing.** The signup destination is the misspelled route constant `singup`
   (sic) — `static const String singup = '/singup';` — which is a stable
   identifier and is intentionally preserved as-is.
-  Source: mobile/lib/core/constants/navigation.dart:L6
+  Source: mobile/lib/core/constants/navigation.dart:L21
   The landing screen pushes this route when the user chooses to register.
-  Source: mobile/lib/features/authentication/presentation/widgets/screens/authentication_start.dart:L36
+  Source: mobile/lib/features/authentication/presentation/widgets/screens/authentication_start.dart:L56
 
 ## Data flow
 
@@ -167,39 +170,44 @@ sequenceDiagram
     Screen->>Screen: Navigate to Navigation.home
 ```
 
-Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L28-L69, mobile/lib/features/authentication/data/api/authentication.api.dart:L14-L28, mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L11-L16
+Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L34-L109
+Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L29-L54
+Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L25-L37
 
 ## Design patterns used
 
 - **BLoC (event/state).** `AuthBloc` consumes `AuthEvent`s and emits `AuthState`,
   centralizing form validation and the async login/signup logic.
-  Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L14
+  Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart:L28
 - **Repository pattern.** The domain `AuthRepository` interface decouples use
   cases from transport details, while the data-layer `AuthRepositoryImpl` provides
   the concrete implementation.
-  Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L4
-  Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L6
+  Source: mobile/lib/features/authentication/domain/repositories/auth.repository.dart:L15
+  Source: mobile/lib/features/authentication/data/repositories/auth.repository.dart:L14
 - **Use Case pattern.** `LoginUsecase` and `SignupUsecase` each implement
   `UseCaseWithParams<void, AuthDto>`, encapsulating one unit of application logic.
-  Source: mobile/lib/core/utils/usercase.dart:L5-L7
+  Source: mobile/lib/core/utils/usercase.dart:L22-L27
 - **Dependency injection via `get_it`.** Collaborators such as `DioClient` and
   `SharedPreferencesHelper` are resolved from the `getIt` locator rather than
   constructed inline.
-  Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L11
-  Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L14
+  Source: mobile/lib/features/authentication/data/api/authentication.api.dart:L20
+  Source: mobile/lib/features/authentication/domain/usecases/login.usecase.dart:L34
 
 ## Known limitations / gaps
 
 - The signup route constant is misspelled as `singup` (sic). It is a **stable
   identifier preserved as-is** — documented here, never renamed.
-  Source: mobile/lib/core/constants/navigation.dart:L6
+  Source: mobile/lib/core/constants/navigation.dart:L21
 - KNOWN ISSUE: Tokens are persisted **client-side** in `SharedPreferences` as
   plain key/value entries with no additional at-rest protection.
-  Source: mobile/lib/core/utils/shared_preferences_helper.dart:L12-L19
-- SECURITY NOTE: The shared Dio client attaches a verbose `LogInterceptor` that
-  logs `Authorization` bearer tokens in all builds. This concern is documented in
-  [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md); it is cross-referenced
-  here rather than restated, and the code is intentionally left unchanged.
+  Source: mobile/lib/core/utils/shared_preferences_helper.dart:L26-L27,L38-L39
+- SECURITY NOTE: The shared Dio client attaches a verbose `LogInterceptor`
+  unconditionally with `requestHeader: true`, so the `Authorization: Bearer
+  <token>` header is written to logs in all builds, including release. The code
+  is intentionally left unchanged (additive-only task); the system-wide context
+  is also captured in
+  [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md).
+  Source: mobile/lib/core/utils/dio_client.dart:L48-L60
 
 ## Local development
 
@@ -223,7 +231,7 @@ Source: mobile/lib/features/authentication/presentation/bloc/auth/auth_bloc.dart
    flutter run --dart-define API_BASE_URL=http://<host>:3000/api
    ```
 
-   Source: mobile/lib/env_config.dart:L2
+   Source: mobile/lib/env_config.dart:L23
 
    `<host>` must be reachable from the device or emulator — use a LAN IP for a
    physical device, or `10.0.2.2` to reach the host machine from the Android

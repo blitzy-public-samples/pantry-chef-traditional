@@ -20,6 +20,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class AuthenticationStart extends StatelessWidget {
   const AuthenticationStart({super.key});
 
+  /// Builds the authentication landing screen for the given [context].
+  ///
+  /// Renders the app logo and two call-to-action buttons: the first
+  /// routes to the signup screen, the second to the login screen.
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(

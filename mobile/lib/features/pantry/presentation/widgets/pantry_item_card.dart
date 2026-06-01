@@ -18,6 +18,11 @@ class PantryItemCard extends StatelessWidget {
 
   const PantryItemCard({super.key, required this.item});
 
+  /// Builds the pantry item card for the given [context].
+  ///
+  /// Renders the ingredient name, the expiration date formatted as
+  /// `dd.MM.yyyy`, and the quantity with its unit, plus an edit button
+  /// that routes to [Navigation.pantryItemEdit].
   @override
   Widget build(BuildContext context) {
     // Transparent Material wrapper so the Card defines the surface.

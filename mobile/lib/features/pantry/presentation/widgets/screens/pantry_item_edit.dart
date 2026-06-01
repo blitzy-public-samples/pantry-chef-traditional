@@ -51,6 +51,11 @@ class PantryItemEdit extends StatelessWidget {
     }
   }
 
+  /// Builds the pantry item edit screen for the given [context].
+  ///
+  /// Provides a [PantryItemEditBloc] seeded from the [item] and renders
+  /// the quantity field, expiration date picker, and location select,
+  /// plus save and delete actions.
   @override
   Widget build(BuildContext context) {
     // Provide a PantryItemEditBloc seeded from the item's values.

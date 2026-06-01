@@ -23,6 +23,12 @@ import 'package:pantry_chef/features/pantry/presentation/widgets/pantry_item_car
 class PantryMain extends StatelessWidget {
   const PantryMain({super.key});
 
+  /// Builds the pantry overview screen for the given [context].
+  ///
+  /// Renders a platform-adaptive scaffold whose body reacts to
+  /// [PantryBloc] state: dispatches [PantryItemsFetched] and shows a
+  /// shimmer when items are null, an empty placeholder when empty, or a
+  /// grouped, pull-to-refresh list of [PantryItemCard]s when populated.
   @override
   Widget build(BuildContext context) {
     return PlatformScaffold(

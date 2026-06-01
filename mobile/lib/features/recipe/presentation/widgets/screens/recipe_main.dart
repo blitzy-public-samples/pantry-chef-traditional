@@ -31,10 +31,17 @@ class _RecipeMainState extends State<RecipeMain> {
     if (bloc.state.items == null) {
       context.read<RecipeBloc>().add(RecipeMatching());
     }
-    // Call super.initState() last, per Flutter convention.
+    // This implementation calls super.initState() after the initial
+    // dispatch above.
     super.initState();
   }
 
+  /// Builds the recipe list screen for the given [context].
+  ///
+  /// Renders a platform-adaptive scaffold whose body reacts to
+  /// [ProfileBloc] and [RecipeBloc] state: a shimmer while fetching,
+  /// otherwise the matched recipe list of [RecipeCard]s with
+  /// pull-to-refresh.
   @override
   Widget build(BuildContext context) {
     // Platform-adaptive scaffold is the screen root.

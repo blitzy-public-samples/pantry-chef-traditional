@@ -23,6 +23,11 @@ import 'package:loader_overlay/loader_overlay.dart';
 class Signup extends StatelessWidget {
   const Signup({super.key});
 
+  /// Builds the signup screen for the given [context].
+  ///
+  /// Provides an [AuthBloc] and renders the email and password fields;
+  /// dispatches `SignupActionSend` (sic) on submit, navigates to
+  /// [Navigation.home] on success, and overlays a loader while fetching.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
