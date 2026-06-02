@@ -18,20 +18,16 @@ import { PantryIngridientDocumentRepository } from './repositories/pantryIngridi
  * - Registers the Mongoose feature model for `PantryIngridientSchemaClass` via
  *   `MongooseModule.forFeature`, mapping `PantryIngridientSchemaClass.name` to
  *   the generated `PantryIngridientSchema`.
- *   Source: backend/src/pantry/infrastructure/document/document-persistence.module.ts:L11-L18
  * - Binds the abstract `PantryRepository` token to the concrete
  *   `PantryIngridientDocumentRepository` via
  *   `{ provide: PantryRepository, useClass: PantryIngridientDocumentRepository }`.
- *   Source: backend/src/pantry/infrastructure/document/document-persistence.module.ts:L19-L24
  * - Exports the `PantryRepository` token so consumer modules (e.g.,
  *   `PantryModule`) resolve the repository transparently without depending on
  *   the concrete implementation.
- *   Source: backend/src/pantry/infrastructure/document/document-persistence.module.ts:L25
  *
  * Imported and re-exported by `PantryModule`, the pantry feature module.
- * Source: backend/src/pantry/pantry.module.ts:L6-L11
+ * Source: backend/src/pantry/pantry.module.ts:L17,L23
  *
- * Source: backend/src/pantry/infrastructure/document/document-persistence.module.ts:L10-L27
  */
 @Module({
   imports: [

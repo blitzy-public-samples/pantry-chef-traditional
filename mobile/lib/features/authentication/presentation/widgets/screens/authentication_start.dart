@@ -16,7 +16,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 /// `MainAxisAlignment.spaceBetween`) so the logo and buttons stay spaced
 /// across device sizes.
 ///
-/// Source: .../authentication_start.dart:L10
 class AuthenticationStart extends StatelessWidget {
   const AuthenticationStart({super.key});
 
@@ -50,7 +49,7 @@ class AuthenticationStart extends StatelessWidget {
                         // Signup button. Routes via the misspelled route
                         // `Navigation.singup` (sic), preserved intentionally;
                         // never rename or correct.
-                        // Source: mobile/lib/core/constants/navigation.dart:L6
+                        // Source: mobile/lib/core/constants/navigation.dart:L17
                         ActionButton(
                           text: AppLocalizations.of(context)!.signup,
                           onPress: () => Navigator.of(context).pushNamed(Navigation.singup),

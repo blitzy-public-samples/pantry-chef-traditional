@@ -7,7 +7,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 ///
 /// Provides a localized, platform-adaptive page frame for the
 /// preferences route. See the KNOWN ISSUE in [build] below.
-/// Source: screens/preferences.dart:L6,L10-L16.
 class PreferencesScreen extends StatelessWidget {
   const PreferencesScreen({super.key});
 
@@ -17,7 +16,6 @@ class PreferencesScreen extends StatelessWidget {
     // an app bar (getAppBarWidget) and no `body` argument, so the
     // screen renders no content and is effectively empty. Captured
     // verbatim per the additive-only policy; no fix is applied.
-    // Source: preferences.dart:L10-L16
     return PlatformScaffold(
       appBar: getAppBarWidget(
         context,

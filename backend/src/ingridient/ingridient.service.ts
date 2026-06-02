@@ -46,7 +46,6 @@ export class IngridientService {
       if (userObject) {
         // KNOWN ISSUE: the 422 payload is keyed under `email` (a copy-paste
         // artifact) instead of `name`; preserved as-is, not corrected.
-        // Source: backend/src/ingridient/ingridient.service.ts:L24-L34
         throw new HttpException(
           {
             status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -125,7 +124,6 @@ export class IngridientService {
     if (!ingredientObject?.id) {
       // KNOWN ISSUE: the 422 payload is keyed under `email` (a copy-paste
       // artifact) instead of `id`; preserved as-is, not corrected.
-      // Source: backend/src/ingridient/ingridient.service.ts:L69-L79
       throw new HttpException(
         {
           status: HttpStatus.UNPROCESSABLE_ENTITY,

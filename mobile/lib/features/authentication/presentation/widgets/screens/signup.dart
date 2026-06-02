@@ -19,7 +19,6 @@ import 'package:loader_overlay/loader_overlay.dart';
 /// once `AuthState.success` becomes true, and shows a loader overlay
 /// while `AuthState.isFetching` is true.
 ///
-/// Source: .../signup.dart:L14
 class Signup extends StatelessWidget {
   const Signup({super.key});
 
@@ -36,7 +35,6 @@ class Signup extends StatelessWidget {
         listeners: [
           // On AuthState.success, navigates to Navigation.home and
           // clears the back stack via pushNamedAndRemoveUntil.
-          // Source: .../signup.dart:L23
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.success != curr.success,
             listener: (context, state) {
@@ -47,7 +45,6 @@ class Signup extends StatelessWidget {
           ),
           // On AuthState.isFetching change, shows or hides the
           // loader overlay; requires a loader-overlay ancestor.
-          // Source: .../signup.dart:L31
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.isFetching != curr.isFetching,
             listener: (context, state) {
@@ -83,7 +80,6 @@ class Signup extends StatelessWidget {
                             // at maxLength 50, validates via
                             // getEmailErrorText, and dispatches
                             // AuthFormValueChanged(email: value).
-                            // Source: .../signup.dart:L61
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.email != curr.email ||
@@ -108,7 +104,6 @@ class Signup extends StatelessWidget {
                             // flag drives errorText (shows passwordHint);
                             // caps at maxLength 10, dispatches
                             // AuthFormValueChanged(password: value).
-                            // Source: .../signup.dart:L80
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.password != curr.password || prev.passwordToShort != curr.passwordToShort,
@@ -131,7 +126,6 @@ class Signup extends StatelessWidget {
                         // greyed) until both email and password are
                         // non-empty; otherwise dispatches
                         // SignupActionSend() (sic) on the AuthBloc.
-                        // Source: .../signup.dart:L98
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
                             return ActionButton(

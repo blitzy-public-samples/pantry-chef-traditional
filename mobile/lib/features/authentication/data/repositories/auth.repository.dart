@@ -9,15 +9,13 @@ import 'package:pantry_chef/features/authentication/domain/repositories/auth.rep
 /// into the [AuthResponse] domain entity for the sign-in and sign-up
 /// flows. The class is stateless: it holds no fields and creates a new
 /// [AuthenticationApi] on demand inside each method.
-/// Source: .../data/repositories/auth.repository.dart:L6
-/// Source: .../domain/repositories/auth.repository.dart:L4-L7
+/// Source: .../domain/repositories/auth.repository.dart:L15
 class AuthRepositoryImpl extends AuthRepository {
   /// Authenticates an existing user with the credentials in [dto].
   ///
   /// Sends [dto] to the backend via [AuthenticationApi.login] and maps
   /// the raw `Map<String, dynamic>` response into an [AuthResponse]
   /// through [AuthResponse.fromJson].
-  /// Source: .../data/repositories/auth.repository.dart:L7-L12
   @override
   Future<AuthResponse> login(AuthDto dto) async {
     // Instantiates the API client on demand (stateless repository).
@@ -31,7 +29,6 @@ class AuthRepositoryImpl extends AuthRepository {
   /// Sends [dto] to the backend via [AuthenticationApi.signup] and maps
   /// the raw `Map<String, dynamic>` response into an [AuthResponse]
   /// through [AuthResponse.fromJson].
-  /// Source: .../data/repositories/auth.repository.dart:L14-L19
   @override
   Future<AuthResponse> signup(AuthDto dto) async {
     // Instantiates the API client on demand (stateless repository).

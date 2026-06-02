@@ -9,11 +9,9 @@ import 'package:pantry_chef/features/pantry/domain/repositories/pantry.repositor
 /// Creates a pantry item from the supplied creation DTO by
 /// delegating to the pantry repository's create operation.
 /// Implements `UseCaseWithParams<PantryItem, CreatePantryItemDto>`.
-/// Source: add_to_pantry.usecase.dart:L7
 class AddToPantryUsecase implements UseCaseWithParams<PantryItem, CreatePantryItemDto> {
   /// Creates a pantry item from [dto] and returns the created
   /// `PantryItem`.
-  /// Source: add_to_pantry.usecase.dart:L9
   @override
   Future<PantryItem> call(CreatePantryItemDto dto) {
     // New repository instance per call; typed as the domain interface.

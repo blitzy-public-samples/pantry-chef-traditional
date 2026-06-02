@@ -18,7 +18,6 @@ import 'package:pantry_chef/features/recipe/presentation/widgets/recipe_card.dar
 /// [FavoriteRecipesFetched] and shows a [ShimmerList]; (b) when
 /// empty it shows an empty-state icon and message; (c) otherwise
 /// it renders a [ListView] of [RecipeCard] (isFavorite: true).
-/// Source: screens/favorite_recipes.dart:L12,L25-L61.
 class FavoriteRecipes extends StatelessWidget {
   const FavoriteRecipes({super.key});
 

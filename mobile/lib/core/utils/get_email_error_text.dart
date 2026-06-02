@@ -11,15 +11,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 ///
 /// 1. Malformed email: returns the `emailWrongFormat` localized string when
 ///    `state.emailWrongFormat` is true.
-///    Source: mobile/lib/core/utils/get_email_error_text.dart:L7-L9
 /// 2. `ErrorMessage.emailAlreadyExists`: returns the `emailAlreadyExists`
 ///    localized string.
-///    Source: mobile/lib/core/utils/get_email_error_text.dart:L10-L12
 /// 3. `ErrorMessage.notFound`: returns the `wrongEmail` localized string.
-///    Source: mobile/lib/core/utils/get_email_error_text.dart:L13-L15
 ///
 /// Returns `null` when no email-specific message applies.
-/// Source: mobile/lib/core/utils/get_email_error_text.dart:L16
 String? getEmailErrorText(BuildContext context, AuthState state) {
   // Priority 1: malformed email format takes precedence.
   if (state.emailWrongFormat) {

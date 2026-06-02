@@ -7,21 +7,19 @@ import { UserSchemaClass } from '../entities/user.schema';
  * domain field translation for the users document/infrastructure layer so that
  * repositories do not duplicate mapping rules. Exposes only static methods and
  * holds no state.
- * Source: backend/src/users/infrastructure/document/mappers/user.mapper.ts:L4
  */
 export class UserMapper {
   /**
    * Converts a persistence document into the domain `User`.
    *
-   * Maps `raw._id.toString()` to `user.id` (L7), copies `email`/`password`
-   * (L8-L9), reconstructs the embedded `preferences` object when present and
-   * otherwise assigns `undefined` (L11-L18), defaults `recentSearches` and
-   * `favoriteRecipes` to `[]` via `|| []` (L20, L22), then copies
-   * `createdAt`/`updatedAt`/`deletedAt` (L24-L26).
+   * Maps `raw._id.toString()` to `user.id`, copies `email`/`password`,
+   * reconstructs the embedded `preferences` object when present and
+   * otherwise assigns `undefined`, defaults `recentSearches` and
+   * `favoriteRecipes` to `[]` via `|| []`, then copies
+   * `createdAt`/`updatedAt`/`deletedAt`.
    *
    * @param raw - The `UserSchemaClass` persistence document to convert.
    * @returns The reconstructed domain `User` model.
-   * Source: backend/src/users/infrastructure/document/mappers/user.mapper.ts:L5-L29
    */
   static toDomain(raw: UserSchemaClass): User {
     const user = new User();
@@ -53,15 +51,14 @@ export class UserMapper {
    * Converts a domain `User` into a `UserSchemaClass` persistence entity.
    *
    * Conditionally assigns `_id` only when `user.id` is a string
-   * (`if (user.id && typeof user.id === 'string')`, L33-L35), copies
-   * `email`/`password` (L37-L38), reconstructs `preferences` when present and
-   * otherwise assigns `undefined` (L40-L47), defaults `recentSearches` and
-   * `favoriteRecipes` to `[]` via `|| []` (L49, L51), then copies
-   * `createdAt`/`updatedAt`/`deletedAt` (L53-L55).
+   * (`if (user.id && typeof user.id === 'string')`), copies
+   * `email`/`password`, reconstructs `preferences` when present and
+   * otherwise assigns `undefined`, defaults `recentSearches` and
+   * `favoriteRecipes` to `[]` via `|| []`, then copies
+   * `createdAt`/`updatedAt`/`deletedAt`.
    *
    * @param user - The domain `User` to convert.
    * @returns The `UserSchemaClass` persistence entity.
-   * Source: backend/src/users/infrastructure/document/mappers/user.mapper.ts:L31-L58
    */
   static toPersistence(user: User): UserSchemaClass {
     const userEntity = new UserSchemaClass();

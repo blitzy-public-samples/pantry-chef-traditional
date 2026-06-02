@@ -18,7 +18,6 @@ import 'package:pantry_chef/features/profile/presentation/widgets/profile_naviga
 /// ([Navigation.preferences]) and Favorite Recipes
 /// ([Navigation.favoriteRecipes]), and a logout [ActionButton]
 /// whose onPress dispatches `Logout(context: context)`.
-/// Source: screens/profile_main.dart:L12,L17-L18,L53-L57.
 class ProfileMain extends StatelessWidget {
   const ProfileMain({super.key});
 

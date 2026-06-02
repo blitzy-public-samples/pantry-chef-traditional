@@ -8,7 +8,7 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 /// [CreateIngredientDto] supplied by the add-ingredient form.
 ///
 /// Implements [UseCaseWithParams] so callers invoke it via `call`.
-/// Source: core/utils/usercase.dart:L5
+/// Source: core/utils/usercase.dart:L19
 class CreateIngredientUsecase implements UseCaseWithParams<Ingredient, CreateIngredientDto> {
   /// Creates the ingredient described by [dto] and returns the saved
   /// [Ingredient].

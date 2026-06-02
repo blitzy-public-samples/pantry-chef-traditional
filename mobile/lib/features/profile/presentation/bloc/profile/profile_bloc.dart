@@ -15,7 +15,6 @@ part 'profile_state.dart';
 /// `Bloc<ProfileEvent, ProfileState>` with `HydratedMixin` to persist
 /// `userProfile` and `favoriteRecipes` across app launches. Calls
 /// `hydrate()` in its constructor to restore cached state.
-/// Source: profile_bloc.dart:L14,L16
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> with HydratedMixin {
   ProfileBloc() : super(ProfileState()) {
     // Restore any persisted state from hydrated storage on creation.

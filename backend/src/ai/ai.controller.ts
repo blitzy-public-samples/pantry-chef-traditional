@@ -12,14 +12,13 @@ import { AiService } from './ai.service';
 // SECURITY NOTE: This endpoint has NO JWT guard and is therefore unauthenticated,
 // unlike every other resource controller (auth/users/pantry/recipe/ingridient),
 // which apply `@UseGuards(AuthGuard('jwt'))`. Documented as-is; do NOT add a guard.
-// Source: backend/src/ai/ai.controller.ts:L12-L16
 /**
  * REST controller exposing the AI image-to-ingredient recognition endpoint.
  *
  * The controller base path is `ai`, mounted under the global `api` prefix, so
  * the served route is `POST /api/ai/vision`. No version segment is declared on
  * the controller, so there is NO `/v1/` segment in the path.
- * Source: backend/src/main.ts:L14-L15
+ * Source: backend/src/main.ts:L30-L35
  *
  * Recognition is delegated to `AiService.detectIngredientsFromBuffer`, which
  * performs Google Cloud Vision label detection and dictionary matching.
@@ -37,9 +36,9 @@ export class AiController {
    * @returns The matched ingredient object
    *   `{ id, name, category, quantity, unit, confidence }`, or an empty object `{}`
    *   when Google Vision is disabled or no label matches (the service degrades
-   *   gracefully). Source: backend/src/ai/ai.service.ts:L114-L126
+   *   gracefully). Source: backend/src/ai/ai.service.ts:L161-L175
    * @throws BadRequestException With message `'Image empty'` when no file is
-   *   provided. Source: backend/src/ai/ai.controller.ts:L33-L34
+   *   provided.
    */
   @Post('vision')
   @UseInterceptors(
@@ -47,7 +46,6 @@ export class AiController {
       storage: memoryStorage(),
       // KNOWN ISSUE: The MIME-type fileFilter below is commented out, so non-image
       // uploads are NOT rejected at the interceptor level.
-      // Source: backend/src/ai/ai.controller.ts:L20-L28
       // fileFilter: (req, file, callback) => {
       //   if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
       //     return callback(

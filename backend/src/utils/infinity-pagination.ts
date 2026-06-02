@@ -18,9 +18,8 @@ import { InfinityPaginationResultType } from './types/infinity-pagination-result
  * @returns A `Readonly<{ data, hasNextPage }>` where `hasNextPage` is `true` when
  *   the page is full.
  *
- * Source: backend/src/utils/infinity-pagination.ts:L10
- * Source: backend/src/utils/types/pagination-options.ts:L1
- * Source: backend/src/utils/types/infinity-pagination-result.type.ts:L1
+ * Source: backend/src/utils/types/pagination-options.ts:L6
+ * Source: backend/src/utils/types/infinity-pagination-result.type.ts:L7
  */
 export const infinityPagination = <T>(
   data: T[],

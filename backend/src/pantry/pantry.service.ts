@@ -142,7 +142,7 @@ export class PantryService {
     // KNOWN ISSUE: despite the name `softDelete`, the document repository
     // performs a HARD delete (`deleteOne`) that physically removes the record
     // even though the schema declares a `deletedAt` field.
-    // Source: pantryIngridient.repository.ts:L120
+    // Source: pantryIngridient.repository.ts:L184-L186
     await this.pantryRepository.softDelete(id);
   }
 }

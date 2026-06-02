@@ -13,7 +13,7 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 ///
 /// Implements [UseCaseWithParams] (params: [SearchDto], result:
 /// List of [Ingredient]).
-/// Source: core/utils/usercase.dart:L5
+/// Source: core/utils/usercase.dart:L19
 class SearchIngredientUsecase implements UseCaseWithParams<List<Ingredient>, SearchDto> {
   /// Searches ingredients matching [dto] and returns the resulting
   /// list of [Ingredient].

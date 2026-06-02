@@ -8,7 +8,6 @@ import { IngridientSchemaClass } from 'src/ingridient/infrastructure/document/en
  * domain `Recipe` entity. Exposes only static methods and performs no I/O or
  * side effects, centralizing field-by-field mapping for the recipe document layer.
  *
- * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L6
  */
 export class RecipeMapper {
   /**
@@ -23,7 +22,6 @@ export class RecipeMapper {
    * @param raw the `RecipeSchemaClass` document loaded from MongoDB
    * @returns the mapped domain `Recipe`
    *
-   * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L7-L47
    */
   static toDomain(raw: RecipeSchemaClass): Recipe {
     const recipe = new Recipe();
@@ -78,7 +76,6 @@ export class RecipeMapper {
    * @param recipe the domain `Recipe` to serialize
    * @returns a `Partial<RecipeSchemaClass>` for database writes
    *
-   * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L49-L83
    */
   static toPersistence(recipe: Recipe): Partial<RecipeSchemaClass> {
     const recipeEntity: Partial<RecipeSchemaClass> = {};

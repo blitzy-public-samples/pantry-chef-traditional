@@ -14,19 +14,15 @@ import { SessionDocumentRepository } from './repositories/session.repository';
  *
  * - Registers the Mongoose model for `SessionSchemaClass` via `MongooseModule.forFeature`,
  *   binding the model name `SessionSchemaClass.name` to the generated `SessionSchema`.
- *   Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L9-L11
  * - Binds the abstract `SessionRepository` token to the concrete `SessionDocumentRepository`
  *   via `{ provide: SessionRepository, useClass: SessionDocumentRepository }`, so the
  *   application/auth layer depends on the abstraction, not the storage technology.
- *   Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L14-L17
  * - Exports `SessionRepository` so consumers (e.g. `SessionModule` -> `AuthModule`) inject
  *   the abstraction rather than the implementation.
- *   Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L19
  *
  * Re-exported by `SessionModule`, the session feature module.
- * Source: backend/src/session/session.module.ts:L6,L8
+ * Source: backend/src/session/session.module.ts:L28,L32
  *
- * Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L7-L21
  */
 @Module({
   // imports: registers the SessionSchemaClass Mongoose model for this feature

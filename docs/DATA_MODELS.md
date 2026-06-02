@@ -46,30 +46,30 @@ The backend stores data in MongoDB accessed through Mongoose 8
 `backend/src/<module>/infrastructure/document/entities/*.schema.ts`.
 
 Every collection-backing schema class extends `EntityDocumentHelper`
-(`Source: backend/src/utils/document-entity-helper.ts:L3`), which exposes a
+(`Source: backend/src/utils/document-entity-helper.ts:L15`), which exposes a
 public `_id` whose value is serialized to a string through a `@Transform`
 applied on plain serialization
-(`Source: backend/src/utils/document-entity-helper.ts:L4-L17`). As a result,
+(`Source: backend/src/utils/document-entity-helper.ts:L16-L30`). As a result,
 every document exposes a string `_id` in its serialized JSON. Embedded
 subdocument classes do not extend it — for example the recipe `IngridientList`
 subdocument is a plain `@Schema()` class with no `EntityDocumentHelper` base
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L6-L7`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L11-L12`).
 
 The collection-backing classes are decorated with
 `@Schema({ timestamps: true, toJSON: { virtuals: true, getters: true } })`,
 which enables Mongoose timestamps and applies virtuals and getters on JSON
-serialization (`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L53-L59`,
-`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L8-L14`,
-`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L9-L15`,
+serialization (`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L48-L54`,
+`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L26`,
+`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26`,
 `Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L9-L15`).
 The `Recipe` schema additionally declares a matching `toObject` option
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L46-L56`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L76-L79`).
 Because each schema sets `timestamps: true`, Mongoose maintains `createdAt` and
 `updatedAt` at runtime. Most schema classes also declare these as explicit class
 fields (with `default: now`) alongside a `deletedAt` field; `SessionSchemaClass`,
 however, declares only `createdAt` and `deletedAt` as class fields and relies on
 `timestamps: true` to supply `updatedAt`
-(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L8-L9,L19-L23`).
+(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L26,L32-L40`).
 
 ### Mobile Dart models
 
@@ -91,7 +91,7 @@ field-by-field mapping appears in [Section 10](#10-mobile-dart-models).
 > class with a misspelled field `ingridient`, a misspelled list field
 > `ingridientList`, and a misspelled class `InstractionItem`. These spellings
 > are stable identifiers and are reproduced exactly throughout this document
-> (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16`,
+> (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26`,
 > `Source: mobile/lib/features/recipe/domain/models/recipe.dart:L12-L13`).
 
 ## 2. Entity Relationship Diagram
@@ -189,17 +189,17 @@ classDiagram
     RecipeSchemaClass *-- "many" Instruction : embeds
 ```
 
-_Diagram sources: `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L17-L114`,
-`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L15-L24`,
-`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16-L50`,
-`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L16-L43`,
-`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L6-L102`._
+_Diagram sources: `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L15-L108`,
+`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L26-L41`,
+`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26-L70`,
+`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L21-L58`,
+`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L12-L141`._
 
 ## 3. User and Embedded Preferences
 
 The `User` collection is backed by `UserSchemaClass`, which extends
 `EntityDocumentHelper`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L60`).
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L55`).
 It embeds a `Preferences` subdocument by value and tracks the user's favorite
 recipes and recent searches as string arrays.
 
@@ -209,32 +209,32 @@ Owning module source: [`backend/src/users/`](../backend/src/users/).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `_id` | `string` | Inherited from `EntityDocumentHelper`; serialized to a string | `backend/src/utils/document-entity-helper.ts:L17` |
-| `email` | `string \| null` | `unique: true`; carries `@Expose({ toPlainOnly: true })` | `user.schema.ts:L30-L35` |
-| `password` | `string?` | `@Exclude({ toPlainOnly: true })` — omitted from serialized output | `user.schema.ts:L37-L39` |
-| `preferences` | `Preferences` | Embedded subdocument; defaults to an object with empty arrays and `cookingTime: 0` | `user.schema.ts:L41-L50` |
-| `favoriteRecipes` | `string[]` | Default `[]` | `user.schema.ts:L52-L56` |
-| `recentSearches` | `string[]` | Default `[]` | `user.schema.ts:L58-L59` |
-| `createdAt` | `Date` | `default: now` | `user.schema.ts:L61-L62` |
-| `updatedAt` | `Date` | `default: now` | `user.schema.ts:L64-L65` |
-| `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `user.schema.ts:L67-L68` |
+| `_id` | `string` | Inherited from `EntityDocumentHelper`; serialized to a string | `backend/src/utils/document-entity-helper.ts:L32` |
+| `email` | `string \| null` | `unique: true`; carries `@Expose({ toPlainOnly: true })` | `user.schema.ts:L58-L63` |
+| `password` | `string?` | `@Exclude({ toPlainOnly: true })` — omitted from serialized output | `user.schema.ts:L67-L69` |
+| `preferences` | `Preferences` | Embedded subdocument; defaults to an object with empty arrays and `cookingTime: 0` | `user.schema.ts:L73-L82` |
+| `favoriteRecipes` | `string[]` | Default `[]` | `user.schema.ts:L85-L89` |
+| `recentSearches` | `string[]` | Default `[]` | `user.schema.ts:L92-L93` |
+| `createdAt` | `Date` | `default: now` | `user.schema.ts:L96-L97` |
+| `updatedAt` | `Date` | `default: now` | `user.schema.ts:L100-L101` |
+| `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `user.schema.ts:L106-L107` |
 
 The schema declares a `deletedAt` field intended for soft deletion
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L112-L113`),
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L106-L107`),
 but the repository removes user documents physically; this divergence is
 documented in [Section 9](#9-soft-delete-vs-hard-delete-matrix).
 
 ### `Preferences` (embedded subdocument)
 
 `Preferences` is a plain class embedded inside `UserSchemaClass.preferences`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L17-L34`).
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L15-L31`).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `dietary` | `string[]` | Default `[]` | `user.schema.ts:L9-L10` |
-| `allergies` | `string[]` | Default `[]` | `user.schema.ts:L12-L13` |
-| `dislikedIngredients` | `string[]` | Default `[]` | `user.schema.ts:L15-L16` |
-| `cookingTime` | `number?` | Default `0` | `user.schema.ts:L18-L19` |
+| `dietary` | `string[]` | Default `[]` | `user.schema.ts:L17-L18` |
+| `allergies` | `string[]` | Default `[]` | `user.schema.ts:L21-L22` |
+| `dislikedIngredients` | `string[]` | Default `[]` | `user.schema.ts:L25-L26` |
+| `cookingTime` | `number?` | Default `0` | `user.schema.ts:L29-L30` |
 
 The mobile client mirrors this subdocument with its own `Preferences` model;
 see [Section 10](#10-mobile-dart-models).
@@ -243,7 +243,7 @@ see [Section 10](#10-mobile-dart-models).
 
 The `Session` collection is backed by `SessionSchemaClass`, which extends
 `EntityDocumentHelper`
-(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L15`).
+(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L26`).
 A session references the owning user by `ObjectId` and backs refresh-token
 issuance.
 
@@ -253,24 +253,24 @@ Owning module source: [`backend/src/session/`](../backend/src/session/).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L17` |
-| `user` | `UserSchemaClass` | `ObjectId` reference, `ref: 'UserSchemaClass'` | `session.schema.ts:L16-L17` |
-| `createdAt` | `Date` | `default: now` | `session.schema.ts:L19-L20` |
-| `deletedAt` | `Date` | Declared field; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `session.schema.ts:L22-L23` |
+| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L32` |
+| `user` | `UserSchemaClass` | `ObjectId` reference, `ref: 'UserSchemaClass'` | `session.schema.ts:L28-L29` |
+| `createdAt` | `Date` | `default: now` | `session.schema.ts:L32-L33` |
+| `deletedAt` | `Date` | Declared field; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `session.schema.ts:L39-L40` |
 
 The schema declares a secondary index on `{ user: 1 }`
-(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L28`);
+(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L29`);
 see [Section 8](#8-indexes).
 
 ## 5. Ingridient
 
 > The backend module directory, schema file, and schema class preserve the
-> spelling `Ingridient` (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16`).
+> spelling `Ingridient` (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26`).
 > This spelling is a stable identifier and is reproduced exactly.
 
 The `Ingridient` collection is backed by `IngridientSchemaClass`, which extends
 `EntityDocumentHelper`
-(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16`).
+(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26`).
 Several fields carry `@Exclude({ toPlainOnly: true })`, so they are omitted from
 serialized output.
 
@@ -280,17 +280,17 @@ Owning module source: [`backend/src/ingridient/`](../backend/src/ingridient/).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L17` |
-| `name` | `string` | Ingredient display name | `ingridient.schema.ts:L17-L18` |
-| `category` | `Reference` | Stored via `@Prop({ type: { id: Number, name: String } })`; `Reference` is `{ id: string; name: string }` | `ingridient.schema.ts:L20-L21`, `backend/src/common/types.ts:L1-L4` |
-| `quantity` | `number?` | Optional quantity | `ingridient.schema.ts:L23-L24` |
-| `unit` | `Reference?` | `@Exclude({ toPlainOnly: true })`; stored via `@Prop({ type: { id: Number, name: String } })` | `ingridient.schema.ts:L26-L28` |
-| `expirationDate` | `Date?` | `@Exclude({ toPlainOnly: true })` | `ingridient.schema.ts:L30-L32` |
-| `imageUrl` | `string?` | `@Exclude({ toPlainOnly: true })` | `ingridient.schema.ts:L34-L36` |
-| `confidence` | `number` | `@Exclude({ toPlainOnly: true })`; AI-detection confidence on the `0`–`1` scale | `ingridient.schema.ts:L38-L40` |
-| `createdAt` | `Date` | `default: now` | `ingridient.schema.ts:L42-L43` |
-| `updatedAt` | `Date` | `default: now` | `ingridient.schema.ts:L45-L46` |
-| `deletedAt` | `Date?` | Declared field | `ingridient.schema.ts:L48-L49` |
+| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L32` |
+| `name` | `string` | Ingredient display name | `ingridient.schema.ts:L28-L29` |
+| `category` | `Reference` | Stored via `@Prop({ type: { id: Number, name: String } })`; `Reference` is `{ id: string; name: string }` | `ingridient.schema.ts:L32-L33`, `backend/src/common/types.ts:L1-L4` |
+| `quantity` | `number?` | Optional quantity | `ingridient.schema.ts:L36-L37` |
+| `unit` | `Reference?` | `@Exclude({ toPlainOnly: true })`; stored via `@Prop({ type: { id: Number, name: String } })` | `ingridient.schema.ts:L40-L42` |
+| `expirationDate` | `Date?` | `@Exclude({ toPlainOnly: true })` | `ingridient.schema.ts:L45-L47` |
+| `imageUrl` | `string?` | `@Exclude({ toPlainOnly: true })` | `ingridient.schema.ts:L50-L52` |
+| `confidence` | `number` | `@Exclude({ toPlainOnly: true })`; AI-detection confidence on the `0`–`1` scale | `ingridient.schema.ts:L55-L57` |
+| `createdAt` | `Date` | `default: now` | `ingridient.schema.ts:L60-L61` |
+| `updatedAt` | `Date` | `default: now` | `ingridient.schema.ts:L64-L65` |
+| `deletedAt` | `Date?` | Declared field | `ingridient.schema.ts:L68-L69` |
 
 The `Ingridient` schema declares no secondary index — `SchemaFactory.createForClass`
 is the final statement and no `.index(...)` call follows
@@ -311,16 +311,16 @@ Owning module source: [`backend/src/pantry/`](../backend/src/pantry/).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L17` |
-| `ingridient` | `IngridientSchemaClass` | `ObjectId` reference, `ref: 'IngridientSchemaClass'` | `pantryIngridient.schema.ts:L17-L18` |
-| `quantity` | `number` | Amount on hand | `pantryIngridient.schema.ts:L20-L21` |
-| `userId` | `string` | Owning user identifier | `pantryIngridient.schema.ts:L23-L24` |
-| `unit` | `string` | Unit of measure | `pantryIngridient.schema.ts:L26-L27` |
-| `expirationDate` | `Date?` | Optional expiry | `pantryIngridient.schema.ts:L29-L30` |
-| `location` | `'fridge' \| 'freezer' \| 'pantry'` | Enum-constrained storage location | `pantryIngridient.schema.ts:L32-L33` |
-| `createdAt` | `Date` | `default: now` | `pantryIngridient.schema.ts:L35-L36` |
-| `updatedAt` | `Date` | `default: now` | `pantryIngridient.schema.ts:L38-L39` |
-| `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `pantryIngridient.schema.ts:L41-L42` |
+| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L32` |
+| `ingridient` | `IngridientSchemaClass` | `ObjectId` reference, `ref: 'IngridientSchemaClass'` | `pantryIngridient.schema.ts:L23-L24` |
+| `quantity` | `number` | Amount on hand | `pantryIngridient.schema.ts:L27-L28` |
+| `userId` | `string` | Owning user identifier | `pantryIngridient.schema.ts:L31-L32` |
+| `unit` | `string` | Unit of measure | `pantryIngridient.schema.ts:L35-L36` |
+| `expirationDate` | `Date?` | Optional expiry | `pantryIngridient.schema.ts:L39-L40` |
+| `location` | `'fridge' \| 'freezer' \| 'pantry'` | Enum-constrained storage location | `pantryIngridient.schema.ts:L44-L45` |
+| `createdAt` | `Date` | `default: now` | `pantryIngridient.schema.ts:L48-L49` |
+| `updatedAt` | `Date` | `default: now` | `pantryIngridient.schema.ts:L52-L53` |
+| `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `pantryIngridient.schema.ts:L56-L57` |
 
 The schema declares a secondary index on `{ userId: 1 }`
 (`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49`);
@@ -332,7 +332,7 @@ repository removes pantry documents physically; see
 
 The `Recipe` collection is backed by `RecipeSchemaClass`, which extends
 `EntityDocumentHelper`
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L57`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L81`).
 It composes two embedded subdocument arrays — `IngridientList` (the misspelling
 is preserved) and `Instruction` — and is the only entity whose repository
 honors the `deletedAt` soft-delete column at runtime
@@ -344,56 +344,56 @@ Owning module source: [`backend/src/recipe/`](../backend/src/recipe/).
 
 `IngridientList` is declared with a bare `@Schema()` and compiled to
 `IngridientListSchema`
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L6-L29`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L11-L40`).
 It is embedded as an array on `RecipeSchemaClass.ingridientList`.
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `ingridient` | `IngridientSchemaClass` | `ObjectId` reference, `ref: 'IngridientSchemaClass'`, `required: true` | `recipe.schema.ts:L8-L13` |
-| `amount` | `number` | `required: true` | `recipe.schema.ts:L15-L16` |
-| `unit` | `string` | `required: true` | `recipe.schema.ts:L18-L19` |
-| `required` | `boolean` | `required: true` | `recipe.schema.ts:L21-L22` |
-| `substitutes` | `string[]?` | Default `[]` | `recipe.schema.ts:L24-L25` |
+| `ingridient` | `IngridientSchemaClass` | `ObjectId` reference, `ref: 'IngridientSchemaClass'`, `required: true` | `recipe.schema.ts:L14-L19` |
+| `amount` | `number` | `required: true` | `recipe.schema.ts:L22-L23` |
+| `unit` | `string` | `required: true` | `recipe.schema.ts:L26-L27` |
+| `required` | `boolean` | `required: true` | `recipe.schema.ts:L30-L31` |
+| `substitutes` | `string[]?` | Default `[]` | `recipe.schema.ts:L34-L35` |
 
 ### `Instruction` (embedded subdocument)
 
 `Instruction` is a plain class embedded as an array on
 `RecipeSchemaClass.instructions`
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L31-L40`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L45-L57`).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `step` | `number` | `required: true` | `recipe.schema.ts:L32-L33` |
-| `description` | `string` | `required: true` | `recipe.schema.ts:L35-L36` |
-| `timer` | `number?` | Optional duration | `recipe.schema.ts:L38-L39` |
+| `step` | `number` | `required: true` | `recipe.schema.ts:L47-L48` |
+| `description` | `string` | `required: true` | `recipe.schema.ts:L51-L52` |
+| `timer` | `number?` | Optional duration | `recipe.schema.ts:L55-L56` |
 
 ### `RecipeSchemaClass`
 
 The recipe difficulty is constrained by the type alias
 `Difficulty = 'easy' | 'medium' | 'hard'`
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L42`).
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L60`).
 
 | Field | Type | Notes | Source |
 |---|---|---|---|
-| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L17` |
-| `id` | `string` | `ObjectId`-typed property | `recipe.schema.ts:L58-L59` |
-| `title` | `string` | `required: true` | `recipe.schema.ts:L61-L62` |
-| `description` | `string` | Free-text description | `recipe.schema.ts:L64-L65` |
-| `ingridientList` | `IngridientList[]` | Embedded array, `required: true` | `recipe.schema.ts:L67-L68` |
-| `instructions` | `Instruction[]` | Embedded array, `required: true` | `recipe.schema.ts:L70-L71` |
-| `prepTime` | `number` | Preparation time | `recipe.schema.ts:L73-L74` |
-| `cookTime` | `number` | Cooking time | `recipe.schema.ts:L76-L77` |
-| `servings` | `number` | Serving count | `recipe.schema.ts:L79-L80` |
-| `difficulty` | `Difficulty` | Enum `'easy' \| 'medium' \| 'hard'`, `required: true` | `recipe.schema.ts:L82-L83` |
-| `tags` | `string[]` | Tag list | `recipe.schema.ts:L85-L86` |
-| `imageUrl` | `string` | Image URL | `recipe.schema.ts:L88-L89` |
-| `matchScore` | `number?` | Optional; populated by the matching engine | `recipe.schema.ts:L91-L92` |
-| `createdAt` | `Date` | `default: now` | `recipe.schema.ts:L94-L95` |
-| `updatedAt` | `Date` | `default: now` | `recipe.schema.ts:L97-L98` |
-| `deletedAt` | `Date?` | Honored at runtime (true soft delete); see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `recipe.schema.ts:L100-L101` |
+| `_id` | `string` | Inherited from `EntityDocumentHelper` | `backend/src/utils/document-entity-helper.ts:L32` |
+| `id` | `string` | `ObjectId`-typed property | `recipe.schema.ts:L83-L84` |
+| `title` | `string` | `required: true` | `recipe.schema.ts:L87-L88` |
+| `description` | `string` | Free-text description | `recipe.schema.ts:L91-L92` |
+| `ingridientList` | `IngridientList[]` | Embedded array, `required: true` | `recipe.schema.ts:L95-L96` |
+| `instructions` | `Instruction[]` | Embedded array, `required: true` | `recipe.schema.ts:L99-L100` |
+| `prepTime` | `number` | Preparation time | `recipe.schema.ts:L103-L104` |
+| `cookTime` | `number` | Cooking time | `recipe.schema.ts:L107-L108` |
+| `servings` | `number` | Serving count | `recipe.schema.ts:L111-L112` |
+| `difficulty` | `Difficulty` | Enum `'easy' \| 'medium' \| 'hard'`, `required: true` | `recipe.schema.ts:L115-L116` |
+| `tags` | `string[]` | Tag list | `recipe.schema.ts:L119-L120` |
+| `imageUrl` | `string` | Image URL | `recipe.schema.ts:L123-L124` |
+| `matchScore` | `number?` | Optional; populated by the matching engine | `recipe.schema.ts:L127-L128` |
+| `createdAt` | `Date` | `default: now` | `recipe.schema.ts:L131-L132` |
+| `updatedAt` | `Date` | `default: now` | `recipe.schema.ts:L135-L136` |
+| `deletedAt` | `Date?` | Honored at runtime (true soft delete); see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `recipe.schema.ts:L139-L140` |
 
 The schema declares a secondary index on `{ title: 1 }`
-(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L106`);
+(`Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L147`);
 see [Section 8](#8-indexes).
 
 ## 8. Indexes
@@ -403,15 +403,15 @@ index that MongoDB creates implicitly on every collection is omitted.
 
 | Collection | Index | Source |
 |---|---|---|
-| Users | `email` unique | `backend/src/users/infrastructure/document/entities/user.schema.ts:L32` |
+| Users | `email` unique | `backend/src/users/infrastructure/document/entities/user.schema.ts:L58-L63` |
 | Sessions | `{ user: 1 }` | `backend/src/session/infrastructure/document/entities/session.schema.ts:L28` |
 | PantryIngridients | `{ userId: 1 }` | `backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49` |
-| Recipes | `{ title: 1 }` | `backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L106` |
+| Recipes | `{ title: 1 }` | `backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L147` |
 | Ingridients | (none declared) | `backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts` |
 
 The `email` uniqueness constraint is declared inline on the property with
 `unique: true`
-(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L63-L68`),
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L58-L63`),
 while the `Session`, `PantryIngridient`, and `Recipe` secondary indexes are
 declared with explicit `Schema.index(...)` calls.
 
@@ -425,19 +425,19 @@ repositories physically remove documents even though their schemas declare a
 
 | Entity | Method | Actual behavior | Source |
 |---|---|---|---|
-| Recipe | `softDelete` | **True soft delete** — `updateOne({ _id: id }, { deletedAt: new Date() })`; reads filter on `deletedAt: null` | `recipe.repository.ts:L184-L186`; read filter `recipe.repository.ts:L71` |
-| User | `softDelete` | **KNOWN ISSUE: hard delete** — calls `deleteOne({ _id: id })` despite the schema's `deletedAt` field | `user.repository.ts:L80-L82` (`deleteOne` at `L81`); schema field `user.schema.ts:L67-L68` |
-| PantryIngridient | `softDelete` | **KNOWN ISSUE: hard delete** — calls `deleteOne({ _id: id })` despite the schema's `deletedAt` field | `pantryIngridient.repository.ts:L119-L121` (`deleteOne` at `L120`); schema field `pantryIngridient.schema.ts:L41-L42` |
-| Session | session removal | **KNOWN ISSUE: hard delete** — calls `deleteMany(transformedCriteria)` despite the schema's `deletedAt` field | `session.repository.ts:L54`; schema field `session.schema.ts:L22-L23` |
+| Recipe | `softDelete` | **True soft delete** — `updateOne({ _id: id }, { deletedAt: new Date() })`; reads filter on `deletedAt: null` | `recipe.repository.ts:L310-L311`; read filter `recipe.repository.ts:L127` |
+| User | `softDelete` | **KNOWN ISSUE: hard delete** — calls `deleteOne({ _id: id })` despite the schema's `deletedAt` field | `user.repository.ts:L172-L174` (`deleteOne` at `L172`); schema field `user.schema.ts:L106-L107` |
+| PantryIngridient | `softDelete` | **KNOWN ISSUE: hard delete** — calls `deleteOne({ _id: id })` despite the schema's `deletedAt` field | `pantryIngridient.repository.ts:L184-L186` (`deleteOne` at `L184`); schema field `pantryIngridient.schema.ts:L56-L57` |
+| Session | session removal | **KNOWN ISSUE: hard delete** — calls `deleteMany(transformedCriteria)` despite the schema's `deletedAt` field | `session.repository.ts:L106`; schema field `session.schema.ts:L39-L40` |
 
 **KNOWN ISSUE:** Only `Recipe` honors the `deletedAt` soft-delete column at
-runtime (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186`).
+runtime (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L310-L312`).
 `User`, `PantryIngridient`, and `Session` documents are physically removed by
 `deleteOne` / `deleteMany`, so their `deletedAt` columns are never populated
 even though the schemas declare them
-(`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L174-L186`,
-`Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L119-L121`,
-`Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54`).
+(`Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L164-L175`,
+`Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L179-L187`,
+`Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L106`).
 This matrix records the behavior as built; it does not prescribe a change.
 
 ## 10. Mobile Dart Models
@@ -457,18 +457,18 @@ composes a list of `IngredientListItem` through the misspelled field
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `id` | `String` | Recipe identifier | `recipe.dart:L9` |
-| `title` | `String` | Recipe title | `recipe.dart:L10` |
-| `description` | `String` | Description | `recipe.dart:L11` |
-| `ingridientList` | `List<IngredientListItem>` | Misspelled field name (preserved) | `recipe.dart:L12` |
-| `instructions` | `List<InstractionItem>` | Misspelled element class (preserved) | `recipe.dart:L13` |
-| `prepTime` | `int` | Preparation time | `recipe.dart:L14` |
-| `cookTime` | `int` | Cooking time | `recipe.dart:L15` |
-| `servings` | `int` | Serving count | `recipe.dart:L16` |
-| `difficulty` | `String` | Difficulty label | `recipe.dart:L17` |
-| `tags` | `List<String>` | Tag list | `recipe.dart:L18` |
-| `imageUrl` | `String` | Image URL | `recipe.dart:L19` |
-| `matchScore` | `double?` | Commented "how well it matches available ingredients" | `recipe.dart:L20` |
+| `id` | `String` | Recipe identifier | `recipe.dart:L16` |
+| `title` | `String` | Recipe title | `recipe.dart:L18` |
+| `description` | `String` | Description | `recipe.dart:L20` |
+| `ingridientList` | `List<IngredientListItem>` | Misspelled field name (preserved) | `recipe.dart:L23` |
+| `instructions` | `List<InstractionItem>` | Misspelled element class (preserved) | `recipe.dart:L26` |
+| `prepTime` | `int` | Preparation time | `recipe.dart:L28` |
+| `cookTime` | `int` | Cooking time | `recipe.dart:L30` |
+| `servings` | `int` | Serving count | `recipe.dart:L32` |
+| `difficulty` | `String` | Difficulty label | `recipe.dart:L34` |
+| `tags` | `List<String>` | Tag list | `recipe.dart:L36` |
+| `imageUrl` | `String` | Image URL | `recipe.dart:L38` |
+| `matchScore` | `double?` | Commented "how well it matches available ingredients" | `recipe.dart:L41` |
 
 **KNOWN ISSUE:** `Recipe.copyWith` accepts a `bool? inFavorite` parameter but
 never applies it — `Recipe` declares no `inFavorite` field, and the method
@@ -481,16 +481,16 @@ by contrast, see [`Profile`](#profile) below
 ### `InstractionItem`
 
 > The class name `InstractionItem` preserves the misspelling and is a stable
-> identifier (`Source: mobile/lib/features/recipe/domain/models/instraction_item.dart:L6`).
+> identifier (`Source: mobile/lib/features/recipe/domain/models/instraction_item.dart:L11`).
 
 `InstractionItem` is annotated `@JsonSerializable`
 (`Source: mobile/lib/features/recipe/domain/models/instraction_item.dart:L5-L20`).
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `step` | `int` | Step ordinal | `instraction_item.dart:L7` |
-| `description` | `String` | Step text | `instraction_item.dart:L8` |
-| `timer` | `double?` | Optional timer | `instraction_item.dart:L9` |
+| `step` | `int` | Step ordinal | `instraction_item.dart:L13` |
+| `description` | `String` | Step text | `instraction_item.dart:L15` |
+| `timer` | `double?` | Optional timer | `instraction_item.dart:L17` |
 
 ### `IngredientListItem`
 
@@ -500,47 +500,47 @@ field `ingridient`
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `ingridient` | `Ingredient` | Misspelled field name (preserved) | `ingredient_list_item.dart:L8` |
-| `amount` | `double` | Quantity | `ingredient_list_item.dart:L9` |
-| `unit` | `String` | Unit of measure | `ingredient_list_item.dart:L10` |
-| `required` | `bool` | Whether the ingredient is required | `ingredient_list_item.dart:L11` |
-| `substitutes` | `List<String>?` | Optional substitutes | `ingredient_list_item.dart:L12` |
+| `ingridient` | `Ingredient` | Misspelled field name (preserved) | `ingredient_list_item.dart:L15` |
+| `amount` | `double` | Quantity | `ingredient_list_item.dart:L17` |
+| `unit` | `String` | Unit of measure | `ingredient_list_item.dart:L19` |
+| `required` | `bool` | Whether the ingredient is required | `ingredient_list_item.dart:L21` |
+| `substitutes` | `List<String>?` | Optional substitutes | `ingredient_list_item.dart:L23` |
 
 ### `Ingredient`
 
 `Ingredient` is annotated `@JsonSerializable` and uses `@JsonKey` mappers for
 its `category` and `unit` fields
-(`Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L8-L37`).
+(`Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L8-L31`).
 This is the correctly spelled mobile class; the misspelling appears only on the
 backend and on the `ingridient` field names that reference this class.
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `id` | `String` | Ingredient identifier | `ingredient.dart:L10` |
-| `name` | `String` | Display name | `ingredient.dart:L11` |
-| `category` | `Category` | `@JsonKey(toJson: Mappers.categoryToJson)` | `ingredient.dart:L12-L13` |
-| `confidence` | `double` | AI-detection confidence | `ingredient.dart:L14` |
-| `createdAt` | `String?` | Creation timestamp | `ingredient.dart:L15` |
-| `quantity` | `double?` | Optional quantity | `ingredient.dart:L16` |
-| `unit` | `Unit` | `@JsonKey(toJson: Mappers.unitToJson)` | `ingredient.dart:L17-L18` |
-| `imageUrl` | `String?` | Optional image URL | `ingredient.dart:L19` |
-| `expirationDate` | `String?` | Optional expiry | `ingredient.dart:L20` |
+| `id` | `String` | Ingredient identifier | `ingredient.dart:L20` |
+| `name` | `String` | Display name | `ingredient.dart:L22` |
+| `category` | `Category` | `@JsonKey(toJson: Mappers.categoryToJson)` | `ingredient.dart:L26-L27` |
+| `confidence` | `double` | AI-detection confidence | `ingredient.dart:L30` |
+| `createdAt` | `String?` | Creation timestamp | `ingredient.dart:L32` |
+| `quantity` | `double?` | Optional quantity | `ingredient.dart:L34` |
+| `unit` | `Unit` | `@JsonKey(toJson: Mappers.unitToJson)` | `ingredient.dart:L38-L39` |
+| `imageUrl` | `String?` | Optional image URL | `ingredient.dart:L41` |
+| `expirationDate` | `String?` | Optional expiry | `ingredient.dart:L43` |
 
 ### `PantryItem`
 
 `PantryItem` is annotated `@JsonSerializable` and exposes the misspelled field
 `ingridient`
-(`Source: mobile/lib/features/pantry/domain/models/pantry_item.dart:L7-L29`).
+(`Source: mobile/lib/features/pantry/domain/models/pantry_item.dart:L17-L54`).
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `id` | `String` | Pantry item identifier | `pantry_item.dart:L8` |
-| `ingridient` | `Ingredient` | Misspelled field name (preserved) | `pantry_item.dart:L9` |
-| `quantity` | `double` | Amount on hand | `pantry_item.dart:L10` |
-| `location` | `String` | Storage location | `pantry_item.dart:L11` |
-| `createdAt` | `String` | Creation timestamp | `pantry_item.dart:L12` |
-| `updatedAt` | `String` | Update timestamp | `pantry_item.dart:L13` |
-| `expirationDate` | `String` | Expiry timestamp | `pantry_item.dart:L14` |
+| `id` | `String` | Pantry item identifier | `pantry_item.dart:L19` |
+| `ingridient` | `Ingredient` | Misspelled field name (preserved) | `pantry_item.dart:L24` |
+| `quantity` | `double` | Amount on hand | `pantry_item.dart:L26` |
+| `location` | `String` | Storage location | `pantry_item.dart:L28` |
+| `createdAt` | `String` | Creation timestamp | `pantry_item.dart:L30` |
+| `updatedAt` | `String` | Update timestamp | `pantry_item.dart:L32` |
+| `expirationDate` | `String` | Expiry timestamp | `pantry_item.dart:L34` |
 
 ### `Profile`
 
@@ -550,11 +550,11 @@ backend and on the `ingridient` field names that reference this class.
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `id` | `String` | User identifier | `profile.dart:L9` |
-| `email` | `String` | User email | `profile.dart:L10` |
-| `favoriteRecipes` | `List<String>` | Favorite recipe identifiers | `profile.dart:L11` |
-| `recentSearches` | `List<String>` | Recent search terms | `profile.dart:L12` |
-| `preferences` | `Preferences` | `@JsonKey(toJson: Mappers.preferencesToJson)` | `profile.dart:L13-L14` |
+| `id` | `String` | User identifier | `profile.dart:L15` |
+| `email` | `String` | User email | `profile.dart:L17` |
+| `favoriteRecipes` | `List<String>` | Favorite recipe identifiers | `profile.dart:L19` |
+| `recentSearches` | `List<String>` | Recent search terms | `profile.dart:L21` |
+| `preferences` | `Preferences` | `@JsonKey(toJson: Mappers.preferencesToJson)` | `profile.dart:L23-L24` |
 
 Unlike `Recipe.copyWith`, `Profile.copyWith({ List<String>? favoriteRecipes })`
 applies its parameter via `favoriteRecipes ?? this.favoriteRecipes`, so it
@@ -569,10 +569,10 @@ produces an updated copy as expected
 
 | Field | Dart type | Notes | Source |
 |---|---|---|---|
-| `dietary` | `List<String>` | Default `[]` | `preferences.dart:L7` |
-| `allergies` | `List<String>` | Default `[]` | `preferences.dart:L8` |
-| `dislikedIngredients` | `List<String>` | Default `[]` | `preferences.dart:L9` |
-| `cookingTime` | `double?` | Optional cooking time | `preferences.dart:L10` |
+| `dietary` | `List<String>` | Default `[]` | `mobile/lib/features/profile/domain/models/preferences.dart:L13` |
+| `allergies` | `List<String>` | Default `[]` | `mobile/lib/features/profile/domain/models/preferences.dart:L15` |
+| `dislikedIngredients` | `List<String>` | Default `[]` | `mobile/lib/features/profile/domain/models/preferences.dart:L17` |
+| `cookingTime` | `double?` | Optional cooking time | `mobile/lib/features/profile/domain/models/preferences.dart:L19` |
 
 ## 11. Related Documentation
 

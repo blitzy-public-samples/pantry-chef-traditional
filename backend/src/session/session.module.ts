@@ -16,10 +16,10 @@ import { SessionService } from './session.service';
  * and `AuthService` can inject session capabilities for JWT refresh-token
  * rotation.
  *
- * Wired into the application root module. Source: backend/src/app.module.ts:L29
+ * Wired into the application root module. Source: backend/src/app.module.ts:L50
  *
  * Consumed by `AuthModule`, which imports this module
- * (Source: backend/src/auth/auth.module.ts:L15); the re-exported
+ * (Source: backend/src/auth/auth.module.ts:L25); the re-exported
  * `SessionService` is injected by `AuthService` for refresh-token rotation.
  */
 @Module({

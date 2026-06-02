@@ -9,7 +9,7 @@ with AI assistance, and manage their profile and preferences.
 The mobile client is the front half of a monorepo whose other half is a NestJS
 + MongoDB REST backend; the client talks to that backend over HTTP and targets
 an API base URL defined as a compile-time constant
-(`Source: mobile/lib/env_config.dart:L23`). State management uses the BLoC
+(`Source: mobile/lib/env_config.dart:L19`). State management uses the BLoC
 pattern, networking uses Dio, dependency injection uses `get_it`, and local
 persistence uses `shared_preferences` together with `hydrated_bloc`
 (`Source: mobile/pubspec.yaml:L34-L35,L39,L43,L50`).
@@ -51,11 +51,11 @@ Versions are reproduced exactly from the manifest
 
 The client follows a feature-first clean architecture. The entrypoint is
 `lib/main.dart`, and the compile-time API base URL lives in `lib/env_config.dart`
-(`Source: mobile/lib/env_config.dart:L23`). Shared infrastructure sits under
+(`Source: mobile/lib/env_config.dart:L19`). Shared infrastructure sits under
 `lib/core/` — dependency injection (`get_it`) and the Dio HTTP client live in
 `core/utils/`, while route, endpoint, and status-code constants live in
 `core/constants/`
-(`Source: mobile/lib/core/utils/service_locator.dart:L34, mobile/lib/core/utils/dio_client.dart:L12, mobile/lib/core/constants/endpoints.dart:L9`). Each feature under
+(`Source: mobile/lib/core/utils/service_locator.dart:L28, mobile/lib/core/utils/dio_client.dart:L11, mobile/lib/core/constants/endpoints.dart:L8`). Each feature under
 `lib/features/<feature>/` is split into `domain/` (models, repository
 interfaces, use cases), `data/` (api clients, DTOs, repository
 implementations), and `presentation/` (BLoCs, screens, widgets).
@@ -84,7 +84,7 @@ lib/
 At startup, `main()` runs inside `runZonedGuarded`, preserves the native splash
 screen, builds `HydratedBloc.storage`, locks the device to portrait
 orientation, and calls `setupLocator()` to register dependencies before
-`runApp` (`Source: mobile/lib/main.dart:L31-L40`). See
+`runApp` (`Source: mobile/lib/main.dart:L25-L34`). See
 [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) for the full architecture
 picture.
 
@@ -124,7 +124,7 @@ The client requires a Dart SDK satisfying `^3.5.1`
    ```
 
 3. Run the app against a backend, supplying the API base URL at build time
-   (`Source: mobile/lib/env_config.dart:L23`):
+   (`Source: mobile/lib/env_config.dart:L19`):
 
    ```sh
    flutter run --dart-define API_BASE_URL=http://<host>:3000/api
@@ -137,7 +137,7 @@ The client requires a Dart SDK satisfying `^3.5.1`
 ## Configuration — `API_BASE_URL`
 
 The API base URL is a single compile-time constant
-(`Source: mobile/lib/env_config.dart:L23`):
+(`Source: mobile/lib/env_config.dart:L19`):
 
 ```dart
 static const String apiBaseUrl =
@@ -159,7 +159,7 @@ the full endpoint catalogue, see
 > **SECURITY NOTE:** The Dio client attaches a verbose `LogInterceptor`
 > unconditionally to both its main and refresh instances, each configured with
 > `requestHeader: true`
-> (`Source: mobile/lib/core/utils/dio_client.dart:L48-L60,L99-L111`). As a
+> (`Source: mobile/lib/core/utils/dio_client.dart:L42-L53,L99-L111`). As a
 > result, `Authorization: Bearer <token>` headers are written to the logs in
 > every build, including release builds. This is a documented known risk
 > recorded here for awareness; the code is intentionally left unchanged by this

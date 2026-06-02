@@ -5,7 +5,7 @@ import 'package:pantry_chef/core/styles/app_theme.dart';
 ///
 /// Renders a [Material] > [InkWell] > [Ink] row that shows [title] on
 /// the left and a trailing chevron icon; tapping pushes the named
-/// route [page]. Source: profile_navigation_item.dart:L4,L19-L21.
+/// route [page]..
 class ProfileNavigationItem extends StatelessWidget {
   /// Visible label text rendered on the left of the row.
   final String title;

@@ -7,7 +7,7 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 /// add-ingredient form needs, as an [IngredientAddData].
 ///
 /// Implements [UseCase] (no params); callers invoke it via `call`.
-/// Source: core/utils/usercase.dart:L1
+/// Source: core/utils/usercase.dart:L7
 class GetIngredientCategoriesAndUnitsUsecase implements UseCase<IngredientAddData> {
   /// Returns the available categories and units as an
   /// [IngredientAddData]; takes no parameters.

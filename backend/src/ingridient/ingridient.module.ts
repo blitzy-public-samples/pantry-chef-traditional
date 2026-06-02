@@ -12,11 +12,11 @@ import { DocumentIngridientPersistenceModule } from './infrastructure/document/d
  *
  * Exports `IngridientService` and `DocumentIngridientPersistenceModule` so other
  * NestJS modules can reuse the ingredient feature without re-declaring its
- * providers. Source: backend/src/ingridient/ingridient.module.ts:L10
+ * providers.
  *
- * Wired into the root `AppModule` (Source: backend/src/app.module.ts:L31) and,
+ * Wired into the root `AppModule` (Source: backend/src/app.module.ts:L52) and,
  * among feature modules, currently consumed only by `AiModule` for ingredient
- * lookups during image recognition (Source: backend/src/ai/ai.module.ts:L7); the
+ * lookups during image recognition (Source: backend/src/ai/ai.module.ts:L23); the
  * Pantry and Recipe modules do not import it.
  *
  * Note: the `Ingridient` spelling is an intentional, stable identifier used

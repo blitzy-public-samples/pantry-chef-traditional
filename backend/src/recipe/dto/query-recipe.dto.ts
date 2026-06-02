@@ -18,7 +18,7 @@ import { Recipe } from '../domain/recipe';
  * KNOWN ISSUE: the `name` constraint is applied to a `name` key, but
  * `RecipeSchemaClass` declares no `name` field (its title field is `title`),
  * so the `$regex` targets a non-schema field and does not filter by title.
- * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+ * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L115,
  * backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
  */
 export class FilterRecipeDto {
@@ -65,7 +65,7 @@ export class QueryRecipeDto {
   page: number;
 
   // Page size; @Transform defaults to 10. The controller clamps the effective
-  // value to a maximum of 50. Source: backend/src/recipe/recipe.controller.ts:L57-L58
+  // value to a maximum of 50. Source: backend/src/recipe/recipe.controller.ts:L110-L113
   @ApiProperty({
     required: false,
   })

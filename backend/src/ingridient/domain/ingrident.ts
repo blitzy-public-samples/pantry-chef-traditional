@@ -7,7 +7,6 @@ import { Reference } from 'src/common/types';
  * mapper layers of the ingredient module. Imports `Reference` ({ id, name })
  * from `src/common/types` for the `category` and `unit` fields.
  *
- * Source: backend/src/ingridient/domain/ingrident.ts:L2
  */
 export class Ingridient {
   // Unique identifier of the ingredient record.

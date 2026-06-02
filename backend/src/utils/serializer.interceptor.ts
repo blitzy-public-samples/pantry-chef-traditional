@@ -23,8 +23,7 @@ import deepResolvePromises from './deep-resolver';
  * globally or per-route by the consuming application. This file only
  * declares the capability; it does not register the interceptor.
  *
- * Source: backend/src/utils/serializer.interceptor.ts:L12-L15
- * Source: backend/src/utils/deep-resolver.ts:L1
+ * Source: backend/src/utils/deep-resolver.ts:L25
  */
 @Injectable()
 export class ResolvePromisesInterceptor implements NestInterceptor {

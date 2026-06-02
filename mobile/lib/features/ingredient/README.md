@@ -61,9 +61,9 @@ the source.
 
 | Component | Role | Source |
 |-----------|------|--------|
-| `Ingredient` | Core ingredient model | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L19` |
-| `Category` | Ingredient category reference | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L12` |
-| `Unit` | Measurement unit reference | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L12` |
+| `Ingredient` | Core ingredient model | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L18` |
+| `Category` | Ingredient category reference | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L11` |
+| `Unit` | Measurement unit reference | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L11` |
 | `IngredientAddData` | Aggregates the categories + units used by the add form | `Source: mobile/lib/features/ingredient/domain/models/ingredient_add_data.dart:L16` |
 | `IngredientRepository` | Abstract repository contract | `Source: mobile/lib/features/ingredient/domain/repositories/ingredient.repository.dart:L15` |
 | `CreateIngredientUsecase` | Wraps ingredient creation | `Source: mobile/lib/features/ingredient/domain/usecases/create_ingredient.usecase.dart:L12` |
@@ -76,18 +76,18 @@ class it declares, `SearchIngredientUsecase`, is correctly spelled. Both are
 preserved exactly as-is and must never be renamed.
 `Source: mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart:L17`.
 The four use cases are re-exported through a barrel file.
-`Source: mobile/lib/features/ingredient/domain/usecases/index.dart`.
+`Source: mobile/lib/features/ingredient/domain/usecases/index.dart:L8-L11`.
 
 ### Data
 
 | Component | Role | Source |
 |-----------|------|--------|
 | `IngredientApi` | Dio-based HTTP access to the ingredient and AI endpoints | `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L16` |
-| `IngredientRepositoryImpl` | Concrete repository mapping API responses to models | `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L18` |
+| `IngredientRepositoryImpl` | Concrete repository mapping API responses to models | `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L17` |
 | `CreateIngredientDto` | Request payload for ingredient creation | `Source: mobile/lib/features/ingredient/data/dto/create_ingredient.dto.dart:L15` |
 
 The DTO is re-exported through a barrel file.
-`Source: mobile/lib/features/ingredient/data/dto/index.dart`.
+`Source: mobile/lib/features/ingredient/data/dto/index.dart:L2`.
 
 ### Presentation widgets and screens
 
@@ -112,7 +112,7 @@ dependencies pointing inward from presentation to domain:
   `Source: mobile/lib/features/ingredient/domain/repositories/ingredient.repository.dart:L15`.
 - `data/` holds the `IngredientApi` HTTP client, the `CreateIngredientDto`, and
   `IngredientRepositoryImpl`, which implements the domain contract.
-  `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L18`.
+  `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L17`.
 - `presentation/` holds the two BLoCs, the widgets, and the screens.
   `Source: mobile/lib/features/ingredient/presentation/bloc/ingredient_add/ingredient_add_bloc.dart:L24`.
 
@@ -121,7 +121,7 @@ the shared `DioClient` from the `get_it` service locator —
 `_dio = getIt<DioClient>().dio`.
 `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L23`.
 The `DioClient` singleton is registered during startup in `setupLocator()`.
-`Source: mobile/lib/core/utils/service_locator.dart:L39-L40`.
+`Source: mobile/lib/core/utils/service_locator.dart:L33-L34`.
 
 The use cases, by contrast, instantiate `IngredientRepositoryImpl()` directly
 rather than resolving it from `get_it`.
@@ -139,37 +139,37 @@ may be absent until codegen runs.
 
 ### `Ingredient`
 
-`Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L19-L55`.
+`Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L18-L43`.
 
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
-| `id` | `String` | Ingredient identifier | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L22` |
-| `name` | `String` | Ingredient name | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L25` |
-| `category` | `Category` | Serialized via `@JsonKey(toJson: Mappers.categoryToJson)` | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L31-L32` |
-| `confidence` | `double` | Recognition confidence, range 0–1 | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L36` |
-| `createdAt` | `String?` | Creation timestamp | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L39` |
-| `quantity` | `double?` | Optional quantity | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L42` |
-| `unit` | `Unit` | Serialized via `@JsonKey(toJson: Mappers.unitToJson)` | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L48-L49` |
-| `imageUrl` | `String?` | Optional image URL | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L52` |
-| `expirationDate` | `String?` | Optional expiration date | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L55` |
+| `id` | `String` | Ingredient identifier | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L20` |
+| `name` | `String` | Ingredient name | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L22` |
+| `category` | `Category` | Serialized via `@JsonKey(toJson: Mappers.categoryToJson)` | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L26-L27` |
+| `confidence` | `double` | Recognition confidence, range 0–1 | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L30` |
+| `createdAt` | `String?` | Creation timestamp | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L32` |
+| `quantity` | `double?` | Optional quantity | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L34` |
+| `unit` | `Unit` | Serialized via `@JsonKey(toJson: Mappers.unitToJson)` | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L38-L39` |
+| `imageUrl` | `String?` | Optional image URL | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L41` |
+| `expirationDate` | `String?` | Optional expiration date | `Source: mobile/lib/features/ingredient/domain/models/ingredient.dart:L43` |
 
 ### `Category`
 
-`Source: mobile/lib/features/ingredient/domain/models/category.dart:L12-L18`.
+`Source: mobile/lib/features/ingredient/domain/models/category.dart:L11-L15`.
 
 | Field | Type | Source |
 |-------|------|--------|
-| `id` | `int` | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L15` |
-| `name` | `String` | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L18` |
+| `id` | `int` | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L13` |
+| `name` | `String` | `Source: mobile/lib/features/ingredient/domain/models/category.dart:L15` |
 
 ### `Unit`
 
-`Source: mobile/lib/features/ingredient/domain/models/unit.dart:L12-L18`.
+`Source: mobile/lib/features/ingredient/domain/models/unit.dart:L11-L15`.
 
 | Field | Type | Source |
 |-------|------|--------|
-| `id` | `int` | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L15` |
-| `name` | `String` | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L18` |
+| `id` | `int` | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L13` |
+| `name` | `String` | `Source: mobile/lib/features/ingredient/domain/models/unit.dart:L15` |
 
 ### `IngredientAddData`
 
@@ -226,19 +226,19 @@ Each of the four use cases wraps one repository method one-to-one.
 ### Backend REST endpoints called
 
 The `IngredientApi` issues the HTTP calls behind the repository.
-`Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart`.
+`Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L16`.
 
 | Method | Path | Purpose | Source |
 |--------|------|---------|--------|
-| `GET` | `/api/ingredient/creation-data` | Loads category + unit metadata (the backend exposes 5 categories and 9 units) | `Source: mobile/lib/core/constants/endpoints.dart:L64`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L33` |
-| `GET` | `/api/ingredient` | Searches ingredients using query parameters from `SearchDto.toJson()` | `Source: mobile/lib/core/constants/endpoints.dart:L60`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L42` |
-| `POST` | `/api/ingredient` | Creates an ingredient | `Source: mobile/lib/core/constants/endpoints.dart:L60`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L50` |
-| `POST` | `/api/ai/vision` | Uploads the captured image as a multipart `image` field built with `FormData` / `MultipartFile.fromFile` | `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L63-L65`; base `Source: mobile/lib/core/constants/endpoints.dart:L74` |
+| `GET` | `/api/ingredient/creation-data` | Loads category + unit metadata (the backend exposes 5 categories and 9 units) | `Source: mobile/lib/core/constants/endpoints.dart:L51`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L33` |
+| `GET` | `/api/ingredient` | Searches ingredients using query parameters from `SearchDto.toJson()` | `Source: mobile/lib/core/constants/endpoints.dart:L48`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L42` |
+| `POST` | `/api/ingredient` | Creates an ingredient | `Source: mobile/lib/core/constants/endpoints.dart:L48`, used at `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L50` |
+| `POST` | `/api/ai/vision` | Uploads the captured image as a multipart `image` field built with `FormData` / `MultipartFile.fromFile` | `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L63-L65`; base `Source: mobile/lib/core/constants/endpoints.dart:L59` |
 
 Endpoints follow the convention `/api/<resource>` with **no `/v1/` segment**:
 the client builds paths as `"$apiBaseUrl/<resource>"`, and `apiBaseUrl` already
 ends in `/api`.
-`Source: mobile/lib/core/constants/endpoints.dart:L60,L64,L74`.
+`Source: mobile/lib/core/constants/endpoints.dart:L48,L64,L74`.
 Full request/response detail lives in
 [docs/API_REFERENCE.md](../../../../docs/API_REFERENCE.md).
 
@@ -248,7 +248,7 @@ Full request/response detail lives in
   constant resolved via
   `String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api')`;
   the default already includes the `/api` prefix.
-  `Source: mobile/lib/env_config.dart:L23`.
+  `Source: mobile/lib/env_config.dart:L19`.
 - **Camera.** Camera capture uses the `camera` package: it enumerates devices
   with `availableCameras()` and drives a `CameraController`.
   `Source: mobile/lib/features/ingredient/presentation/widgets/screens/ingredient_camera_detecting.dart:L58-L60`.
@@ -301,14 +301,14 @@ graph TD
 - **Repository.** An abstract `IngredientRepository` interface is implemented by
   `IngredientRepositoryImpl`, isolating the domain from the data layer.
   `Source: mobile/lib/features/ingredient/domain/repositories/ingredient.repository.dart:L15`,
-  `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L18`.
+  `Source: mobile/lib/features/ingredient/data/repositories/ingredient.repository.dart:L17`.
 - **Use Case.** Each action is a single-responsibility use case implementing the
   core `UseCase` / `UseCaseWithParams` contracts.
-  `Source: mobile/lib/core/utils/usercase.dart:L8-L28`.
+  `Source: mobile/lib/core/utils/usercase.dart:L7-L24`.
 - **Dependency Injection via `get_it`.** The shared `DioClient` is resolved from
   the service locator instead of being constructed per call.
   `Source: mobile/lib/features/ingredient/data/api/ingredient.api.dart:L23`,
-  `Source: mobile/lib/core/utils/service_locator.dart:L39-L40`.
+  `Source: mobile/lib/core/utils/service_locator.dart:L33-L34`.
 - **DTO mapping.** `CreateIngredientDto.toJson()` serializes the request, with
   nested `Category` and `Unit` mapped through `Mappers.categoryToJson` and
   `Mappers.unitToJson`.
@@ -338,7 +338,7 @@ graph TD
   the full response contract, see
   [docs/DEPLOYMENT.md](../../../../docs/DEPLOYMENT.md) and
   [docs/API_REFERENCE.md](../../../../docs/API_REFERENCE.md).
-  `Source: backend/src/ai/ai.service.ts:L52-L56`,
+  `Source: backend/src/ai/ai.service.ts:L70-L76`,
   `Source: backend/src/ai/ai.service.ts:L63-L67`.
 - `KNOWN ISSUE:` the camera state class is named `ImagedProcessed` (sic).
   `Source: mobile/lib/features/ingredient/presentation/bloc/camera/camera_state.dart:L17`.
@@ -373,7 +373,7 @@ flutter run --dart-define API_BASE_URL=http://<host>:3000/api
 
 Runs the app against a backend. `<host>` must be reachable from the device or
 emulator (a LAN IP, or `10.0.2.2` for the Android emulator).
-`Source: mobile/lib/env_config.dart:L23`.
+`Source: mobile/lib/env_config.dart:L19`.
 
 Camera capture requires a physical device or an emulator with camera access; if
 no camera is available, the detect screen renders its unavailable state.

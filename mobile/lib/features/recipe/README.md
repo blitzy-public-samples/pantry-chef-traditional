@@ -86,18 +86,18 @@ Source: mobile/lib/features/recipe/domain/models/recipe.dart:L14-L88
 
 | Field | Type | Source line |
 |-------|------|-------------|
-| `id` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L16 |
-| `title` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L18 |
-| `description` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L20 |
-| `ingridientList` (sic) | `List<IngredientListItem>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L23 |
-| `instructions` | `List<InstractionItem>` (sic) | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L26 |
-| `prepTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L28 |
-| `cookTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L30 |
-| `servings` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L32 |
-| `difficulty` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L34 |
-| `tags` | `List<String>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L36 |
-| `imageUrl` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L38 |
-| `matchScore` | `double?` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L41 |
+| `id` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L69 |
+| `title` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L70 |
+| `description` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L71 |
+| `ingridientList` (sic) | `List<IngredientListItem>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L72 |
+| `instructions` | `List<InstractionItem>` (sic) | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L73 |
+| `prepTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L74 |
+| `cookTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L75 |
+| `servings` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L76 |
+| `difficulty` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L77 |
+| `tags` | `List<String>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L78 |
+| `imageUrl` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L79 |
+| `matchScore` | `double?` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L80 |
 
 The `matchScore` field carries the codebase's own inline description,
 `// how well it matches available ingredients`, preserved verbatim in source
@@ -145,9 +145,9 @@ Dart models), see [Data models](../../../../docs/DATA_MODELS.md).
 
 Recipe endpoints resolve to `/api/recipe`, built from
 `Endpoints.recipe = "$apiBaseUrl/recipe"`
-(Source: mobile/lib/core/constants/endpoints.dart:L55), where `apiBaseUrl`
+(Source: mobile/lib/core/constants/endpoints.dart:L44), where `apiBaseUrl`
 defaults to `http://192.168.2.20:3000/api`
-(Source: mobile/lib/env_config.dart:L23). Because the base URL already includes
+(Source: mobile/lib/env_config.dart:L19). Because the base URL already includes
 the `/api` prefix, every route is `/api/<resource>` with no `/v1/` segment.
 
 The mobile client consumes the backend through `RecipeApi`, whose methods all
@@ -171,7 +171,7 @@ and `getRecipeById(String id)`
 (Source: mobile/lib/features/recipe/domain/repositories/recipe.repository.dart:L14-L27).
 
 The list endpoint is paginated and the server enforces a result cap of 50
-(Source: backend/src/recipe/recipe.controller.ts:L57-L58); that server-side
+(Source: backend/src/recipe/recipe.controller.ts:L63); that server-side
 detail, together with recipe match-scoring, is also documented in
 [API reference](../../../../docs/API_REFERENCE.md).
 
@@ -186,8 +186,8 @@ perform recipe create, update, or delete.
 - The API base URL comes from `EnvConfig.apiBaseUrl`, a compile-time constant
   defined as
   `String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.2.20:3000/api')`
-  (Source: mobile/lib/env_config.dart:L23), and is consumed through
-  `Endpoints.recipe` (Source: mobile/lib/core/constants/endpoints.dart:L55).
+  (Source: mobile/lib/env_config.dart:L19), and is consumed through
+  `Endpoints.recipe` (Source: mobile/lib/core/constants/endpoints.dart:L44).
 - `RecipeFiltersDto` carries the matching flags `isQuickMake` (default `false`)
   and `isAlmostThere` (default `false`)
   (Source: mobile/lib/features/recipe/data/dto/recipe_filters.dto.dart:L8-L17),
@@ -198,7 +198,7 @@ perform recipe create, update, or delete.
   (mapped via `Mappers.orderToJson`)
   (Source: mobile/lib/features/recipe/data/dto/query_recipe.dto.dart:L9-L28).
   Although the client default `limit` is `500`, the backend caps results at 50
-  (Source: backend/src/recipe/recipe.controller.ts:L57-L58; see also
+  (Source: backend/src/recipe/recipe.controller.ts:L63; see also
   [API reference](../../../../docs/API_REFERENCE.md)).
 
 ## Data flow
@@ -238,7 +238,7 @@ use case
 repository
 (Source: mobile/lib/features/recipe/data/repositories/recipe.repository.dart:L12-L46);
 api (Source: mobile/lib/features/recipe/data/api/recipe.api.dart:L25-L37);
-endpoint (Source: mobile/lib/core/constants/endpoints.dart:L55).
+endpoint (Source: mobile/lib/core/constants/endpoints.dart:L44).
 
 A detail-selection sub-flow runs alongside the list flow: tapping a card
 dispatches `RecipeDetailedSelected(id: item.id)` and navigates to the detail
@@ -286,8 +286,8 @@ but `toJson()` always serializes `isQuickMake` and `isAlmostThere`
 (Source: mobile/lib/features/recipe/data/api/recipe.api.dart:L34-L37). The backend
 binds `@Query()` to a `FilterType` alias with no boolean transform
 (Source: backend/src/recipe/recipe.controller.ts:L45;
-Source: backend/src/recipe/types/filter.types.ts:L2-L3) and filters by truthiness
-(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L153,L157,L161),
+Source: backend/src/recipe/types/filter.types.ts:L9) and filters by truthiness
+(Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L251,L255,L259),
 where the query string `"false"` is truthy. Default `false` flags are therefore
 not guaranteed to behave as an unfiltered match. Documented here as-is and not
 corrected.
@@ -296,17 +296,17 @@ corrected.
   `Recipe` field/usages `ingridientList` and `ingridient`, are misspelled in
   source. These spellings are intentional and stable; they are documented as-is
   and never renamed
-  (Source: mobile/lib/features/recipe/domain/models/recipe.dart:L23,L26,
+  (Source: mobile/lib/features/recipe/domain/models/recipe.dart:L23,L48,
   Source: mobile/lib/features/recipe/domain/models/ingredient_list_item.dart:L15).
 - **Matching is server-side and exact-ingredient based** — the client only
   sends the `isQuickMake` / `isAlmostThere` flags; the match scoring is computed
   by the backend, which derives `matchScore` as
   `availableIngredients.length / totalIngredients`
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L137),
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L231),
   then derives `isQuickMake` (`totalIngredients <= 5`)
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L139)
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L234)
   and `isAlmostThere` (1–2 missing ingredients)
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L141-L142).
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L237-L238).
   Matching uses exact `_id` comparison with no unit normalization. Further detail
   is documented in [API reference](../../../../docs/API_REFERENCE.md).
 
@@ -323,7 +323,7 @@ flutter run --dart-define API_BASE_URL=http://<host>:3000/api
   `*.g.dart` files, required because the models use codegen (`@JsonSerializable`
   with `part '*.g.dart'`).
 - `flutter run --dart-define API_BASE_URL=http://<host>:3000/api` overrides the
-  compile-time API base (Source: mobile/lib/env_config.dart:L23). `<host>` must
+  compile-time API base (Source: mobile/lib/env_config.dart:L19). `<host>` must
   be reachable from the device or emulator (a LAN IP, or `10.0.2.2` for the
   Android emulator).
 - Keep static analysis clean with `flutter analyze` (equivalently

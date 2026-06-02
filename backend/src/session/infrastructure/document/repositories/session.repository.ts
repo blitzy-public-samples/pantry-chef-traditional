@@ -15,13 +15,12 @@ import { SessionMapper } from '../mappers/session.mapper';
  * Bound to the `SessionRepository` token by `DocumentSessionPersistenceModule`
  * via `{ provide: SessionRepository, useClass: SessionDocumentRepository }`, so the
  * application / auth layer depends on the abstraction rather than on Mongoose.
- * Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L14-L17
+ * Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L37-L38
  *
  * Injects the `SessionSchemaClass` Mongoose model and converts between persistence
  * documents and the domain `Session` via `SessionMapper`. Implements three
  * operations: `findOne`, `create`, and `softDelete`.
  *
- * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L12-L13
  */
 @Injectable()
 export class SessionDocumentRepository implements SessionRepository {
@@ -41,7 +40,6 @@ export class SessionDocumentRepository implements SessionRepository {
    * @param fields The `EntityCondition<Session>` query (e.g. `{ id }` or `{ user }`).
    * @returns The matched session mapped to the domain via `SessionMapper.toDomain`,
    *   or `null` (`NullableType<Session>`) when no document matches.
-   * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L19-L29
    */
   async findOne(
     fields: EntityCondition<Session>,
@@ -63,7 +61,6 @@ export class SessionDocumentRepository implements SessionRepository {
    * @param data The domain `Session` to persist.
    * @returns A `Promise<Session>` resolving to the saved session, re-mapped to the
    *   domain via `SessionMapper.toDomain`.
-   * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L31-L36
    */
   async create(data: Session): Promise<Session> {
     // Flow: map domain -> persistence (SessionMapper.toPersistence), construct a
@@ -86,7 +83,6 @@ export class SessionDocumentRepository implements SessionRepository {
    *   all of a user's sessions EXCEPT this one (used to invalidate sibling sessions on
    *   JWT refresh-token rotation).
    * @returns A `Promise<void>` that resolves once the matching sessions are removed.
-   * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L38-L55
    */
   async softDelete({
     excludeId,
@@ -106,7 +102,7 @@ export class SessionDocumentRepository implements SessionRepository {
     };
     // KNOWN ISSUE: this performs a HARD delete; sessions are physically removed,
     // not soft-deleted, even though `SessionSchemaClass` declares a `deletedAt` field.
-    // Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L22-L23
+    // Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L39-L40
     await this.sessionModel.deleteMany(transformedCriteria);
   }
 }

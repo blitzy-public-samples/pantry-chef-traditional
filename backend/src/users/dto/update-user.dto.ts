@@ -22,7 +22,7 @@ import { lowerCaseTransformer } from 'src/utils/transformers/lower-case.transfor
  */
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   // Optional email; lowercased & trimmed via lowerCaseTransformer when a value is sent.
-  // Source: backend/src/utils/transformers/lower-case.transformer.ts:L4-L6
+  // Source: backend/src/utils/transformers/lower-case.transformer.ts:L17-L19
   @ApiProperty({ example: 'test1@example.com' })
   @Transform(lowerCaseTransformer)
   @IsOptional()

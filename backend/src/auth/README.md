@@ -48,7 +48,7 @@ Source: backend/src/auth/auth.controller.ts:L15-L18
 
 `AuthModule` is wired into the root application module as the **first feature
 import**, so it is composed ahead of the other resource modules.
-Source: backend/src/app.module.ts:L50
+Source: backend/src/app.module.ts:L49
 
 The module imports `UsersModule` (account data) and `SessionModule`
 (refresh-token sessions), enables `PassportModule`, and registers
@@ -90,7 +90,7 @@ in its decorator (Source: backend/src/auth/auth.controller.ts:L36-L39), the
 bootstrap only calls `app.setGlobalPrefix(...)` and **never calls
 `app.enableVersioning()`**, so NestJS does not insert a `/v1/` URI segment.
 The canonical documented base is therefore `/api/auth`.
-Source: backend/src/main.ts:L32-L37
+Source: backend/src/main.ts:L30-L35
 
 Full request/response detail (bodies, validation messages, error payloads) is
 catalogued in [`../../../docs/API_REFERENCE.md`](../../../docs/API_REFERENCE.md).

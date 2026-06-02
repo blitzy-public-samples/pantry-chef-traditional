@@ -16,7 +16,7 @@ import { FilterType } from '../types/filter.types';
  * Implemented by the Mongoose document adapter `RecipeDocumentRepository` and bound to this
  * abstract token via dependency injection using
  * `{ provide: RecipeRepository, useClass: RecipeDocumentRepository }`.
- * Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts:L16-L21
+ * Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts:L33-L34
  *
  * Consumed by `RecipeService`, the recipe business layer, so callers depend only on this
  * abstraction rather than on a concrete data store.
@@ -46,7 +46,7 @@ export abstract class RecipeRepository {
    * KNOWN ISSUE: the concrete repository applies `name` as a `$regex` on a
    * `name` key, but `RecipeSchemaClass` declares no `name` field (its title
    * field is `title`), so the `name` filter matches no recipes by title.
-   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L115,
    * backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
    * @returns the matching recipes for the requested page; the concrete implementation
    * excludes soft-deleted records by constraining `deletedAt: null`.
@@ -73,7 +73,7 @@ export abstract class RecipeRepository {
    * `isAlmostThere`).
    * @returns recipes with a computed `matchScore`, ordered by descending match score. The
    * scoring detail lives in the implementation:
-   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92-L171
+   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L166-L245
    */
   abstract matches(
     preferences: Preferences,
@@ -109,7 +109,7 @@ export abstract class RecipeRepository {
    * The concrete adapter performs a TRUE soft delete: it sets `deletedAt` rather than
    * removing the document, in contrast to the hard-delete adapters in users, pantry, and
    * session.
-   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186
+   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L310-L311
    *
    * @param id the recipe id (`Recipe['id']`).
    * @returns nothing once the soft delete is applied.

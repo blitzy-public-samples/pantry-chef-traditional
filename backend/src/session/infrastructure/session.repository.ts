@@ -5,7 +5,7 @@ import { EntityCondition } from 'src/utils/types/entity-condition.type';
 
 // Imported helper types used by the repository contract below:
 // `NullableType<T>` resolves to `T | null`; lets `findOne` explicitly signal "no match".
-// Source: backend/src/utils/types/nullable.type.ts:L1
+// Source: backend/src/utils/types/nullable.type.ts:L2
 // `EntityCondition<T>` is a partial map of an entity's fields to a value (or array of
 // values) — i.e. flexible, type-safe query conditions.
 // Source: backend/src/utils/types/entity-condition.type.ts:L1-L3
@@ -20,11 +20,11 @@ import { EntityCondition } from 'src/utils/types/entity-condition.type';
  * The concrete implementation is `SessionDocumentRepository`, bound to this abstract
  * class via dependency injection in `DocumentSessionPersistenceModule`
  * (`{ provide: SessionRepository, useClass: SessionDocumentRepository }`).
- * Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L14-L17
+ * Source: backend/src/session/infrastructure/document/document-persistence.module.ts:L37-L38
  *
  * Backs the JWT refresh-token lifecycle: sessions are created at login, looked up on
  * refresh, and removed on logout. Consumed by `SessionService`.
- * Source: backend/src/session/session.service.ts:L9-L10
+ * Source: backend/src/session/session.service.ts:L18-L19
  */
 export abstract class SessionRepository {
   /**
@@ -66,7 +66,7 @@ export abstract class SessionRepository {
    * HARD delete via `deleteMany(...)` — sessions are physically removed, NOT soft-
    * deleted, even though `SessionSchemaClass` declares a `deletedAt` field. The behavior
    * is documented here; the contract is intentionally left unchanged.
-   * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54
+   * Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L106
    */
   abstract softDelete({
     excludeId,

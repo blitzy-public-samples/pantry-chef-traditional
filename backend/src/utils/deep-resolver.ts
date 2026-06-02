@@ -20,8 +20,7 @@
  * @returns a `Promise` resolving to the same structure with all nested
  *   Promises resolved.
  *
- * Source: backend/src/utils/deep-resolver.ts:L1-L28
- * Source: backend/src/utils/serializer.interceptor.ts:L14
+ * Source: backend/src/utils/serializer.interceptor.ts:L45
  */
 async function deepResolvePromises(input) {
   // Await and return a resolved Promise.

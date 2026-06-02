@@ -36,16 +36,16 @@ client, the NestJS REST API, the MongoDB database, and the optional Google Cloud
 Vision service.
 
 The mobile client talks to the backend exclusively over HTTP/JSON using a Dio
-HTTP client (`Source: mobile/lib/core/utils/dio_client.dart:L40-L47`). The
+HTTP client (`Source: mobile/lib/core/utils/dio_client.dart:L34-L41`). The
 backend exposes its routes under a configurable global prefix — `api` by default
-(`Source: backend/src/main.ts:L32-L37`, `Source: backend/env_example:L4`) — and
+(`Source: backend/src/main.ts:L30-L35`, `Source: backend/env_example:L4`) — and
 listens on the port supplied by configuration, `3000` by default
-(`Source: backend/src/main.ts:L56`, `Source: backend/env_example:L2`). The
+(`Source: backend/src/main.ts:L54`, `Source: backend/env_example:L2`). The
 backend reads and writes domain data in MongoDB through Mongoose, with the
-connection assembled at startup (`Source: backend/src/app.module.ts:L44-L46`).
+connection assembled at startup (`Source: backend/src/app.module.ts:L43-L45`).
 When an ingredient photo is submitted, the backend calls Google Cloud Vision to
 label the image; this dependency is optional and degrades gracefully when its
-credentials are absent (`Source: backend/src/ai/ai.service.ts:L53-L56`).
+credentials are absent (`Source: backend/src/ai/ai.service.ts:L73-L76`).
 
 ```mermaid
 graph LR
@@ -64,7 +64,7 @@ graph LR
 default container topology binds MongoDB on `27017` and the NestJS service on
 `3000` (`Source: backend/docker-compose.yml:L11-L12,L24-L25`). The dotted edge
 to Vision denotes the optional path that is skipped when no service-account key
-is present (`Source: backend/src/ai/ai.service.ts:L64-L67`).
+is present (`Source: backend/src/ai/ai.service.ts:L70-L76`).
 
 ## 2. Monorepo Layout
 
@@ -110,7 +110,7 @@ Both spellings are reproduced verbatim wherever they appear.
 | `patry_main.dart` | `mobile/lib/features/pantry/presentation/widgets/screens/patry_main.dart` | "pantry" transposed |
 | `search_ingredietn.usecase.dart` | `mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart` | "ingredient" transposed |
 | `profile.repositiry.dart` | `mobile/lib/features/profile/data/repositories/profile.repositiry.dart` | "repository" misspelled |
-| `singup` (route constant) | `mobile/lib/core/constants/navigation.dart:L6` | "signup" transposed |
+| `singup` (route constant) | `mobile/lib/core/constants/navigation.dart:L17` | "signup" transposed |
 
 These names are referenced as-is throughout the rest of this document and across
 the sibling reference docs.
@@ -133,15 +133,15 @@ responsibilities:
 
 The `recipe/` module is a representative example of this chain. The controller
 is guarded by JWT, tagged for Swagger, and versioned at `v1`
-(`Source: backend/src/recipe/recipe.controller.ts:L27-L33`); it injects the
+(`Source: backend/src/recipe/recipe.controller.ts:L49`); it injects the
 service and forwards each route to it — for instance the `POST` create handler
 simply calls `recipeService.create(...)`
-(`Source: backend/src/recipe/recipe.controller.ts:L37-L41`). The service owns the
+(`Source: backend/src/recipe/recipe.controller.ts:L63-L67`). The service owns the
 rules: when creating a recipe it rejects a duplicate title with a `422
 Unprocessable Entity` before persisting
-(`Source: backend/src/recipe/recipe.service.ts:L27-L41`), and its `matches`
+(`Source: backend/src/recipe/recipe.service.ts:L26-L40`), and its `matches`
 method first loads the caller's preferences and pantry, then delegates the
-scoring query (`Source: backend/src/recipe/recipe.service.ts:L67-L76`).
+scoring query (`Source: backend/src/recipe/recipe.service.ts:L66-L75`).
 
 Persistence is expressed against a contract rather than the database directly.
 `RecipeRepository` is declared as an abstract class enumerating `create`,
@@ -149,20 +149,20 @@ Persistence is expressed against a contract rather than the database directly.
 (`Source: backend/src/recipe/infrastructure/recipe.repository.ts:L11-L42`). The
 concrete `RecipeDocumentRepository implements RecipeRepository` and receives the
 Mongoose model through `@InjectModel`
-(`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L16-L21`).
+(`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L31-L36`).
 Documents are translated to and from the domain shape by a mapper, so the rest
 of the backend works with domain objects rather than Mongoose documents
-(`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L23-L30`).
+(`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L268`).
 
 Each module repeats the same internal folders: `dto/` for request/response
 shapes, `domain/` for the domain entity, and
 `infrastructure/document/{entities,mappers,repositories}` for the persistence
 implementation
 (`Source: backend/src/recipe/infrastructure/recipe.repository.ts:L1-L42`,
-`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L20-L30`).
+`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L31-L32`).
 Note the preserved backend misspelling here: the ingredient module directory is
 `ingridient/` and its domain entity file is `ingrident.ts`
-(`Source: backend/src/ingridient/domain/ingrident.ts:L2`).
+(`Source: backend/src/ingridient/domain/ingrident.ts:L11`).
 
 ### Module wiring
 
@@ -170,15 +170,15 @@ All feature modules are assembled in the root `AppModule`. It imports the global
 `ConfigModule`, wires Mongoose asynchronously through `MongooseConfigService`,
 and registers the feature modules `AuthModule`, `SessionModule`, `UsersModule`,
 `IngridientModule`, `PantryModule`, `RecipeModule`, and `AiModule`
-(`Source: backend/src/app.module.ts:L33-L62`). Several feature modules import
+(`Source: backend/src/app.module.ts:L32-L61`). Several feature modules import
 one another directly. `AiModule` imports `IngridientModule` so the vision
 service can resolve recognized labels to stored ingredients
-(`Source: backend/src/ai/ai.module.ts:L4,L7`); `AuthModule` imports both
+(`Source: backend/src/ai/ai.module.ts:L4,L23`); `AuthModule` imports both
 `UsersModule` and `SessionModule` to validate credentials and manage refresh
 sessions (`Source: backend/src/auth/auth.module.ts:L6-L7,L24-L25`); and
 `RecipeModule` imports `UsersModule` and `PantryModule` to read user data and
 pantry contents during recipe matching
-(`Source: backend/src/recipe/recipe.module.ts:L5-L6,L9`).
+(`Source: backend/src/recipe/recipe.module.ts:L5-L6,L27`).
 
 ```mermaid
 graph TD
@@ -223,7 +223,7 @@ edges are NestJS module imports; the dotted edges indicate that the guarded
 controllers in those modules depend at runtime on the `jwt` Passport strategy
 that `AuthModule` registers — they apply `@UseGuards(AuthGuard('jwt'))` rather
 than importing `AuthModule` directly
-(`Source: backend/src/users/users.controller.ts:L41-L46`). See
+(`Source: backend/src/users/users.controller.ts:L40-L45`). See
 [Cross-Cutting Concerns](#5-cross-cutting-concerns) for the guard details.
 
 ### Request lifecycle
@@ -258,12 +258,12 @@ sequenceDiagram
 `backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L48-L90`.*
 The served path is `/api/recipe` with no `/v1/` segment: although
 `RecipeController` declares `version: '1'`
-(`Source: backend/src/recipe/recipe.controller.ts:L31-L33`), `main.ts` never
+(`Source: backend/src/recipe/recipe.controller.ts:L45-L48`), `main.ts` never
 calls `app.enableVersioning()`, so the version property is not URI-effective and
-no version segment is added (`Source: backend/src/main.ts:L21-L57`).
+no version segment is added (`Source: backend/src/main.ts:L20-L55`).
 The controller delegates to the service
 (`Source: backend/src/recipe/recipe.controller.ts:L50-L72`), the service forwards
-to the repository contract (`Source: backend/src/recipe/recipe.service.ts:L47-L61`),
+to the repository contract (`Source: backend/src/recipe/recipe.service.ts:L46-L60`),
 and the document repository runs the query through the injected model and maps
 the results back to the domain type
 (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L48-L90`).
@@ -282,16 +282,16 @@ into three clean-architecture layers. The five features are `authentication/`,
   *interfaces*, and use cases that express a single application action. The
   ingredient search use case lives here, under the preserved misspelled filename
   `search_ingredietn.usecase.dart`
-  (`Source: mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart:L7`).
+  (`Source: mobile/lib/features/ingredient/domain/usecases/search_ingredietn.usecase.dart:L17`).
 - **`data/`** — the outward-facing implementation: `api/` clients, `dto/`
   data-transfer objects, and concrete `repositories/` that implement the domain
   interfaces. The profile feature's implementation carries the preserved
   misspelled filename `profile.repositiry.dart`
-  (`Source: mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L6`).
+  (`Source: mobile/lib/features/profile/data/repositories/profile.repositiry.dart:L18`).
 - **`presentation/`** — the UI and its state: `bloc/` (events, states, and the
   BLoC itself) plus `widgets/screens/`. The pantry main screen carries the
   preserved misspelled filename `patry_main.dart`
-  (`Source: mobile/lib/features/pantry/presentation/widgets/screens/patry_main.dart:L12`).
+  (`Source: mobile/lib/features/pantry/presentation/widgets/screens/patry_main.dart:L23`).
 
 State is managed with the BLoC pattern via the `bloc` and `flutter_bloc`
 packages, and persisted state (such as profile preferences) uses `hydrated_bloc`
@@ -302,17 +302,17 @@ initialized once at startup — see [Bootstrap Sequence](#7-bootstrap-sequence).
 
 Cross-cutting singletons are resolved through the `get_it` service locator. A
 single `getIt = GetIt.instance` is exposed
-(`Source: mobile/lib/core/utils/service_locator.dart:L10`) and `setupLocator()`
+(`Source: mobile/lib/core/utils/service_locator.dart:L9`) and `setupLocator()`
 registers the shared services at startup: `SharedPreferences` (registered as an
 async singleton), a `SharedPreferencesHelper` wrapper, and the `DioClient`
-(`Source: mobile/lib/core/utils/service_locator.dart:L34-L40`). Features obtain
+(`Source: mobile/lib/core/utils/service_locator.dart:L28-L34`). Features obtain
 these dependencies by resolving them from `getIt` rather than constructing them
 directly, which keeps the HTTP client and persistence helpers as process-wide
 singletons.
 
 The client's navigation routes are defined as constants in
 `mobile/lib/core/constants/navigation.dart`, including the preserved misspelled
-route `singup` (`Source: mobile/lib/core/constants/navigation.dart:L6`). The
+route `singup` (`Source: mobile/lib/core/constants/navigation.dart:L17`). The
 flow inside each feature — UI event → BLoC → use case → repository →
 `DioClient` → API — is described per feature in each feature's source, for
 example [`mobile/lib/features/ingredient/`](../mobile/lib/features/ingredient/)
@@ -326,21 +326,21 @@ configured once during bootstrap and then implicitly affect every request.
 
 - **CORS.** Cross-origin requests are enabled globally when the application is
   created with `NestFactory.create(AppModule, { cors: true })`
-  (`Source: backend/src/main.ts:L23`).
+  (`Source: backend/src/main.ts:L22`).
 - **Global validation.** A single `ValidationPipe` is registered for the whole
   app with shared validation options, so incoming DTOs are validated everywhere
-  (`Source: backend/src/main.ts:L40`). Because `class-validator` is wired into
+  (`Source: backend/src/main.ts:L38`). Because `class-validator` is wired into
   Nest's container via `useContainer(...)`, validators can themselves use
-  dependency injection (`Source: backend/src/main.ts:L25`).
+  dependency injection (`Source: backend/src/main.ts:L24`).
 - **Configuration.** `ConfigModule.forRoot(...)` is registered as global and
   loads the database, auth, and app configuration namespaces from `.env`
   (`Source: backend/src/app.module.ts:L37-L43`). The global API prefix is read
-  from this configuration (`Source: backend/src/main.ts:L32-L37`).
+  from this configuration (`Source: backend/src/main.ts:L30-L35`).
 - **Authentication guards.** Protected controllers apply
   `@UseGuards(AuthGuard('jwt'))` together with `@ApiBearerAuth()`; the users
-  controller is one example (`Source: backend/src/users/users.controller.ts:L41-L46`)
+  controller is one example (`Source: backend/src/users/users.controller.ts:L40-L45`)
   and the recipe controller applies the same pair
-  (`Source: backend/src/recipe/recipe.controller.ts:L27-L28`). The guard resolves
+  (`Source: backend/src/recipe/recipe.controller.ts:L49`). The guard resolves
   one of three Passport strategies that live in `backend/src/auth/strategies/` —
   `jwt.strategy.ts`, `jwt-refresh.strategy.ts`, and `anonymous.strategy.ts`.
   Strategy details are documented in the auth module source at
@@ -351,20 +351,20 @@ configured once during bootstrap and then implicitly affect every request.
 
 On the mobile side the cross-cutting HTTP concern is the `DioClient`, which
 configures a base URL, connect/receive timeouts, and JSON headers
-(`Source: mobile/lib/core/utils/dio_client.dart:L40-L47`). It installs an
+(`Source: mobile/lib/core/utils/dio_client.dart:L34-L41`). It installs an
 `InterceptorsWrapper` that attaches `Authorization: Bearer <token>` to outgoing
 requests when an access token is present
-(`Source: mobile/lib/core/utils/dio_client.dart:L66-L69`) and, on a
+(`Source: mobile/lib/core/utils/dio_client.dart:L58-L61`) and, on a
 `tokenExpired` or `unauthorized` response, transparently refreshes the token and
 retries the original request
-(`Source: mobile/lib/core/utils/dio_client.dart:L73-L84`,
+(`Source: mobile/lib/core/utils/dio_client.dart:L65-L75`,
 `Source: mobile/lib/core/utils/dio_client.dart:L129-L155`).
 
 > **SECURITY NOTE:** A `LogInterceptor` is added **unconditionally** to both the
 > main Dio instance and the dedicated refresh instance, in each case with
 > `requestHeader: true`
-> (`Source: mobile/lib/core/utils/dio_client.dart:L48-L60`,
-> `Source: mobile/lib/core/utils/dio_client.dart:L99-L111`). Because the
+> (`Source: mobile/lib/core/utils/dio_client.dart:L42-L53`,
+> `Source: mobile/lib/core/utils/dio_client.dart:L89-L100`). Because the
 > request-attaching interceptor sets the `Authorization: Bearer <token>` header,
 > these bearer tokens are written to the logs in **all** builds, including
 > release builds. This behavior is documented here as it exists in the codebase;
@@ -380,11 +380,11 @@ optional Google Cloud Vision service.
 
 The database connection is configured asynchronously. `AppModule` registers
 `MongooseModule.forRootAsync({ useClass: MongooseConfigService })`
-(`Source: backend/src/app.module.ts:L44-L46`), and `MongooseConfigService`
+(`Source: backend/src/app.module.ts:L43-L45`), and `MongooseConfigService`
 implements `MongooseOptionsFactory`, assembling the connection options from the
 `database` configuration namespace — returning the `uri`, `dbName`, `user`, and
 `pass` derived from `configService.get('database')`
-(`Source: backend/src/database/mongoose-config.service.ts:L13-L19`). The
+(`Source: backend/src/database/mongoose-config.service.ts:L27-L33`). The
 persisted entities and their relationships are catalogued in
 [./DATA_MODELS.md](./DATA_MODELS.md), and the environment variables that feed
 this configuration are documented in [./DEPLOYMENT.md](./DEPLOYMENT.md).
@@ -395,17 +395,17 @@ The `ai/` module adds image-based ingredient recognition. `AiService`
 constructs an `ImageAnnotatorClient` from a service-account key expected at
 `src/config/ai.json`. If that key file is missing, the service logs the
 condition and sets `isGoogleVisionEnabled = false` rather than failing startup
-(`Source: backend/src/ai/ai.service.ts:L51-L61`). When vision is disabled,
+(`Source: backend/src/ai/ai.service.ts:L67-L82`). When vision is disabled,
 `detectIngredientsFromBuffer` short-circuits and returns an empty object `{}`,
 so the rest of the system keeps working without the integration
-(`Source: backend/src/ai/ai.service.ts:L64-L67`).
+(`Source: backend/src/ai/ai.service.ts:L104-L106`).
 
 When vision is enabled, the service requests `LABEL_DETECTION` with a maximum of
-ten results (`Source: backend/src/ai/ai.service.ts:L73-L78`), then matches the
+ten results (`Source: backend/src/ai/ai.service.ts:L114-L119`), then matches the
 returned labels against an internal in-memory ingredient dictionary and resolves
 the recognized label to a stored ingredient through `IngridientService`
-(`Source: backend/src/ai/ai.service.ts:L88-L113`). This is why `AiModule`
-imports `IngridientModule` (`Source: backend/src/ai/ai.module.ts:L4,L7`). The
+(`Source: backend/src/ai/ai.service.ts:L130-L160`). This is why `AiModule`
+imports `IngridientModule` (`Source: backend/src/ai/ai.module.ts:L4,L23`). The
 key-provisioning workflow for `ai.json` is described in
 [./DEPLOYMENT.md](./DEPLOYMENT.md) and the AI module source at
 [`backend/src/ai/`](../backend/src/ai/).
@@ -420,51 +420,51 @@ Each side has a single, well-defined startup path.
 The `bootstrap()` function brings the application up in order:
 
 1. Create the Nest application from `AppModule` with CORS enabled
-   (`Source: backend/src/main.ts:L23`).
+   (`Source: backend/src/main.ts:L22`).
 2. Wire `class-validator` into Nest's DI container so validators can inject
-   providers (`Source: backend/src/main.ts:L25`).
+   providers (`Source: backend/src/main.ts:L24`).
 3. Read configuration and apply the global API prefix, excluding the root path
-   `/` (`Source: backend/src/main.ts:L32-L37`).
+   `/` (`Source: backend/src/main.ts:L30-L35`).
 4. Register the global `ValidationPipe`
-   (`Source: backend/src/main.ts:L40`).
+   (`Source: backend/src/main.ts:L38`).
 5. Build the Swagger document (title `API`, bearer auth) and mount the UI
-   (`Source: backend/src/main.ts:L43-L53`).
-6. Listen on the configured port (`Source: backend/src/main.ts:L56`).
+   (`Source: backend/src/main.ts:L41-L51`).
+6. Listen on the configured port (`Source: backend/src/main.ts:L54`).
 
 The Swagger UI is mounted at `docs` via `SwaggerModule.setup('docs', ...)`, which
 serves it at `/docs` — the global API prefix is **not** applied to the Swagger
-route (`Source: backend/src/main.ts:L53`).
+route (`Source: backend/src/main.ts:L51`).
 
 > **KNOWN ISSUE:** The Swagger UI is served at `/docs`, not at `/api/docs`. Some
 > task wording refers to `/api/docs`; the actual path is `/docs` because the
 > global prefix does not apply to the Swagger route
-> (`Source: backend/src/main.ts:L32-L37`, `Source: backend/src/main.ts:L53`).
+> (`Source: backend/src/main.ts:L30-L35`, `Source: backend/src/main.ts:L51`).
 > Endpoint-level detail is deferred to [./API_REFERENCE.md](./API_REFERENCE.md).
 
 ### Mobile — `mobile/lib/main.dart`
 
 `main()` runs the entire startup inside `runZonedGuarded` so uncaught errors are
-funneled to a single handler (`Source: mobile/lib/main.dart:L31-L48`). Inside the
+funneled to a single handler (`Source: mobile/lib/main.dart:L25-L42`). Inside the
 guarded zone it:
 
 1. Ensures the Flutter binding is initialized
-   (`Source: mobile/lib/main.dart:L33`).
+   (`Source: mobile/lib/main.dart:L27`).
 2. Preserves the native splash screen during initialization
-   (`Source: mobile/lib/main.dart:L34`).
+   (`Source: mobile/lib/main.dart:L28`).
 3. Initializes `HydratedBloc.storage` from a temporary directory so persisted
-   BLoC state survives restarts (`Source: mobile/lib/main.dart:L35-L37`).
+   BLoC state survives restarts (`Source: mobile/lib/main.dart:L29-L31`).
 4. Locks the app to portrait orientation
-   (`Source: mobile/lib/main.dart:L38`, `Source: mobile/lib/main.dart:L57-L61`).
+   (`Source: mobile/lib/main.dart:L32`, `Source: mobile/lib/main.dart:L50-L54`).
 5. Runs the `get_it` service-locator setup
-   (`Source: mobile/lib/main.dart:L39`).
+   (`Source: mobile/lib/main.dart:L33`).
 6. Launches the widget tree with `runApp(const App())`
-   (`Source: mobile/lib/main.dart:L40`).
+   (`Source: mobile/lib/main.dart:L34`).
 
 The zone's error handler prints uncaught errors
-(`Source: mobile/lib/main.dart:L41-L48`). The compile-time API base URL the
+(`Source: mobile/lib/main.dart:L35-L42`). The compile-time API base URL the
 client connects to is resolved from `EnvConfig.apiBaseUrl`, an environment value
 read with `String.fromEnvironment('API_BASE_URL', ...)` whose default targets a
-LAN address (`Source: mobile/lib/env_config.dart:L23`); overriding it at build
+LAN address (`Source: mobile/lib/env_config.dart:L19`); overriding it at build
 time is covered in [./DEPLOYMENT.md](./DEPLOYMENT.md) and
 [../mobile/README.md](../mobile/README.md).
 

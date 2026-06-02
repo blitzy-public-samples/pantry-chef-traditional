@@ -3,10 +3,9 @@
 ///
 /// DioClient checks [tokenExpired] (419) and [unauthorized] (401) on a
 /// failed response to drive the token-refresh path
-/// (Source: mobile/lib/core/utils/dio_client.dart:L44-L49). The private
+/// (Source: mobile/lib/core/utils/dio_client.dart:L65-L70). The private
 /// constructor StatusCodes._() prevents instantiation.
 ///
-/// Source: mobile/lib/core/constants/status_codes.dart:L1-L2
 class StatusCodes {
   // Private constructor: prevents instantiation of the static namespace.
   StatusCodes._();

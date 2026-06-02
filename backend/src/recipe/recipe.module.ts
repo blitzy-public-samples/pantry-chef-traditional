@@ -13,13 +13,11 @@ import { PantryModule } from 'src/pantry/pantry.module';
  * Imports `DocumentPantryPersistenceModule` (which binds the abstract `RecipeRepository` to
  * its Mongoose document implementation), `UsersModule`, and `PantryModule`, so that
  * `RecipeService` can read user preferences and pantry ingredients when matching recipes.
- * Source: backend/src/recipe/recipe.module.ts:L9
  *
  * Registers `RecipeController` and provides and exports `RecipeService`, while also
  * re-exporting `DocumentPantryPersistenceModule` for downstream modules.
- * Source: backend/src/recipe/recipe.module.ts:L10-L12
  *
- * Wired into the application root module. Source: backend/src/app.module.ts:L33
+ * Wired into the application root module. Source: backend/src/app.module.ts:L54
  *
  * Note: the imported persistence module retains the pre-existing name
  * `DocumentPantryPersistenceModule` even though this is the recipe feature; the identifier is

@@ -10,7 +10,7 @@ import 'package:pantry_chef/features/authentication/domain/repositories/auth.rep
 ///
 /// Implements the `UseCaseWithParams<void, AuthDto>` contract — the
 /// standard parameterized callable use case
-/// (Source: mobile/lib/core/utils/usercase.dart:L5-L7) — so it accepts
+/// (Source: mobile/lib/core/utils/usercase.dart:L19-L21) — so it accepts
 /// an [AuthDto] of credentials and returns `Future<void>`, since its
 /// purpose is the side effect of authenticating and storing tokens.
 class LoginUsecase implements UseCaseWithParams<void, AuthDto> {
@@ -20,7 +20,6 @@ class LoginUsecase implements UseCaseWithParams<void, AuthDto> {
   /// for an `AuthResponse`, then saves `result.token` and
   /// `result.refreshToken` through [SharedPreferencesHelper] obtained
   /// from the [getIt] service locator
-  /// (Source: .../usecases/login.usecase.dart:L11-L16).
   @override
   Future<void> call(AuthDto dto) async {
     // Resolve the auth repository implementation via the domain contract.

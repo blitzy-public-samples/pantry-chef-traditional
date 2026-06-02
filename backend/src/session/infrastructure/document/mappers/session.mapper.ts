@@ -11,7 +11,6 @@ import { UserMapper } from 'src/users/infrastructure/document/mappers/user.mappe
  * no I/O, and needs no dependency injection. Nested user conversion is
  * delegated to `UserMapper` rather than reimplemented here.
  *
- * Source: backend/src/session/infrastructure/document/mappers/session.mapper.ts:L6
  */
 export class SessionMapper {
   /**
@@ -23,7 +22,6 @@ export class SessionMapper {
    * @param raw - The `SessionSchemaClass` document read from MongoDB.
    * @returns The hydrated domain `Session`.
    *
-   * Source: backend/src/session/infrastructure/document/mappers/session.mapper.ts:L7-L18
    */
   static toDomain(raw: SessionSchemaClass): Session {
     const session = new Session();
@@ -48,7 +46,6 @@ export class SessionMapper {
    * @param session - The domain `Session` to serialize for persistence.
    * @returns The `SessionSchemaClass` persistence entity.
    *
-   * Source: backend/src/session/infrastructure/document/mappers/session.mapper.ts:L19-L30
    */
   static toPersistence(session: Session): SessionSchemaClass {
     const user = new UserSchemaClass();

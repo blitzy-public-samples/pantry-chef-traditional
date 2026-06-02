@@ -30,12 +30,11 @@ import { UsersService } from './users.service';
  * Routes are served under the global `api` prefix as `/api/users`. Although
  * this controller declares `version: '1'`, `main.ts` never calls
  * `app.enableVersioning()`, so NO `/v1/` segment is added to any path.
- * Source: backend/src/main.ts:L14-L15
+ * Source: backend/src/main.ts:L30-L35
  *
  * The whole controller is JWT-guarded at the class level via
  * `@UseGuards(AuthGuard('jwt'))` and documented for bearer auth with
  * `@ApiBearerAuth()` under the `Users` Swagger tag.
- * Source: backend/src/users/users.controller.ts:L26-L28
  */
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -71,7 +70,6 @@ export class UsersController {
    * Route: `GET /api/users` -> `200 OK`. Applies pagination defaults of
    * `page = 1` and `limit = 10`, and clamps the page size to a maximum of 50
    * items (`if (limit > 50) limit = 50;`).
-   * Source: backend/src/users/users.controller.ts:L47-L51
    *
    * @param query - Pagination, filtering, and sorting options.
    * @returns A `Promise<InfinityPaginationResultType<User>>` page of users.
@@ -161,7 +159,7 @@ export class UsersController {
     // KNOWN ISSUE: despite the `softDelete` name, the underlying document
     // repository performs a HARD delete via `deleteOne`, permanently removing
     // the record (no `deletedAt` tombstone is written).
-    // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L81
+    // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L172-L174
     return this.usersService.softDelete(id);
   }
 }

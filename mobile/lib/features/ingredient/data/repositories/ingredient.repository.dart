@@ -14,7 +14,6 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 /// ingredient use cases to the remote [IngredientApi]. Stateless: each
 /// method instantiates a fresh [IngredientApi] locally, delegates the
 /// remote call, then maps the raw JSON into domain models.
-/// Source: ingredient.repository.dart:L11
 class IngredientRepositoryImpl implements IngredientRepository {
   /// Loads ingredient reference data (categories and units).
   ///
@@ -22,7 +21,6 @@ class IngredientRepositoryImpl implements IngredientRepository {
   /// `response['categories']` via [Category.fromJson] and
   /// `response['units']` via [Unit.fromJson], then returns them in an
   /// [IngredientAddData] aggregate.
-  /// Source: ingredient.repository.dart:L13
   @override
   Future<IngredientAddData> getCategoriesAndUnits() async {
     // Fresh stateless API client instantiated per call.
@@ -41,7 +39,6 @@ class IngredientRepositoryImpl implements IngredientRepository {
   /// Forwards [dto] (query, page, limit, sort) to
   /// [IngredientApi.searchIngredient] and maps the returned JSON list
   /// into a typed `List<Ingredient>` via [Ingredient.fromJson].
-  /// Source: ingredient.repository.dart:L25
   @override
   Future<List<Ingredient>> searchIngredient(SearchDto dto) async {
     IngredientApi api = IngredientApi();
@@ -57,7 +54,6 @@ class IngredientRepositoryImpl implements IngredientRepository {
   /// Delegates to `IngredientApi.createIngredient` (camelCase API
   /// method) and maps the returned JSON map into a single [Ingredient]
   /// via [Ingredient.fromJson].
-  /// Source: ingredient.repository.dart:L32
   @override
   Future<Ingredient> createingredient(CreateIngredientDto dto) async {
     IngredientApi api = IngredientApi();
@@ -70,7 +66,6 @@ class IngredientRepositoryImpl implements IngredientRepository {
   /// Sends [image] to [IngredientApi.processImage] (backend AI vision)
   /// and maps the parsed response into an [Ingredient] via
   /// [Ingredient.fromJson].
-  /// Source: ingredient.repository.dart:L39
   @override
   Future<Ingredient> processImage(XFile image) async {
     IngredientApi api = IngredientApi();

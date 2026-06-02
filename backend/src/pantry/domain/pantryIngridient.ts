@@ -26,6 +26,6 @@ export class PantryIngridient {
   // Optional soft-delete marker.
   // KNOWN ISSUE: the document repository's softDelete() hard-deletes via
   // deleteOne(), so this field is declared but never set by the delete path.
-  // Source: pantryIngridient.repository.ts:L120
+  // Source: pantryIngridient.repository.ts:L184-L186
   deletedAt?: Date;
 }

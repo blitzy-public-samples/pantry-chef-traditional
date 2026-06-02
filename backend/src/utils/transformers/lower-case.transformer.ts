@@ -12,7 +12,7 @@ import { MaybeType } from '../types/maybe.type';
  *   is read from `params.value`.
  * @returns a `MaybeType<string>` (`string | undefined`): the lower-cased,
  *   trimmed value, or `undefined` when `params.value` is nullish.
- *   Source: backend/src/utils/types/maybe.type.ts:L1
+ *   Source: backend/src/utils/types/maybe.type.ts:L2
  */
 export const lowerCaseTransformer = (
   params: TransformFnParams,

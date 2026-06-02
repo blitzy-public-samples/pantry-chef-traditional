@@ -9,7 +9,7 @@ import 'package:pantry_chef/features/ingredient/domain/repositories/ingredient.r
 ///
 /// Implements [UseCaseWithParams] (params: [XFile], result:
 /// [Ingredient]).
-/// Source: core/utils/usercase.dart:L5
+/// Source: core/utils/usercase.dart:L19
 class ImageProcessingUsecase implements UseCaseWithParams<Ingredient, XFile> {
   /// Recognizes an ingredient from [image] and returns the resulting
   /// [Ingredient]. [image] is a `camera` package [XFile].

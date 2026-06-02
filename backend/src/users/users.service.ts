@@ -16,7 +16,6 @@ import * as bcrypt from 'bcryptjs';
  * Responsibilities include hashing passwords with bcryptjs, rejecting
  * duplicate email addresses, and validating user existence on update.
  *
- * Source: backend/src/users/users.service.ts:L13
  */
 @Injectable()
 export class UsersService {
@@ -27,9 +26,7 @@ export class UsersService {
    * before persistence and rejecting duplicate email addresses.
    *
    * The password is hashed when present.
-   * Source: backend/src/users/users.service.ts:L22-L23 (hashing).
    * A duplicate email yields HTTP 422 (emailAlreadyExists).
-   * Source: backend/src/users/users.service.ts:L26-L41 (duplicate check).
    *
    * @param createProfileDto - The user creation payload to persist.
    * @returns A promise resolving to the persisted {@link User}.
@@ -106,7 +103,6 @@ export class UsersService {
   /**
    * Updates a user. When `payload.id` is supplied, validates that the user
    * exists, throwing HTTP 422 (userNotFound) otherwise.
-   * Source: backend/src/users/users.service.ts:L72-L88 (existence check).
    *
    * @param id - The identifier of the user to update.
    * @param payload - The partial user fields to apply.
@@ -150,7 +146,7 @@ export class UsersService {
   async softDelete(id: User['id']): Promise<void> {
     // KNOWN ISSUE: The repository performs a HARD delete (deleteOne) despite
     // the soft-delete naming.
-    // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L81
+    // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L172-L174
     await this.usersRepository.softDelete(id);
   }
 }

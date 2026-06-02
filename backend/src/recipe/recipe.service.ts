@@ -19,7 +19,6 @@ import { FilterType } from './types/filter.types';
  * abstract RecipeRepository; cross-domain reads come from UsersService (user
  * preferences) and PantryService (available pantry ingredients).
  *
- * Source: backend/src/recipe/recipe.service.ts:L16-L20 (injected collaborators)
  */
 @Injectable()
 export class RecipeService {
@@ -35,7 +34,7 @@ export class RecipeService {
    * @param createRecipeDto - Recipe creation payload (title, ingredients, steps, etc.).
    * @returns A promise resolving to the newly persisted Recipe.
    * @throws HttpException 422 UNPROCESSABLE_ENTITY when a recipe with the same title
-   *   already exists. Source: backend/src/recipe/recipe.service.ts:L31-L41
+   *   already exists.
    */
   async create(createRecipeDto: CreateRecipeDto): Promise<Recipe> {
     const clonedPayload = {
@@ -128,7 +127,6 @@ export class RecipeService {
    * @param payload - Deep-partial recipe fields to merge into the stored document.
    * @returns A promise resolving to the updated Recipe, or null when not updated.
    * @throws HttpException 422 UNPROCESSABLE_ENTITY when no recipe matches the id.
-   *   Source: backend/src/recipe/recipe.service.ts:L85-L95
    */
   async update(
     id: Recipe['id'],
@@ -160,7 +158,7 @@ export class RecipeService {
    */
   async softDelete(id: Recipe['id']): Promise<void> {
     // Repository performs a TRUE soft delete (sets deletedAt). Source:
-    // backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186
+    // backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L310-L311
     await this.recipeRepository.softDelete(id);
   }
 }

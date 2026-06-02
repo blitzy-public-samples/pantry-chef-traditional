@@ -14,12 +14,12 @@ import { DocumentUserPersistenceModule } from './infrastructure/document/documen
  * functionality through this feature boundary rather than reaching into the
  * persistence layer directly.
  *
- * Wired into the application root module. Source: backend/src/app.module.ts:L30
+ * Wired into the application root module. Source: backend/src/app.module.ts:L51
  *
  * Consumed by `AuthModule`, which imports this module for the registration and
- * login flows (Source: backend/src/auth/auth.module.ts:L14); the re-exported
+ * login flows (Source: backend/src/auth/auth.module.ts:L24); the re-exported
  * `UsersService` is injected by `AuthService`
- * (Source: backend/src/auth/auth.service.ts:L28).
+ * (Source: backend/src/auth/auth.service.ts:L37).
  */
 @Module({
   // Persistence layer: binds the abstract `UserRepository` to its Mongoose

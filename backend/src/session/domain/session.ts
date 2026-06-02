@@ -10,8 +10,8 @@ import { User } from 'src/users/domain/user';
  * The persistence representation lives in `SessionSchemaClass`; conversion between this domain
  * model and that schema is handled by `SessionMapper`.
  *
- * Source: backend/src/session/infrastructure/document/entities/session.schema.ts
- * Source: backend/src/session/infrastructure/document/mappers/session.mapper.ts
+ * Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L26
+ * Source: backend/src/session/infrastructure/document/mappers/session.mapper.ts:L15
  */
 export class Session {
   // Unique session identifier (string | number); populated from the Mongoose document _id.
@@ -26,6 +26,6 @@ export class Session {
   // Soft-deletion timestamp field.
   // KNOWN ISSUE: declared but NOT honored at runtime — the document repository
   // hard-deletes via deleteMany rather than setting this field.
-  // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54
+  // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L106
   deletedAt: Date;
 }

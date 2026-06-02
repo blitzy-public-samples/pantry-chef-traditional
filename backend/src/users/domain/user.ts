@@ -6,7 +6,6 @@
  * (../infrastructure/document/entities/user.schema.ts) and is produced by
  * `UserMapper.toDomain`.
  *
- * Source: backend/src/users/domain/user.ts:L1
  */
 export class User {
   // Unique identifier (string ObjectId at runtime from Mongo `_id`).

@@ -14,18 +14,14 @@ import { UsersDocumentRepository } from './repositories/user.repository';
  * - Registers the Mongoose feature model for `UserSchemaClass` via
  *   `MongooseModule.forFeature`, binding the model name `UserSchemaClass.name` to the
  *   generated `UserSchema`.
- *   Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L8-L12
  * - Binds the abstract `UserRepository` token to the concrete `UsersDocumentRepository`
  *   implementation via `{ provide: UserRepository, useClass: UsersDocumentRepository }`.
- *   Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L13-L18
  * - Exports `UserRepository` so the feature module (`UsersModule`) and downstream
  *   consumers inject the abstraction instead of the implementation.
- *   Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L19
  *
  * Imported and re-exported by `UsersModule`, the users feature module.
- * Source: backend/src/users/users.module.ts:L7-L13
+ * Source: backend/src/users/users.module.ts:L27,L33
  *
- * Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L7-L21
  */
 @Module({
   // imports: register the Mongoose UserSchemaClass model for this scope

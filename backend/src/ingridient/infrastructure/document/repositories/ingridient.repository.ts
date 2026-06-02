@@ -143,7 +143,7 @@ export class IngridientDocumentRepository implements IngridientRepository {
    */
   async softDelete(id: Ingridient['id']): Promise<void> {
     // TRUE soft delete: set deletedAt via updateOne; the document is NOT
-    // physically removed (L94-L99).
+    // physically removed.
     await this.ingridientModel.updateOne(
       { _id: id },
       { deletedAt: new Date() },

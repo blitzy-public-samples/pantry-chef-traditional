@@ -9,11 +9,9 @@ import 'package:pantry_chef/features/pantry/domain/repositories/pantry.repositor
 /// Updates a pantry item from the supplied update DTO by delegating
 /// to the pantry repository's update operation.
 /// Implements `UseCaseWithParams<PantryItem, UpdatePantryItemDto>`.
-/// Source: pantry_item_update.usecase.dart:L7
 class PantryItemUpdateUsecase implements UseCaseWithParams<PantryItem, UpdatePantryItemDto> {
   /// Updates a pantry item from [dto] and returns the updated
   /// `PantryItem`.
-  /// Source: pantry_item_update.usecase.dart:L9
   @override
   Future<PantryItem> call(UpdatePantryItemDto dto) {
     PantryRepository repo = PantryRepositoryImpl();

@@ -10,7 +10,6 @@ part 'auth.dto.g.dart';
 ///
 /// This is a `@JsonSerializable()` request-only (serialize-only) DTO: it
 /// exposes `toJson()` and intentionally declares no `fromJson` factory.
-/// Source: .../data/dto/auth.dto.dart:L5-L16
 @JsonSerializable()
 class AuthDto {
   /// User email address used as the login identifier.
@@ -26,6 +25,5 @@ class AuthDto {
   /// Serializes this DTO to a JSON map via the generated
   /// `_$AuthDtoToJson` helper (defined in the `auth.dto.g.dart` part,
   /// which is out of scope for documentation).
-  /// Source: .../data/dto/auth.dto.dart:L15
   Map<String, dynamic> toJson() => _$AuthDtoToJson(this);
 }

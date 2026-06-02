@@ -10,7 +10,6 @@ import {
 // (no children) joins its constraint messages from Object.values(constraints) with ', ', while a
 // node WITH children recurses via generateErrors(currentValue.children) to mirror nested DTO shape.
 // This is a module-private (non-exported) helper, consumed only by the exceptionFactory below.
-// Source: backend/src/utils/validation-options.ts:L8-L19
 function generateErrors(errors: ValidationError[]) {
   return errors.reduce(
     (accumulator, currentValue) => ({
@@ -38,7 +37,6 @@ function generateErrors(errors: ValidationError[]) {
  * - `exceptionFactory` — builds an HttpException whose body is
  *   `{ status: 422, errors: generateErrors(errors) }`.
  *
- * Source: backend/src/utils/validation-options.ts:L21-L34
  * Source: backend/src/main.ts:L7,L21
  */
 const validationOptions: ValidationPipeOptions = {

@@ -14,7 +14,6 @@ import { IngridientService } from 'src/ingridient/ingridient.service';
  *
  * Holds the `ImageAnnotatorClient`, the `isGoogleVisionEnabled` flag, and the
  * internal `ingredientDictionary`.
- * Source: backend/src/ai/ai.service.ts:L9-L49
  */
 @Injectable()
 export class AiService {
@@ -67,11 +66,10 @@ export class AiService {
   // resolve a recognized label to a persisted ingredient record.
   constructor(private readonly ingirdientService: IngridientService) {
     // Resolve the Google Vision service-account key path; at runtime this
-    // points to src/config/ai.json. Source: backend/src/ai/ai.service.ts:L52
+    // points to src/config/ai.json.
     const keyPath = path.join(__dirname, '../config/ai.json');
     // Graceful-degradation fallback: when the key file is absent, log an error
     // and disable Vision by setting isGoogleVisionEnabled = false.
-    // Source: backend/src/ai/ai.service.ts:L52-L56
     if (!existsSync(keyPath)) {
       console.error(`Key file not found at path: ${keyPath}`);
       this.isGoogleVisionEnabled = false;
@@ -94,14 +92,12 @@ export class AiService {
    * Implements graceful degradation: when `isGoogleVisionEnabled` is false
    * (missing `ai.json`) the method short-circuits to `{}` so the endpoint still
    * responds 2xx rather than throwing.
-   * Source: backend/src/ai/ai.service.ts:L64-L67
    *
    * @param imageBuffer the raw image bytes forwarded from the controller upload
    * @returns a promise resolving to the matched ingredient object
    *   `{ id, name, category, quantity, unit, confidence }`, or an empty object
    *   `{}` when Vision is disabled, returns no labels, or no dictionary match
    *   resolves to a stored ingredient.
-   *   Source: backend/src/ai/ai.service.ts:L114-L126
    */
   async detectIngredientsFromBuffer(imageBuffer: Buffer): Promise<any> {
     // Graceful degradation: short-circuit to {} when Vision is disabled.
@@ -153,7 +149,7 @@ export class AiService {
     // Resolve the recognized label to a stored ingredient via
     // ingirdientService.findManyWithPagination (page 1, limit 1); the first of
     // ingridients (sic) becomes ingridient below.
-    // Source: backend/src/ingridient/ingridient.service.ts:L40-L54
+    // Source: backend/src/ingridient/ingridient.service.ts:L74-L88
     const ingridients: any =
       await this.ingirdientService.findManyWithPagination({
         filterOptions: recognizedIngridient,
@@ -164,7 +160,7 @@ export class AiService {
       });
     const [ingridient] = ingridients ?? [];
     // Shape the matched ingridient into the response object, or {} when no
-    // ingredient matched. Source: backend/src/ai/ai.service.ts:L115-L126
+    // ingredient matched.
     const result = ingridient
       ? {
           id: ingridient.id,

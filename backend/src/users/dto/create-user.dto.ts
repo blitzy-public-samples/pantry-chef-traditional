@@ -54,7 +54,7 @@ export class PreferencesDto {
  */
 export class CreateUserDto {
   // Required email (@IsNotEmpty); lowercased and trimmed via lowerCaseTransformer.
-  // Source: backend/src/utils/transformers/lower-case.transformer.ts:L4-L6
+  // Source: backend/src/utils/transformers/lower-case.transformer.ts:L17-L19
   @ApiProperty({ example: 'test1@example.com' })
   @Transform(lowerCaseTransformer)
   @IsNotEmpty()

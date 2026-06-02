@@ -14,7 +14,6 @@ import { User } from '../domain/user';
  * Embedded within `QueryUserDto.filters`; arrives as a JSON query-string
  * value and is hydrated into an instance via `plainToInstance` before
  * nested validation runs.
- * Source: backend/src/users/dto/query-user.dto.ts:L44-L51
  */
 export class FilterUserDto {
   // Optional list of role objects to filter users by; validated per-item.
@@ -50,7 +49,7 @@ export class SortUserDto {
  * as JSON strings and are hydrated into DTO instances via
  * `plainToInstance`. The controller additionally clamps `limit` to a
  * maximum of 50.
- * Source: backend/src/users/users.controller.ts:L47-L51
+ * Source: backend/src/users/users.controller.ts:L83-L88
  */
 export class QueryUserDto {
   // Page number; coerced from query string, defaults to 1 when absent.

@@ -10,7 +10,6 @@ import 'package:pantry_chef/features/authentication/data/dto/auth.dto.dart';
 /// service locator) and exposes raw login/signup `POST` operations. Each
 /// method returns the unmapped `Map<String, dynamic>` response body; domain
 /// mapping is handled by the repository layer, not here.
-/// Source: .../data/api/authentication.api.dart:L7
 class AuthenticationApi {
   // Shared Dio client resolved via DI from getIt<DioClient>().dio.
   late final Dio _dio;
@@ -24,8 +23,7 @@ class AuthenticationApi {
   /// returns the raw `Map<String, dynamic>` response body.
   ///
   /// The endpoint resolves to `<apiBaseUrl>/auth/email/login`.
-  /// Source: mobile/lib/core/constants/endpoints.dart:L12
-  /// Source: .../data/api/authentication.api.dart:L14-L20
+  /// Source: mobile/lib/core/constants/endpoints.dart:L29
   Future<Map<String, dynamic>> login(AuthDto dto) async {
     Response<dynamic> response = await _dio.post(
       Endpoints.login,
@@ -41,8 +39,7 @@ class AuthenticationApi {
   /// returns the raw `Map<String, dynamic>` response body.
   ///
   /// The endpoint resolves to `<apiBaseUrl>/auth/email/register`.
-  /// Source: mobile/lib/core/constants/endpoints.dart:L13
-  /// Source: .../data/api/authentication.api.dart:L22-L28
+  /// Source: mobile/lib/core/constants/endpoints.dart:L34
   Future<Map<String, dynamic>> signup(AuthDto dto) async {
     Response<dynamic> response = await _dio.post(
       Endpoints.signup,

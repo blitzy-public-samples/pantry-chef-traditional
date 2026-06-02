@@ -18,7 +18,6 @@ import { RecipeDocumentRepository } from './repositories/recipe.repository';
  * Note: the class name retains "Pantry" although it serves the recipe feature;
  * this is a pre-existing identifier and is preserved deliberately.
  *
- * Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts:L7-L23
  */
 @Module({
   imports: [

@@ -34,7 +34,7 @@ import { FilterType } from './types/filter.types';
  * valid bearer token is required (advertised to Swagger via `@ApiBearerAuth()`).
  *
  * Served base path: `/api/recipe`. The global `api` prefix is applied during
- * bootstrap (Source: backend/src/main.ts:L14-L15). Although `@Controller`
+ * bootstrap (Source: backend/src/main.ts:L30-L35). Although `@Controller`
  * declares `version: '1'`, URI versioning is never enabled (no
  * `app.enableVersioning()` call), so that declaration is inert and no version
  * segment appears in the served path.
@@ -58,7 +58,7 @@ export class RecipeController {
    * @returns A promise resolving to the created `Recipe`.
    * @throws HttpException `422 Unprocessable Entity` when a recipe with the same
    * `title` already exists (validated in `RecipeService.create`,
-   * Source: backend/src/recipe/recipe.service.ts:L27-L41).
+   * Source: backend/src/recipe/recipe.service.ts:L44-L59).
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -100,7 +100,6 @@ export class RecipeController {
    * @returns A promise resolving to an `InfinityPaginationResultType<Recipe>`.
    *
    * Pagination: `limit` defaults to 10 and is clamped to a hard maximum of 50
-   * (Source: backend/src/recipe/recipe.controller.ts:L57-L58).
    */
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -157,7 +156,7 @@ export class RecipeController {
    * @returns A promise resolving to the updated `Recipe`, or `null`.
    * @throws HttpException `422 Unprocessable Entity` when the recipe id does
    * not exist (validated in `RecipeService.update`,
-   * Source: backend/src/recipe/recipe.service.ts:L85-L95).
+   * Source: backend/src/recipe/recipe.service.ts:L138-L148).
    */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
@@ -180,7 +179,7 @@ export class RecipeController {
    *
    * Performs a TRUE soft delete: the service/repository sets `deletedAt`
    * instead of removing the document.
-   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L184-L186
+   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L310-L311
    *
    * @param id - The id of the recipe to soft-delete.
    * @returns A promise that resolves once the soft delete completes (`void`).

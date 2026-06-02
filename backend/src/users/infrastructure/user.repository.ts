@@ -10,21 +10,19 @@ import { DeepPartial } from 'src/utils/types/deep-partial.type';
  * compile-time interface that any user-storage adapter must implement, declaring the five
  * repository operations below. It contains no runtime logic, decorators, or direct
  * database access.
- * Source: backend/src/users/infrastructure/user.repository.ts:L8.
  *
  * The concrete document/Mongoose implementation is `UsersDocumentRepository`, bound to this
  * abstract token via `{ provide: UserRepository, useClass: UsersDocumentRepository }`.
- * Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L13-L19.
+ * Source: backend/src/users/infrastructure/document/document-persistence.module.ts:L36-L37.
  *
  * Consumed through dependency injection by `UsersService`.
- * Source: backend/src/users/users.service.ts:L13-L14.
+ * Source: backend/src/users/users.service.ts:L20-L21.
  */
 export abstract class UserRepository {
   /**
    * Persists a new user. The input type
    * `Omit<User, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>` deliberately excludes the
    * server-managed fields (the id plus the lifecycle timestamps).
-   * Source: backend/src/users/infrastructure/user.repository.ts:L9-L11.
    *
    * @param data - The user attributes to persist.
    * @returns A promise resolving to the created domain `User`.
@@ -35,7 +33,6 @@ export abstract class UserRepository {
 
   /**
    * Retrieves a paginated list of users.
-   * Source: backend/src/users/infrastructure/user.repository.ts:L13-L21.
    *
    * @param options - The destructured query-options object.
    * @param options.filterOptions - Optional `FilterUserDto | null` filter criteria.
@@ -55,7 +52,6 @@ export abstract class UserRepository {
 
   /**
    * Resolves a single user matching the supplied typed entity condition.
-   * Source: backend/src/users/infrastructure/user.repository.ts:L23.
    *
    * @param fields - The `EntityCondition<User>` query criteria.
    * @returns A promise resolving to the matching `User`, or null when none matches.
@@ -64,12 +60,11 @@ export abstract class UserRepository {
 
   /**
    * Applies a partial update to the user identified by `id`.
-   * Source: backend/src/users/infrastructure/user.repository.ts:L25-L28.
    *
    * Note: this abstract contract types `payload` as `DeepPartial<User>`, whereas the
    * concrete document adapter types it as `Partial<User>`; the divergence is documented
    * as-is and is intentionally not reconciled.
-   * Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L65.
+   * Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L137.
    *
    * @param id - The target user identifier (`User['id']`).
    * @param payload - A `DeepPartial<User>` describing the fields to change.
@@ -82,7 +77,6 @@ export abstract class UserRepository {
 
   /**
    * Removes the user identified by `id`.
-   * Source: backend/src/users/infrastructure/user.repository.ts:L30.
    *
    * @param id - The target user identifier (`User['id']`).
    * @returns A promise that resolves once the removal completes.
@@ -91,6 +85,6 @@ export abstract class UserRepository {
   // implementation performs a HARD delete via `deleteOne({ _id: id })`, physically
   // removing the document despite the schema's `deletedAt` field. The fix is intentionally
   // not applied.
-  // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L81.
+  // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L172-L174.
   abstract softDelete(id: User['id']): Promise<void>;
 }

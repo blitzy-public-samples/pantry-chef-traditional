@@ -61,7 +61,7 @@ in the repository (`Source: backend/env_example:L1-L23`).
 | `NODE_ENV` | `development` | Node runtime environment (`Source: backend/env_example:L1`) |
 | `APP_PORT` | `3000` | Port the NestJS app listens on; matches the published container port `3000:3000` (`Source: backend/env_example:L2`, `Source: backend/docker-compose.yml:L24-L25`) |
 | `APP_NAME` | `"NestJS API"` | Application name used in bootstrap/metadata (`Source: backend/env_example:L3`) |
-| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/*` with no `/v1/` segment because `enableVersioning()` is never called (`Source: backend/env_example:L4`, `Source: backend/src/main.ts:L21-L57`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
+| `API_PREFIX` | `api` | Global route prefix; routes are served under `/api/*` with no `/v1/` segment because `enableVersioning()` is never called (`Source: backend/env_example:L4`, `Source: backend/src/main.ts:L26-L35`, see [./API_REFERENCE.md](./API_REFERENCE.md)) |
 | `DATABASE_TYPE` | `mongodb` | Persistence engine selector (`Source: backend/env_example:L6`) |
 | `DATABASE_PORT` | `27017` | MongoDB port; matches the published container port `27017:27017` (`Source: backend/env_example:L7`, `Source: backend/docker-compose.yml:L11-L12`) |
 | `DATABASE_USERNAME` | `admin` | MongoDB username — default credential (`Source: backend/env_example:L8`) |
@@ -131,7 +131,7 @@ existing project README (`Source: backend/README.md:L1-L19`).
    ```
 
 2. Seed the database (details in [Section 4](#4-database-seeding))
-   (`Source: backend/README.md:L9`):
+   (`Source: backend/README.md:L121`):
 
    ```bash
    npm run seed:run:document
@@ -179,7 +179,7 @@ overview.
 ## 4. Database Seeding
 
 Seed reference data with the document seeder
-(`Source: backend/README.md:L9`, `Source: backend/package.json:L16`):
+(`Source: backend/README.md:L121`, `Source: backend/package.json:L16`):
 
 ```bash
 npm run seed:run:document
@@ -212,11 +212,11 @@ when the key is absent.
 **Graceful degradation when the key is absent.** On startup, `AiService`
 resolves the key path with `path.join(__dirname, '../config/ai.json')` and
 checks `existsSync`; if the file is missing it logs an error and sets
-`isGoogleVisionEnabled = false` (`Source: backend/src/ai/ai.service.ts:L52-L56`).
+`isGoogleVisionEnabled = false` (`Source: backend/src/ai/ai.service.ts:L70-L76`).
 When Vision is disabled, `detectIngredientsFromBuffer` returns an empty object
 `{}` instead of throwing, so `POST /api/ai/vision` still responds without
 crashing — it simply returns no detected ingredients
-(`Source: backend/src/ai/ai.service.ts:L63-L67`).
+(`Source: backend/src/ai/ai.service.ts:L104-L106`).
 
 Because the key is optional, you can defer this step entirely for a local stack
 that does not need image recognition. For the endpoint contract see
@@ -232,7 +232,7 @@ AI module source at [`backend/src/ai/`](../backend/src/ai/).
 The Flutter client targets a single, compile-time API base URL.
 `EnvConfig.apiBaseUrl` is defined as
 `String.fromEnvironment('API_BASE_URL', defaultValue:
-'http://192.168.2.20:3000/api')` (`Source: mobile/lib/env_config.dart:L23`). The
+'http://192.168.2.20:3000/api')` (`Source: mobile/lib/env_config.dart:L19`). The
 default points at a LAN IP and already includes the `/api` prefix, so override
 it to match your backend host.
 
@@ -266,10 +266,10 @@ Replace `<host>` with an address reachable from the device or emulator: a LAN IP
 (for a physical device on the same network) or `10.0.2.2` for the Android
 emulator to reach the host machine's `localhost`. Keep the trailing `/api`
 prefix so requests resolve under the backend's global prefix
-(`Source: mobile/lib/env_config.dart:L23`, `Source: backend/env_example:L4`).
+(`Source: mobile/lib/env_config.dart:L19`, `Source: backend/env_example:L4`).
 
 If you omit `--dart-define`, the client falls back to the default
-`http://192.168.2.20:3000/api` (`Source: mobile/lib/env_config.dart:L23`). For the
+`http://192.168.2.20:3000/api` (`Source: mobile/lib/env_config.dart:L19`). For the
 mobile project overview and run details, see
 [../mobile/README.md](../mobile/README.md).
 
@@ -294,14 +294,14 @@ source and are **not** modified by this guide. Address each before deploying.
 
 > SECURITY NOTE: **Unauthenticated AI endpoint.** `POST /api/ai/vision` is
 > declared with `@Controller('ai')` and `@Post('vision')` and carries no JWT
-> guard (`Source: backend/src/ai/ai.controller.ts:L12-L16`); it accepts image
-> uploads up to 10 MB (`Source: backend/src/ai/ai.controller.ts:L29`). Expose it
+> guard (`Source: backend/src/ai/ai.controller.ts:L26-L43`); it accepts image
+> uploads up to 10 MB (`Source: backend/src/ai/ai.controller.ts:L59`). Expose it
 > with care — place it behind authentication or a gateway before any public
 > deployment. See [./API_REFERENCE.md](./API_REFERENCE.md).
 
 > SECURITY NOTE: **Bearer tokens in mobile logs.** The mobile Dio client attaches
 > a `LogInterceptor` with `requestHeader: true` in all builds, which logs the
-> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L48-L60,L99-L111`).
+> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L42-L53,L99-L111`).
 > This detail is covered in [./ARCHITECTURE.md](./ARCHITECTURE.md); avoid
 > shipping verbose logs in release builds.
 

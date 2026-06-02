@@ -28,7 +28,6 @@ import { AiModule } from './ai/ai.module';
  * - Aggregates the feature modules: Auth, Session, Users, Ingridient, Pantry,
  *   Recipe, and Ai.
  *
- * Source: backend/src/app.module.ts:L18-L35
  */
 @Module({
   imports: [
@@ -40,13 +39,13 @@ import { AiModule } from './ai/ai.module';
       envFilePath: ['.env'],
     }),
     // Asynchronous Mongoose connection; connection options are built by
-    // MongooseConfigService. Source: app.module.ts:L25-L27
+    // MongooseConfigService.
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),
     // Feature modules: each encapsulates one domain area of the API.
     // Note: AiModule imports IngridientModule.
-    // Source: backend/src/ai/ai.module.ts:L7
+    // Source: backend/src/ai/ai.module.ts:L23
     AuthModule,
     SessionModule,
     UsersModule,

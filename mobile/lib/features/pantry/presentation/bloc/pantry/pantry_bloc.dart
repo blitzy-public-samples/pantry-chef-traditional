@@ -13,7 +13,6 @@ part 'pantry_state.dart';
 /// Mixes in [HydratedMixin] and calls `hydrate()` in its
 /// constructor, so the pantry list is persisted to and restored
 /// from storage across app launches.
-/// Source: pantry_bloc.dart:L11
 class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
   PantryBloc() : super(PantryState()) {
     hydrate();
@@ -55,7 +54,6 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
   /// Rebuilds [PantryState] from persisted [json], mapping each
   /// entry via `PantryItem.fromJson`. Returns an empty list when
   /// no items are present.
-  /// Source: pantry_bloc.dart:L45
   @override
   PantryState? fromJson(Map<String, dynamic> json) {
     return PantryState(
@@ -64,7 +62,6 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> with HydratedMixin {
   }
 
   /// Serializes [state] (its `items`) to a JSON map for storage.
-  /// Source: pantry_bloc.dart:L52
   @override
   Map<String, dynamic>? toJson(PantryState state) {
     return {

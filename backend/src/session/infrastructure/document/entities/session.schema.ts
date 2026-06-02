@@ -15,7 +15,6 @@ export type SessionSchemaDocument = HydratedDocument<SessionSchemaClass>;
  * serialization. Extends `EntityDocumentHelper`, which supplies the `_id`/`id`
  * plumbing (the `_id` is stringified on serialization).
  *
- * Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L8-L15
  */
 @Schema({
   timestamps: true,
@@ -36,7 +35,7 @@ export class SessionSchemaClass extends EntityDocumentHelper {
   // Soft-deletion timestamp (declared, intended for soft delete).
   // KNOWN ISSUE: not honored at runtime — the repository hard-deletes via
   // `deleteMany`, so `deletedAt` is never set on removal.
-  // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54
+  // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L106
   @Prop()
   deletedAt: Date;
 }

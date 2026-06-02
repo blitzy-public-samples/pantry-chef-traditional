@@ -7,7 +7,6 @@ import 'package:pantry_chef/core/styles/app_theme.dart';
 /// A [StatelessWidget] that renders a fixed 100x100 circular
 /// [Container] (BorderRadius 50, theme `darkBeige` background)
 /// with a centered [Icons.person] (size 48, theme `grey`).
-/// Source: profile_avatar.dart:L4,L9-L23.
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({super.key});
 

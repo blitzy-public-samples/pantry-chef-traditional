@@ -37,7 +37,7 @@ import { CreateIngridientDto } from './dto/create-ingridient.dto';
  * The served route base is `ingredient` under the global `api` prefix. Despite
  * the declared `version: '1'`, `main.ts` never calls `enableVersioning()`, so
  * the served paths contain no version segment (e.g. `GET /api/ingredient`).
- * Source: backend/src/main.ts:L14-L15
+ * Source: backend/src/main.ts:L30-L35
  *
  * Delegates all business logic to `IngridientService`.
  */
@@ -58,7 +58,6 @@ export class IngridientController {
    * shaped `{ id, name }`. The 5 categories are `spice`, `vegetable`, `fruit`,
    * `dairy`, `protein`; the 9 units are `kg`, `g`, `lb`, `oz`, `ml`, `l`,
    * `cup`, `tbsp`, `tsp`.
-   * Source: backend/src/ingridient/ingridient.controller.ts:L54-L69
    */
   @Get('/creation-data')
   @HttpCode(HttpStatus.OK)
@@ -128,7 +127,6 @@ export class IngridientController {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     // Clamp the requested page size to a maximum of 50 items per page.
-    // Source: backend/src/ingridient/ingridient.controller.ts:L89-L90
     if (limit > 50) {
       limit = 50;
     }
@@ -173,7 +171,7 @@ export class IngridientController {
    * @returns the updated `Ingridient`, or `null` when the update yields none.
    * @throws HttpException 422 (Unprocessable Entity) when no ingredient exists
    * for the given `id`, thrown by `IngridientService.update`.
-   * Source: backend/src/ingridient/ingridient.service.ts:L69-L79
+   * Source: backend/src/ingridient/ingridient.service.ts:L124-L134
    */
   @Patch(':id')
   @HttpCode(HttpStatus.OK)

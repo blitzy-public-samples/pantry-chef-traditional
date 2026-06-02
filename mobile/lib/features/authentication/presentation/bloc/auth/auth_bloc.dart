@@ -24,7 +24,6 @@ part 'auth_state.dart';
 /// Emits [AuthState] updates that the login and signup screens observe.
 /// Seeded with a default `AuthState()` on construction.
 ///
-/// Source: .../auth_bloc.dart:L14-L70
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthState()) {
     // Updates email/password in state from the event and clears prior

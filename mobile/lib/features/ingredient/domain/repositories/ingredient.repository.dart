@@ -11,7 +11,7 @@ import 'package:pantry_chef/features/ingredient/domain/models/ingredient_add_dat
 ///
 /// The concrete realization is `IngredientRepositoryImpl` in the data
 /// layer. This is a pure interface: it has no fields and no constructor.
-/// Source: features/ingredient/data/repositories/ingredient.repository.dart
+/// Source: features/ingredient/data/repositories/ingredient.repository.dart:L17
 abstract class IngredientRepository {
   /// Returns the [IngredientAddData] (available categories and units)
   /// used to populate the add-ingredient form. Takes no parameters.
@@ -31,7 +31,7 @@ abstract class IngredientRepository {
   ///
   /// [dto] supplies name, category, quantity, unit, optional image and
   /// expiry, plus a 0-1 confidence.
-  /// Source: features/ingredient/data/dto/create_ingredient.dto.dart:L9
+  /// Source: features/ingredient/data/dto/create_ingredient.dto.dart:L15
   Future<Ingredient> createingredient(CreateIngredientDto dto);
 
   /// Performs image-based ingredient inference from the captured [image].

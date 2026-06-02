@@ -10,7 +10,6 @@ import { instanceToPlain } from 'class-transformer';
  * decorators). `setEntityName()` is not invoked automatically; callers must
  * call it explicitly to populate `__entity`.
  *
- * Source: backend/src/utils/relational-entity-helper.ts:L3-L12
  */
 export class EntityRelationalHelper {
   // Optional runtime marker holding the concrete entity class name.
@@ -22,7 +21,6 @@ export class EntityRelationalHelper {
    * identification. It is not called automatically; callers must invoke it
    * explicitly to populate `__entity`.
    *
-   * Source: backend/src/utils/relational-entity-helper.ts:L6-L8
    */
   setEntityName() {
     this.__entity = this.constructor.name;
@@ -34,7 +32,6 @@ export class EntityRelationalHelper {
    *
    * @returns the plain-object representation of this instance.
    *
-   * Source: backend/src/utils/relational-entity-helper.ts:L10-L12
    */
   toJSON() {
     return instanceToPlain(this);

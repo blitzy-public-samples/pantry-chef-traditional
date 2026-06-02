@@ -87,6 +87,6 @@ export abstract class PantryRepository {
    * @returns A `Promise<void>`.
    */
   // Implementations remove/disable the record; the document impl HARD-deletes. See
-  // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L120
+  // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186
   abstract softDelete(id: PantryIngridient['id']): Promise<void>;
 }

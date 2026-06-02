@@ -11,7 +11,6 @@ import { Transform } from 'class-transformer';
  * instances are serialized into plain response objects. It does NOT run
  * on the plain-to-class direction, so plain input is left untouched.
  *
- * Source: backend/src/utils/document-entity-helper.ts:L3-L17
  */
 export class EntityDocumentHelper {
   @Transform(
@@ -30,6 +29,5 @@ export class EntityDocumentHelper {
     },
   )
   // Document identifier; stringified from ObjectId on to-plain serialization only.
-  // Source: backend/src/utils/document-entity-helper.ts:L14
   public _id: string;
 }

@@ -8,10 +8,8 @@ import 'package:pantry_chef/features/pantry/domain/repositories/pantry.repositor
 /// A parameterless query that returns the current pantry inventory
 /// by delegating to the pantry repository's fetch operation.
 /// Implements `UseCase<List<PantryItem>>`.
-/// Source: pantry_items_fetch.usecase.dart:L6
 class FetchPantryItemsUsecase implements UseCase<List<PantryItem>> {
   /// Returns the list of all `PantryItem`s from the repository.
-  /// Source: pantry_items_fetch.usecase.dart:L8
   @override
   Future<List<PantryItem>> call() {
     PantryRepository repo = PantryRepositoryImpl();

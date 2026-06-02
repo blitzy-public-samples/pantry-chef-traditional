@@ -6,12 +6,11 @@ import { DocumentPantryPersistenceModule } from './infrastructure/document/docum
 /**
  * Feature module (composition root) for per-user pantry management; wired into
  * the application root module as `PantryModule`.
- * Source: backend/src/app.module.ts:L32.
+ * Source: backend/src/app.module.ts:L53.
  *
  * It composes the Pantry API by binding the document (Mongoose) persistence
  * implementation, the application service, and the JWT-guarded HTTP controller,
  * and re-exporting the persistence module and service for downstream consumers.
- * Source: backend/src/pantry/pantry.module.ts:L6-L11.
  */
 @Module({
   // imports the document (Mongoose) persistence implementation

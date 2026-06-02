@@ -11,8 +11,6 @@ import { ClassConstructor } from 'class-transformer/types/interfaces';
  * `validateSync` with `skipMissingProperties: false`, so missing required variables fail
  * validation. This helper is synchronous and never returns a Promise.
  *
- * Source: backend/src/utils/validate-config.ts:L9-L11 (implicit type conversion).
- * Source: backend/src/utils/validate-config.ts:L16-L18 (throws on validation errors).
  *
  * @typeParam T - The env-variables class type (`extends object`).
  * @param config - The raw config object (`Record<string, unknown>`, e.g. `process.env`).

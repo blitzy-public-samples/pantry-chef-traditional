@@ -14,7 +14,6 @@ import { NullableType } from 'src/utils/types/nullable.type';
  * abstract `SessionRepository` and embeds no storage logic of its own. Consumed
  * internally by `AuthService`; there is no public REST controller for sessions.
  *
- * Source: backend/src/session/session.service.ts:L8-L10
  */
 @Injectable()
 export class SessionService {
@@ -73,7 +72,7 @@ export class SessionService {
     // performs a HARD delete via `deleteMany(...)`, so sessions are physically removed
     // even though `SessionSchemaClass` declares a `deletedAt` field. Behavior is
     // documented here and intentionally left unchanged (additive-only task).
-    // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L54
+    // Source: backend/src/session/infrastructure/document/repositories/session.repository.ts:L106
     await this.sessionRepository.softDelete(criteria);
   }
 }

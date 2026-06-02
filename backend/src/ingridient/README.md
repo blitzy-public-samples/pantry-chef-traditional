@@ -19,8 +19,8 @@ definitions — together with a **reference-data endpoint** that returns the
 hardcoded category and unit lists a client needs to render an
 ingredient-creation form. It exposes a JWT-guarded REST surface and persists each
 record to MongoDB through Mongoose.
-Source: backend/src/ingridient/ingridient.controller.ts:L34-L37,
-backend/src/ingridient/ingridient.service.ts:L11-L13.
+Source: backend/src/ingridient/ingridient.controller.ts:L51,
+backend/src/ingridient/ingridient.service.ts:L21.
 
 **Spelling note (a deliberate, preserved fact — not a defect):** the module
 directory and every code identifier are misspelled `ingridient` / `Ingridient`,
@@ -29,8 +29,8 @@ spellings are intentional and are reproduced verbatim throughout this document;
 they are stable identifiers and are never renamed. The domain-model file is named
 `domain/ingrident.ts` — misspelled *differently again* (`ingrident`, not
 `ingridient`).
-Source: backend/src/ingridient/domain/ingrident.ts:L12,
-backend/src/ingridient/ingridient.controller.ts:L34-L37.
+Source: backend/src/ingridient/domain/ingrident.ts:L11,
+backend/src/ingridient/ingridient.controller.ts:L51.
 
 ## Key components
 
@@ -39,32 +39,32 @@ Moving from the HTTP edge inward to persistence:
 - **`IngridientModule`** — the feature composition root; it imports the
   persistence module, provides the service, registers the controller, and exports
   the service plus the persistence module for reuse.
-  Source: backend/src/ingridient/ingridient.module.ts:L6-L12.
+  Source: backend/src/ingridient/ingridient.module.ts:L35.
 - **`IngridientController`** — the JWT-guarded REST controller, tagged
   `Ingredient` for Swagger.
-  Source: backend/src/ingridient/ingridient.controller.ts:L31-L38.
+  Source: backend/src/ingridient/ingridient.controller.ts:L51.
 - **`IngridientService`** — the application-layer coordinator that holds the
   existence checks and delegates persistence to the repository contract.
-  Source: backend/src/ingridient/ingridient.service.ts:L11-L13.
+  Source: backend/src/ingridient/ingridient.service.ts:L21.
 - **`IngridientRepository`** (abstract) — the persistence contract the service
   depends on, free of any database details.
   Source: backend/src/ingridient/infrastructure/ingridient.repository.ts:L8-L33.
 - **`IngridientDocumentRepository`** — the Mongoose-backed implementation of that
   contract.
-  Source: backend/src/ingridient/infrastructure/document/repositories/ingridient.repository.ts:L13-L14.
+  Source: backend/src/ingridient/infrastructure/document/repositories/ingridient.repository.ts:L22.
 - **`IngridientSchemaClass`** / **`IngridientSchema`** — the Mongoose entity and
   the schema built from it.
-  Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L16,
+  Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26,
   backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L52-L54.
 - **`IngridientMapper`** — maps between the document entity and the domain model.
-  Source: backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L4-L5.
+  Source: backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L10.
 - **`DocumentIngridientPersistenceModule`** — registers the Mongoose model and
   binds the abstract repository to the document implementation.
   Source: backend/src/ingridient/infrastructure/document/document-persistence.module.ts:L10-L24.
 - **`Ingridient`** (domain model) — the plain domain representation, declared in
   `domain/ingrident.ts` (note this filename is misspelled differently from the
   module).
-  Source: backend/src/ingridient/domain/ingrident.ts:L2.
+  Source: backend/src/ingridient/domain/ingrident.ts:L11.
 - **DTOs** — `create-ingridient.dto.ts`, `update-ingridient.dto.ts`, and
   `query-ingridient.dto.ts` define the request shapes (spellings preserved as in
   the codebase).
@@ -75,15 +75,15 @@ Moving from the HTTP edge inward to persistence:
 ## Architecture fit
 
 - The module is registered in the application root module as `IngridientModule`.
-  Source: backend/src/app.module.ts:L31.
+  Source: backend/src/app.module.ts:L52.
 - It **exports** both `IngridientService` and
   `DocumentIngridientPersistenceModule`, so other modules can reuse the service
   and the bound repository without re-declaring them.
-  Source: backend/src/ingridient/ingridient.module.ts:L10.
+  Source: backend/src/ingridient/ingridient.module.ts:L35.
 - The only module that currently imports `IngridientModule` is **`AiModule`**,
   which looks ingredients up while turning image-recognition results into known
   catalog entries.
-  Source: backend/src/ai/ai.module.ts:L7.
+  Source: backend/src/ai/ai.module.ts:L27.
 - The internal flow follows the standard NestJS layering used across the backend:
   controller → service → abstract repository → document repository → Mongoose. For
   the system-wide view, see
@@ -99,17 +99,17 @@ backend/src/ingridient/domain/ingrident.ts:L2-L14.
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `id` | string | Document identifier (Mongo `_id` as a string). Source: backend/src/ingridient/domain/ingrident.ts:L3 |
-| `name` | string | Ingredient name; uniqueness is enforced by the service on create. Source: backend/src/ingridient/domain/ingrident.ts:L4 |
-| `category` | Reference | `{ id, name }` category descriptor. Source: backend/src/ingridient/domain/ingrident.ts:L5 |
-| `quantity` | number (optional) | Optional quantity on hand. Source: backend/src/ingridient/domain/ingrident.ts:L6 |
-| `unit` | Reference (optional) | `{ id, name }` unit descriptor. Source: backend/src/ingridient/domain/ingrident.ts:L7 |
-| `expirationDate` | Date (optional) | Optional expiry date. Source: backend/src/ingridient/domain/ingrident.ts:L8 |
-| `imageUrl` | string (optional) | Optional image URL. Source: backend/src/ingridient/domain/ingrident.ts:L9 |
-| `confidence` | number | A 0–1 confidence score (set by AI capture). Source: backend/src/ingridient/domain/ingrident.ts:L10 |
-| `createdAt` | Date | Creation timestamp. Source: backend/src/ingridient/domain/ingrident.ts:L11 |
-| `updatedAt` | Date | Last-update timestamp. Source: backend/src/ingridient/domain/ingrident.ts:L12 |
-| `deletedAt` | Date (optional) | Soft-delete marker. Source: backend/src/ingridient/domain/ingrident.ts:L13 |
+| `id` | string | Document identifier (Mongo `_id` as a string). Source: backend/src/ingridient/domain/ingrident.ts:L13 |
+| `name` | string | Ingredient name; uniqueness is enforced by the service on create. Source: backend/src/ingridient/domain/ingrident.ts:L15 |
+| `category` | Reference | `{ id, name }` category descriptor. Source: backend/src/ingridient/domain/ingrident.ts:L17 |
+| `quantity` | number (optional) | Optional quantity on hand. Source: backend/src/ingridient/domain/ingrident.ts:L19 |
+| `unit` | Reference (optional) | `{ id, name }` unit descriptor. Source: backend/src/ingridient/domain/ingrident.ts:L21 |
+| `expirationDate` | Date (optional) | Optional expiry date. Source: backend/src/ingridient/domain/ingrident.ts:L23 |
+| `imageUrl` | string (optional) | Optional image URL. Source: backend/src/ingridient/domain/ingrident.ts:L25 |
+| `confidence` | number | A 0–1 confidence score (set by AI capture). Source: backend/src/ingridient/domain/ingrident.ts:L27 |
+| `createdAt` | Date | Creation timestamp. Source: backend/src/ingridient/domain/ingrident.ts:L29 |
+| `updatedAt` | Date | Last-update timestamp. Source: backend/src/ingridient/domain/ingrident.ts:L31 |
+| `deletedAt` | Date (optional) | Soft-delete marker. Source: backend/src/ingridient/domain/ingrident.ts:L33 |
 
 The persisted entity `IngridientSchemaClass` mirrors these fields. Four of them —
 `unit`, `expirationDate`, `imageUrl`, and `confidence` — are annotated
@@ -132,21 +132,21 @@ All routes are served under the global `api` prefix with the route base
 controller declares `version: '1'`, but `main.ts` never calls
 `app.enableVersioning()`, so versioning is inactive and the version never appears
 in the path.
-Source: backend/src/main.ts:L14-L15,
-backend/src/ingridient/ingridient.controller.ts:L34-L37.
+Source: backend/src/main.ts:L26-L35,
+backend/src/ingridient/ingridient.controller.ts:L51.
 Every route requires a Bearer JWT (`AuthGuard('jwt')` at controller scope).
-Source: backend/src/ingridient/ingridient.controller.ts:L31-L32.
+Source: backend/src/ingridient/ingridient.controller.ts:L51.
 Full request/response detail lives in
 [docs/API_REFERENCE.md](../../../docs/API_REFERENCE.md).
 
 | Method & path | Description | Source |
 |---------------|-------------|--------|
-| `GET /api/ingredient/creation-data` | Returns the hardcoded categories and units used to populate the creation UI (see tables below). | backend/src/ingridient/ingridient.controller.ts:L41, L54-L69 |
-| `POST /api/ingredient` | Create an ingredient; a duplicate `name` is rejected with `422 Unprocessable Entity`. | backend/src/ingridient/ingridient.controller.ts:L74-L80, backend/src/ingridient/ingridient.service.ts:L24-L34 |
-| `GET /api/ingredient` | List ingredients; default `limit` is 10 and pagination is capped at 50 per page. | backend/src/ingridient/ingridient.controller.ts:L89-L90 |
-| `GET /api/ingredient/:id` | Fetch a single ingredient by id. | backend/src/ingridient/ingridient.controller.ts:L106-L117 |
-| `PATCH /api/ingredient/:id` | Partial update; a missing id is rejected with `422`. | backend/src/ingridient/ingridient.controller.ts:L119-L131, backend/src/ingridient/ingridient.service.ts:L69-L79 |
-| `DELETE /api/ingredient/:id` | Soft-delete an ingredient; responds `204 No Content`. | backend/src/ingridient/ingridient.controller.ts:L133-L142 |
+| `GET /api/ingredient/creation-data` | Returns the hardcoded categories and units used to populate the creation UI (see tables below). | backend/src/ingridient/ingridient.controller.ts:L62-L95 |
+| `POST /api/ingredient` | Create an ingredient; a duplicate `name` is rejected with `422 Unprocessable Entity`. | backend/src/ingridient/ingridient.controller.ts:L106-L112, backend/src/ingridient/ingridient.service.ts:L24-L34 |
+| `GET /api/ingredient` | List ingredients; default `limit` is 10 and pagination is capped at 50 per page. | backend/src/ingridient/ingridient.controller.ts:L121-L145 |
+| `GET /api/ingredient/:id` | Fetch a single ingredient by id. | backend/src/ingridient/ingridient.controller.ts:L153-L164 |
+| `PATCH /api/ingredient/:id` | Partial update; a missing id is rejected with `422`. | backend/src/ingridient/ingridient.controller.ts:L176-L188, backend/src/ingridient/ingridient.service.ts:L114-L140 |
+| `DELETE /api/ingredient/:id` | Soft-delete an ingredient; responds `204 No Content`. | backend/src/ingridient/ingridient.controller.ts:L198-L207 |
 
 `GET /api/ingredient/creation-data` returns five hardcoded categories:
 
@@ -172,7 +172,7 @@ Full request/response detail lives in
 | 8 | tbsp |
 | 9 | tsp |
 
-Source: backend/src/ingridient/ingridient.controller.ts:L41,
+Source: backend/src/ingridient/ingridient.controller.ts:L51,
 backend/src/ingridient/ingridient.controller.ts:L54-L69.
 
 ## Configuration
@@ -181,7 +181,7 @@ The module defines no configuration of its own. It relies entirely on the shared
 Mongoose connection (provided application-wide via `MongooseModule.forRootAsync`)
 and the application-level JWT authentication; the feature only registers its model
 with `MongooseModule.forFeature`.
-Source: backend/src/ingridient/infrastructure/document/document-persistence.module.ts:L11-L15.
+Source: backend/src/ingridient/infrastructure/document/document-persistence.module.ts:L37.
 For environment setup (env copy, Docker Compose, seeding), see the
 [backend README](../../README.md).
 
@@ -214,16 +214,16 @@ graph LR
   Source: backend/src/ingridient/infrastructure/document/document-persistence.module.ts:L16-L22.
 - **Mapper pattern** — `IngridientMapper.toDomain` and `toPersistence` translate
   between the persistence entity and the domain model.
-  Source: backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L5,
+  Source: backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L10,
   backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L27.
 - **DTO validation** — class-validator / class-transformer decorators guard
   incoming payloads (for example, `confidence` is bounded to 0–1).
   Source: backend/src/ingridient/dto/create-ingridient.dto.ts:L46-L55.
 - **Hardcoded reference-data endpoint** — `GET /creation-data` returns the
   category and unit lists straight from the controller rather than the database.
-  Source: backend/src/ingridient/ingridient.controller.ts:L41-L72.
+  Source: backend/src/ingridient/ingridient.controller.ts:L41-L71.
 - **Pagination clamping** — the list `limit` is capped at 50.
-  Source: backend/src/ingridient/ingridient.controller.ts:L89-L90.
+  Source: backend/src/ingridient/ingridient.controller.ts:L88-L89.
 
 ## Known limitations / gaps
 
@@ -232,17 +232,17 @@ graph LR
   Source: backend/src/ingridient/ingridient.service.ts:L24-L34.
 - The `creation-data` categories and units are **hardcoded in the controller**,
   not database-driven; changing the lists requires a code change and redeploy.
-  Source: backend/src/ingridient/ingridient.controller.ts:L54-L69.
+  Source: backend/src/ingridient/ingridient.controller.ts:L54-L68.
 - **KNOWN ISSUE:** the `422` validation error payload is keyed under `email` (a
   copy-paste artifact) rather than `name` or `id`, on both the duplicate-create
   and the missing-id update paths. This is recorded as a documented fact; the code
   is left unchanged.
-  Source: backend/src/ingridient/ingridient.service.ts:L29,
+  Source: backend/src/ingridient/ingridient.service.ts:L33,
   backend/src/ingridient/ingridient.service.ts:L74.
 - The misspellings `ingridient` / `Ingridient` (module, directory, types) and the
   differently-misspelled `ingrident.ts` (domain file) are intentional, stable
   identifiers — documented facts, not defects to be renamed.
-  Source: backend/src/ingridient/domain/ingrident.ts:L2.
+  Source: backend/src/ingridient/domain/ingrident.ts:L11.
 
 ## Local development
 
@@ -252,7 +252,7 @@ graph LR
 - The module's routes appear in the Swagger UI, which is mounted at **`/docs`**
   (not `/api/docs`). See
   [docs/API_REFERENCE.md](../../../docs/API_REFERENCE.md) for the full contract.
-  Source: backend/src/main.ts:L31.
+  Source: backend/src/main.ts:L49-L51.
 - Exercising the endpoints requires a running MongoDB instance and a valid Bearer
   JWT (obtain one through the Auth module). See the
   [backend README](../../README.md) for full setup — env copy, Docker Compose, and

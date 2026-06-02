@@ -30,13 +30,12 @@ import { PantryService } from './pantry.service';
  * All routes are JWT-guarded: every request must carry a Bearer JWT, enforced
  * by `@UseGuards(AuthGuard('jwt'))`, and the controller is grouped under the
  * `Pantry` Swagger tag.
- * Source: backend/src/pantry/pantry.controller.ts:L26-L28.
  *
  * The class declares `@Controller({ path: 'pantry', version: '1' })`, yet the
  * routes are served under the global `api` prefix as `/api/pantry`. There is
  * no version segment because `main.ts` never calls `app.enableVersioning()`, so
  * the declared `version: '1'` is inactive.
- * Source: backend/src/main.ts:L14-L15.
+ * Source: backend/src/main.ts:L30-L35.
  */
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -167,7 +166,7 @@ export class PantryController {
     // KNOWN ISSUE: despite the `softDelete` name, the document repository
     // performs a HARD delete via `deleteOne`; the record is physically
     // removed, not soft-deleted. Source:
-    // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L120
+    // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186
     return this.pantryService.softDelete(id);
   }
 }
