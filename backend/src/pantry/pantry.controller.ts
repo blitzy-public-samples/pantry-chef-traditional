@@ -34,7 +34,7 @@ import { PantryService } from './pantry.service';
  *
  * The class declares `@Controller({ path: 'pantry', version: '1' })`, yet the
  * routes are served under the global `api` prefix as `/api/pantry`. There is
- * no `/v1/` segment because `main.ts` never calls `app.enableVersioning()`, so
+ * no version segment because `main.ts` never calls `app.enableVersioning()`, so
  * the declared `version: '1'` is inactive.
  * Source: backend/src/main.ts:L14-L15.
  */

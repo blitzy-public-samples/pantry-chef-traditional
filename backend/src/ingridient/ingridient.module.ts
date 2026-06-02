@@ -8,7 +8,7 @@ import { DocumentIngridientPersistenceModule } from './infrastructure/document/d
  *
  * Imports `DocumentIngridientPersistenceModule` (the Mongoose-backed persistence
  * wiring), provides `IngridientService` (business logic), and registers
- * `IngridientController` (the JWT-guarded REST surface mounted at `/v1/ingredient`).
+ * `IngridientController` (the JWT-guarded REST surface mounted at `/api/ingredient`).
  *
  * Exports `IngridientService` and `DocumentIngridientPersistenceModule` so other
  * NestJS modules can reuse the ingredient feature without re-declaring its
@@ -27,7 +27,7 @@ import { DocumentIngridientPersistenceModule } from './infrastructure/document/d
   imports: [DocumentIngridientPersistenceModule],
   // Ingredient business logic: CRUD, duplicate-name rejection, creation data.
   providers: [IngridientService],
-  // JWT-guarded REST controller mounted at /v1/ingredient.
+  // JWT-guarded REST controller mounted at /api/ingredient.
   controllers: [IngridientController],
   // Re-exported so consumers (e.g. AiModule) reuse the service + persistence.
   exports: [IngridientService, DocumentIngridientPersistenceModule],

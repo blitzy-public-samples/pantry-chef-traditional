@@ -33,8 +33,10 @@ export abstract class PantryRepository {
 
   /**
    * Returns a filtered, sorted, paginated list of pantry ingredients.
-   * @param filterOptions Optional `FilterPantryIngridientDto | null` (e.g.,
-   * `id`); owner scoping (`userId`) is applied by the implementation.
+   * @param filterOptions Optional `FilterPantryIngridientDto | null`. NOTE: the
+   * DTO declares `id`, but the document implementation applies only `userId`
+   * scoping and does not use `id`. Source:
+   * backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L98-L99
    * @param sortOptions Optional `SortPantryIngridientDto[] | null` of
    * orderBy/order pairs.
    * @param paginationOptions The `IPaginationOptions` (page and limit).

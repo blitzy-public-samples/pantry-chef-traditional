@@ -15,7 +15,7 @@ import { FilterType } from 'src/recipe/types/filter.types';
 
 /**
  * Mongoose document adapter that implements the abstract `RecipeRepository`
- * contract (Source: backend/src/recipe/infrastructure/recipe.repository.ts).
+ * contract (Source: backend/src/recipe/infrastructure/recipe.repository.ts:L24).
  *
  * Acts as the persistence gateway for recipes: create, single lookup,
  * paginated listing, pantry/preference matching, partial update, and soft
@@ -26,7 +26,7 @@ import { FilterType } from 'src/recipe/types/filter.types';
  * `@InjectModel(RecipeSchemaClass.name)`. The abstract `RecipeRepository`
  * token is bound to this class through dependency injection
  * (`{ provide: RecipeRepository, useClass: RecipeDocumentRepository }`).
- * Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts
+ * Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts:L33-L36
  */
 @Injectable()
 export class RecipeDocumentRepository implements RecipeRepository {
@@ -106,7 +106,11 @@ export class RecipeDocumentRepository implements RecipeRepository {
     const where: EntityCondition<Recipe> = {};
 
     if (filterOptions) {
-      // Case-insensitive name filter using `$regex` with `$options: 'i'`.
+      // Case-insensitive `name` filter using `$regex` with `$options: 'i'`.
+      // KNOWN ISSUE: `name` is not a field on RecipeSchemaClass (its title
+      // field is `title`), so this $regex targets a non-schema key and does
+      // not filter recipes by title.
+      // Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
       if (filterOptions.name) {
         where['name'] = { $regex: filterOptions.name, $options: 'i' } as any;
       }

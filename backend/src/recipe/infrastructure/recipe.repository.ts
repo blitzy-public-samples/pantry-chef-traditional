@@ -42,6 +42,12 @@ export abstract class RecipeRepository {
    * (`FilterRecipeDto` with optional `name` and `ids` filters), `sortOptions?`
    * (`SortRecipeDto[] | null`), and `paginationOptions` (`IPaginationOptions` with
    * `page` and `limit`).
+   *
+   * KNOWN ISSUE: the concrete repository applies `name` as a `$regex` on a
+   * `name` key, but `RecipeSchemaClass` declares no `name` field (its title
+   * field is `title`), so the `name` filter matches no recipes by title.
+   * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+   * backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
    * @returns the matching recipes for the requested page; the concrete implementation
    * excludes soft-deleted records by constraining `deletedAt: null`.
    */

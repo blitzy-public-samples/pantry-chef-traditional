@@ -36,8 +36,8 @@ import { FilterType } from './types/filter.types';
  * Served base path: `/api/recipe`. The global `api` prefix is applied during
  * bootstrap (Source: backend/src/main.ts:L14-L15). Although `@Controller`
  * declares `version: '1'`, URI versioning is never enabled (no
- * `app.enableVersioning()` call), so that declaration is inert and there is NO
- * `/v1/` segment in the served path.
+ * `app.enableVersioning()` call), so that declaration is inert and no version
+ * segment appears in the served path.
  */
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))

@@ -10,7 +10,7 @@ into the source; deeper, cross-cutting detail lives in the repository-level
 [API reference](../../../docs/API_REFERENCE.md), and
 [data models](../../../docs/DATA_MODELS.md) documents.
 
-## 1. Purpose
+## Purpose
 
 The module provides per-user pantry management — full CRUD over the ingredients a
 user has on hand, with every record scoped by `userId`. It exposes a JWT-guarded
@@ -18,7 +18,7 @@ REST surface and persists each entry to MongoDB through Mongoose.
 Source: backend/src/pantry/pantry.controller.ts:L26-L34,
 backend/src/pantry/pantry.service.ts:L15-L17.
 
-## 2. Key components
+## Key components
 
 The module is composed of the following building blocks, moving from the HTTP
 edge inward to persistence:
@@ -56,7 +56,7 @@ edge inward to persistence:
   to the document implementation and registers the schema.
   Source: backend/src/pantry/infrastructure/document/document-persistence.module.ts:L10-L26.
 
-## 3. Architecture fit
+## Architecture fit
 
 - The module is registered in the application root module as `PantryModule`.
   Source: backend/src/app.module.ts:L32.
@@ -70,7 +70,7 @@ edge inward to persistence:
   `@UseGuards(AuthGuard('jwt'))`.
   Source: backend/src/pantry/pantry.controller.ts:L27.
 
-## 4. Data models
+## Data models
 
 The persisted entity is `PantryIngridientSchemaClass`, declared with
 `@Schema({ timestamps: true, toJSON: { virtuals: true, getters: true } })`.
@@ -109,10 +109,10 @@ backend/src/pantry/domain/pantryIngridient.ts:L10.
 For the full, cross-module schema reference, see
 [docs/DATA_MODELS.md](../../../docs/DATA_MODELS.md).
 
-## 5. API endpoints / public interface
+## API endpoints / public interface
 
 All routes are served under the global `api` prefix as **`/api/pantry`** — there
-is no `/v1/` segment. The controller declares `version: '1'`, but `main.ts` never
+is no version segment. The controller declares `version: '1'`, but `main.ts` never
 calls `app.enableVersioning()`, so versioning is inactive.
 Source: backend/src/main.ts:L14-L15,
 backend/src/pantry/pantry.controller.ts:L29-L32.
@@ -129,7 +129,7 @@ Every endpoint requires a Bearer JWT.
 For the complete request/response catalog, see
 [docs/API_REFERENCE.md](../../../docs/API_REFERENCE.md).
 
-## 6. Configuration
+## Configuration
 
 The module defines no environment variables of its own. It relies entirely on the
 shared Mongoose connection and the JWT authentication configured at the
@@ -140,7 +140,7 @@ Source: backend/src/pantry/infrastructure/document/document-persistence.module.t
 For environment setup (env copy, Docker Compose, seeding), see the
 [backend README](../../README.md).
 
-## 7. Data flow
+## Data flow
 
 An authenticated HTTP request reaches `PantryController`, which delegates to
 `PantryService`.
@@ -163,7 +163,7 @@ graph LR
   M --> DB[(MongoDB)]
 ```
 
-## 8. Design patterns used
+## Design patterns used
 
 - **Repository pattern** — the abstract `PantryRepository` is decoupled from its
   Mongoose implementation through a DI token binding.
@@ -182,7 +182,7 @@ graph LR
 - **JWT guard** — `AuthGuard('jwt')` is applied at controller scope.
   Source: backend/src/pantry/pantry.controller.ts:L27.
 
-## 9. Known limitations / gaps
+## Known limitations / gaps
 
 - **KNOWN ISSUE:** the document repository's `softDelete(id)` performs a **hard
   delete** via `deleteOne({ _id: id })` — the record is physically removed even
@@ -191,16 +191,17 @@ graph LR
   Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L120
   (method spans L119-L123). See the soft-delete-vs-hard-delete matrix in
   [docs/DATA_MODELS.md](../../../docs/DATA_MODELS.md).
-- The list filter currently supports only `userId` scoping plus the
-  `FilterPantryIngridientDto.id` field; no other filter criteria are
-  implemented.
-  Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L63-L65,
-  backend/src/pantry/dto/query-pantry-ingridient.dto.ts:L11-L16.
+- **KNOWN ISSUE:** the list filter is scoped **only by `userId`**.
+  `FilterPantryIngridientDto` declares an `id` field, but the document
+  repository's `findManyWithPagination` does **not** apply it — `id` is
+  declared-but-unused.
+  Source: backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L98-L99,
+  backend/src/pantry/dto/query-pantry-ingridient.dto.ts:L13-L17.
 
-## 10. Local development
+## Local development
 
 - Sample pantry data is provided by the document seed: `npm run seed:run:document`.
-  Source: backend/README.md (seed step).
+  Source: backend/package.json:L16.
 - Exercising the endpoints requires a running MongoDB instance and a valid Bearer
   JWT (obtain a token through the Auth module). See the
   [backend README](../../README.md) for full setup — env copy, Docker Compose,

@@ -36,7 +36,7 @@ import { CreateIngridientDto } from './dto/create-ingridient.dto';
  *
  * The served route base is `ingredient` under the global `api` prefix. Despite
  * the declared `version: '1'`, `main.ts` never calls `enableVersioning()`, so
- * the served paths contain NO `/v1/` segment (e.g. `GET /api/ingredient`).
+ * the served paths contain no version segment (e.g. `GET /api/ingredient`).
  * Source: backend/src/main.ts:L14-L15
  *
  * Delegates all business logic to `IngridientService`.

@@ -29,7 +29,7 @@ The HTTP surface that exposes both the CRUD routes and the matching route is the
 | `RecipeSchemaClass` | Mongoose schema with the embedded subdocuments `IngridientList` (sic) and `Instruction`. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L57,L7,L31 |
 | `RecipeMapper` | Maps persistence documents to and from the domain model. | Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L6 |
 | `Recipe` (domain) | Framework-free domain model; references the `Ingridient` type imported from `src/ingridient/domain/ingrident` (sic). | Source: backend/src/recipe/domain/recipe.ts:L1,L3 |
-| DTOs | `create-recipe.dto.ts`, `update-recipe.dto.ts`, and `query-recipe.dto.ts` define request shapes and validation. | Source: backend/src/recipe/dto/ |
+| DTOs | `create-recipe.dto.ts`, `update-recipe.dto.ts`, and `query-recipe.dto.ts` define request shapes and validation. | Source: backend/src/recipe/dto/create-recipe.dto.ts:L86, backend/src/recipe/dto/update-recipe.dto.ts:L16, backend/src/recipe/dto/query-recipe.dto.ts:L50 |
 | `FilterType` | Query shape for `GET /matches` (`isQuickMake` / `isAlmostThere`). | Source: backend/src/recipe/types/filter.types.ts:L1-L4 |
 | `DocumentPantryPersistenceModule` | Binds the abstract repository token to the document implementation and registers the Mongoose model. The class name retains "Pantry" although it belongs to the recipe feature, and is preserved as a stable identifier. | Source: backend/src/recipe/infrastructure/document/document-persistence.module.ts:L7-L23 |
 
@@ -103,10 +103,10 @@ Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L10
 
 ## API endpoints / public interface
 
-All routes are served under the global `api` prefix as `/api/recipe`; there is **no
-`/v1/` segment**. The controller declares `@Controller({ path: 'recipe', version: '1' })`,
-but `main.ts` sets only a global prefix and never enables versioning, so the
-`version: '1'` declaration is inert and does not appear in the served path.
+All routes are served under the global `api` prefix as `/api/recipe`. The
+controller declares `@Controller({ path: 'recipe', version: '1' })`, but `main.ts`
+sets only a global prefix and never enables versioning, so the `version: '1'`
+declaration is inert and no version segment appears in the served path.
 Source: backend/src/main.ts:L14-L15.
 
 | Method | Path | Description | Notes / Source |
@@ -152,7 +152,7 @@ query filter the module builds, including the two filters used by the paginated 
 | Dietary tags | `$all` | `tags` | `GET /api/recipe/matches` | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L113 |
 | Cooking-time bound | `$lte` | `cookTime` | `GET /api/recipe/matches` | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L118 |
 | Soft-delete exclusion | equals `null` | `deletedAt` | `GET /api/recipe/matches` and list | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L99 (matches), L71 (list) |
-| Name search | `$regex` (case-insensitive) | `name` | `GET /api/recipe` list | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L61 |
+| Name search (KNOWN ISSUE) | `$regex` (case-insensitive) on a `name` key that `RecipeSchemaClass` does not declare (its title field is `title`), so it matches no recipes by title | `GET /api/recipe` list | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111, backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88 |
 | Id set | `$in` | `_id` | `GET /api/recipe` list | Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L64 |
 
 After the query runs, the repository scores each returned recipe in application code:
@@ -193,12 +193,15 @@ backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92
   framework-free domain model. Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L6.
 - **Embedded subdocuments.** `IngridientList` (sic) and `Instruction` are embedded in the
   recipe document rather than referenced as separate collections. Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L7,L31.
-- **Query-builder filtering.** List and match queries compose Mongo operators: `$regex`
-  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L61),
-  `$in` (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L64),
-  `$nin` (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L108),
-  `$all` (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L113),
-  and `$lte` (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L118).
+- **Query-builder filtering.** The list query builds a `$regex` constraint on a
+  `name` key — a KNOWN ISSUE, since `RecipeSchemaClass` declares no `name` field
+  (its title field is `title`), so the filter matches no recipes by title
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+  backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88) —
+  plus an `$in` constraint on `_id`
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L114-L115).
+  The match query composes `$nin`, `$all`, and `$lte` constraints
+  (Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L185,L191,L197).
 - **In-memory scoring and sort.** Availability scoring and the descending sort run in
   application code after the query returns. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L137,L167.
 - **Pagination clamping.** The list route caps `limit` at 50. Source: backend/src/recipe/recipe.controller.ts:L57-L58.
@@ -206,6 +209,12 @@ backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92
 
 ## Known limitations / gaps
 
+- **KNOWN ISSUE:** the recipe list's `name` search builds a `$regex` on a `name`
+  key, but `RecipeSchemaClass` declares no `name` field (its title field is
+  `title`), so the filter matches no recipes by title — the query is not
+  synchronized with the schema.
+  Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+  backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88.
 - **KNOWN ISSUE:** matching is by **exact ingredient `_id`** with **no unit or quantity
   normalization** — an ingredient counts as "available" whenever its id is present in the
   pantry, regardless of the amount or unit the recipe actually requires.
@@ -225,7 +234,7 @@ backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92
 ## Local development
 
 - Recipes are seeded into MongoDB with `npm run seed:run:document`.
-  Source: backend/package.json:scripts.
+  Source: backend/package.json:L16.
 - For full backend setup (`cp env_example .env`, then `docker-compose up`), follow the
   backend root guide: [`../../README.md`](../../README.md).
 - Every recipe route requires a JWT bearer token, so obtain one first via

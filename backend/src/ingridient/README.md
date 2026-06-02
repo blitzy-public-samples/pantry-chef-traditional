@@ -12,7 +12,7 @@ before you read the source; cross-cutting detail lives in the repository-level
 [API reference](../../../docs/API_REFERENCE.md), and
 [data models](../../../docs/DATA_MODELS.md) documents.
 
-## 1. Purpose
+## Purpose
 
 The module provides an ingredient **catalog** — full CRUD over ingredient
 definitions — together with a **reference-data endpoint** that returns the
@@ -29,10 +29,10 @@ spellings are intentional and are reproduced verbatim throughout this document;
 they are stable identifiers and are never renamed. The domain-model file is named
 `domain/ingrident.ts` — misspelled *differently again* (`ingrident`, not
 `ingridient`).
-Source: backend/src/ingridient/domain/ingrident.ts,
+Source: backend/src/ingridient/domain/ingrident.ts:L12,
 backend/src/ingridient/ingridient.controller.ts:L34-L37.
 
-## 2. Key components
+## Key components
 
 Moving from the HTTP edge inward to persistence:
 
@@ -68,11 +68,11 @@ Moving from the HTTP edge inward to persistence:
 - **DTOs** — `create-ingridient.dto.ts`, `update-ingridient.dto.ts`, and
   `query-ingridient.dto.ts` define the request shapes (spellings preserved as in
   the codebase).
-  Source: backend/src/ingridient/dto/create-ingridient.dto.ts,
-  backend/src/ingridient/dto/update-ingridient.dto.ts,
-  backend/src/ingridient/dto/query-ingridient.dto.ts.
+  Source: backend/src/ingridient/dto/create-ingridient.dto.ts:L21,
+  backend/src/ingridient/dto/update-ingridient.dto.ts:L16,
+  backend/src/ingridient/dto/query-ingridient.dto.ts:L45.
 
-## 3. Architecture fit
+## Architecture fit
 
 - The module is registered in the application root module as `IngridientModule`.
   Source: backend/src/app.module.ts:L31.
@@ -89,7 +89,7 @@ Moving from the HTTP edge inward to persistence:
   the system-wide view, see
   [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md).
 
-## 4. Data models
+## Data models
 
 The in-memory domain representation is the `Ingridient` class, declared in
 `domain/ingrident.ts`. `Reference` is the shared `{ id, name }` shape imported
@@ -125,10 +125,10 @@ backend/src/ingridient/dto/create-ingridient.dto.ts:L46-L55.
 For the full, cross-module schema reference, see
 [docs/DATA_MODELS.md](../../../docs/DATA_MODELS.md).
 
-## 5. API endpoints / public interface
+## API endpoints / public interface
 
 All routes are served under the global `api` prefix with the route base
-**`ingredient`** (correctly spelled) — there is **no `/v1/` segment**. The
+**`ingredient`** (correctly spelled) — there is **no version segment**. The
 controller declares `version: '1'`, but `main.ts` never calls
 `app.enableVersioning()`, so versioning is inactive and the version never appears
 in the path.
@@ -175,7 +175,7 @@ Full request/response detail lives in
 Source: backend/src/ingridient/ingridient.controller.ts:L41,
 backend/src/ingridient/ingridient.controller.ts:L54-L69.
 
-## 6. Configuration
+## Configuration
 
 The module defines no configuration of its own. It relies entirely on the shared
 Mongoose connection (provided application-wide via `MongooseModule.forRootAsync`)
@@ -185,16 +185,16 @@ Source: backend/src/ingridient/infrastructure/document/document-persistence.modu
 For environment setup (env copy, Docker Compose, seeding), see the
 [backend README](../../README.md).
 
-## 7. Data flow
+## Data flow
 
 An authenticated request reaches `IngridientController`, which delegates to
 `IngridientService`. The service calls the abstract `IngridientRepository`, which
 dependency injection binds to `IngridientDocumentRepository`. That document
 repository uses the Mongoose `IngridientModel` and converts documents to and from
 the domain model with `IngridientMapper`.
-Source: backend/src/ingridient/ingridient.controller.ts,
-backend/src/ingridient/ingridient.service.ts,
-backend/src/ingridient/infrastructure/document/repositories/ingridient.repository.ts.
+Source: backend/src/ingridient/ingridient.controller.ts:L51,
+backend/src/ingridient/ingridient.service.ts:L21,
+backend/src/ingridient/infrastructure/document/repositories/ingridient.repository.ts:L22.
 
 ```mermaid
 graph LR
@@ -207,7 +207,7 @@ graph LR
   D -. maps via .-> MP[IngridientMapper]
 ```
 
-## 8. Design patterns used
+## Design patterns used
 
 - **Repository pattern** — the abstract `IngridientRepository` is decoupled from
   its Mongoose implementation through a `provide` / `useClass` DI binding.
@@ -225,7 +225,7 @@ graph LR
 - **Pagination clamping** — the list `limit` is capped at 50.
   Source: backend/src/ingridient/ingridient.controller.ts:L89-L90.
 
-## 9. Known limitations / gaps
+## Known limitations / gaps
 
 - Duplicate-`name` creation is rejected with `422 Unprocessable Entity`; there is
   no idempotent upsert, so the caller must handle the conflict.
@@ -244,11 +244,11 @@ graph LR
   identifiers — documented facts, not defects to be renamed.
   Source: backend/src/ingridient/domain/ingrident.ts:L2.
 
-## 10. Local development
+## Local development
 
 - The ingredient catalog is seeded together with the rest of the document data:
   `npm run seed:run:document`.
-  Source: backend/package.json:scripts.
+  Source: backend/package.json:L16.
 - The module's routes appear in the Swagger UI, which is mounted at **`/docs`**
   (not `/api/docs`). See
   [docs/API_REFERENCE.md](../../../docs/API_REFERENCE.md) for the full contract.

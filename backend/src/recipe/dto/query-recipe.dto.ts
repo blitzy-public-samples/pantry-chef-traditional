@@ -14,9 +14,16 @@ import { Recipe } from '../domain/recipe';
  *
  * The repository turns these optional constraints into Mongoose query
  * operators: `name` becomes a `$regex` match and `ids` becomes an `$in` list.
+ *
+ * KNOWN ISSUE: the `name` constraint is applied to a `name` key, but
+ * `RecipeSchemaClass` declares no `name` field (its title field is `title`),
+ * so the `$regex` targets a non-schema field and does not filter by title.
+ * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L110-L111,
+ * backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
  */
 export class FilterRecipeDto {
-  // Optional name filter; applied by the repository as a $regex match.
+  // Optional `name` filter; repository applies a $regex on a non-schema `name`
+  // key (schema field is `title`), so it does not match recipes by title.
   @IsString()
   @IsOptional()
   name?: string | null;
@@ -67,7 +74,8 @@ export class QueryRecipeDto {
   @IsOptional()
   limit: number;
 
-  // Optional free-text search term (mapped to the name filter by the controller).
+  // Optional free-text search; controller maps it to the `name` filter, which
+  // targets a non-schema key (see FilterRecipeDto KNOWN ISSUE).
   @IsString()
   @IsOptional()
   query?: string | null;

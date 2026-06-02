@@ -10,7 +10,9 @@ import { PantryIngridient } from '../domain/pantryIngridient';
 
 /** Optional filter criteria for listing pantry ingredients. */
 export class FilterPantryIngridientDto {
-  // Optional pantry-record id to filter the list by.
+  // Optional pantry-record id. KNOWN ISSUE: declared on the DTO but the list
+  // repository applies only `userId` scoping and never reads this `id`. Source:
+  // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L98-L99
   @ApiProperty()
   @IsString()
   @IsOptional()

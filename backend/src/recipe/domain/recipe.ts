@@ -9,8 +9,8 @@ import { Ingridient } from 'src/ingridient/domain/ingrident';
  * `RecipeSchemaClass` is converted to and from this model by `RecipeMapper`
  * (`toDomain` builds a `new Recipe()`; `toPersistence` maps back).
  *
- * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts
- * Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts
+ * Source: backend/src/recipe/infrastructure/document/mappers/recipe.mapper.ts:L28,L83
+ * Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L81
  */
 export class Recipe {
   // Unique recipe identifier (Mongo document _id rendered as a string).
