@@ -76,24 +76,24 @@ The fields are:
 
 | Field | Type | Notes | Source |
 |-------|------|-------|--------|
-| `email` | `string \| null` | Unique index (`unique: true`) | `user.schema.ts:L58-L63` |
-| `password` | `string?` | Annotated `@Exclude({ toPlainOnly: true })` — omitted from serialized output | `user.schema.ts:L67-L69` |
-| `preferences` | embedded `Preferences` | Defaults to an object with empty arrays and `cookingTime: 0` | `user.schema.ts:L73-L82` |
-| `favoriteRecipes` | `string[]` | Default `[]` | `user.schema.ts:L85-L89` |
-| `recentSearches` | `string[]` | Default `[]` | `user.schema.ts:L92-L93` |
-| `createdAt` | `Date` | Default `now` | `user.schema.ts:L96-L97` |
-| `updatedAt` | `Date` | Default `now` | `user.schema.ts:L100-L101` |
-| `deletedAt` | `Date?` | Declared for soft deletion (see Known limitations) | `user.schema.ts:L106-L107` |
+| `email` | `string \| null` | Unique index (`unique: true`) | `backend/src/users/infrastructure/document/entities/user.schema.ts:L58-L63` |
+| `password` | `string?` | Declares `@Exclude({ toPlainOnly: true })`, but no global serializer is registered, so the bcrypt hash is returned in API responses (KNOWN ISSUE) | `backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L69` |
+| `preferences` | embedded `Preferences` | Defaults to an object with empty arrays and `cookingTime: 0` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L73-L82` |
+| `favoriteRecipes` | `string[]` | Default `[]` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L85-L89` |
+| `recentSearches` | `string[]` | Default `[]` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L92-L93` |
+| `createdAt` | `Date` | Default `now` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L96-L97` |
+| `updatedAt` | `Date` | Default `now` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L100-L101` |
+| `deletedAt` | `Date?` | Declared for soft deletion (see Known limitations) | `backend/src/users/infrastructure/document/entities/user.schema.ts:L106-L107` |
 
 The embedded `Preferences` subdocument captures dietary settings
 (`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L15-L31`):
 
 | Field | Type | Default | Source |
 |-------|------|---------|--------|
-| `dietary` | `string[]` | `[]` | `user.schema.ts:L17-L18` |
-| `allergies` | `string[]` | `[]` | `user.schema.ts:L21-L22` |
-| `dislikedIngredients` | `string[]` | `[]` | `user.schema.ts:L25-L26` |
-| `cookingTime` | `number` | `0` | `user.schema.ts:L29-L30` |
+| `dietary` | `string[]` | `[]` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L17-L18` |
+| `allergies` | `string[]` | `[]` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L21-L22` |
+| `dislikedIngredients` | `string[]` | `[]` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L25-L26` |
+| `cookingTime` | `number` | `0` | `backend/src/users/infrastructure/document/entities/user.schema.ts:L29-L30` |
 
 The framework-agnostic domain `User` type mirrors these fields, with its
 identifier typed as `id: number | string`
@@ -179,9 +179,13 @@ plus mapping (`Source: backend/src/users/infrastructure/document/repositories/us
   `Source: backend/src/users/dto/create-user.dto.ts:L55-L95`.
 - **Password hashing** — passwords are salted and hashed with bcryptjs (10 salt
   rounds) on create. `Source: backend/src/users/users.service.ts:L41-L43`.
-- **Field exclusion on serialization** — `password` carries
-  `@Exclude({ toPlainOnly: true })` so it is omitted from serialized responses.
-  `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L69`.
+- **Field exclusion declared but not enforced** — `password` carries
+  `@Exclude({ toPlainOnly: true })` on the schema, but no global
+  `ClassSerializerInterceptor` is registered, so the decorator is not applied to
+  REST responses and the bcrypt hash **is returned** in API responses. This is a
+  KNOWN ISSUE; it is documented here and is not changed.
+  `Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L69`;
+  `Source: backend/src/main.ts:L20-L55`.
 - **Pagination clamping** — the list endpoint caps the page size at 50.
   `Source: backend/src/users/users.controller.ts:L86-L88`.
 
@@ -206,6 +210,14 @@ verifies `oldPassword` and then delegates to `UsersService.update`
 (`Source: backend/src/auth/auth.service.ts:L192-L269`), so a changed password is
 persisted in plaintext rather than as a bcrypt hash. This behavior is documented
 as-is and is not changed here.
+
+**KNOWN ISSUE:** The `password` field declares `@Exclude({ toPlainOnly: true })` on
+the schema, but the application registers no global `ClassSerializerInterceptor`
+(`Source: backend/src/main.ts:L20-L55`), so the decorator is never applied to REST
+responses. Endpoints that return a user (for example `GET /api/users/me`) therefore
+expose the stored bcrypt password hash in their JSON payloads
+(`Source: backend/src/users/infrastructure/document/entities/user.schema.ts:L67-L69`).
+This behavior is documented as-is and is not changed here.
 
 ## Local development
 

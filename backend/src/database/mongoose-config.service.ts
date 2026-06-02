@@ -26,10 +26,10 @@ export class MongooseConfigService implements MongooseOptionsFactory {
    */
   createMongooseOptions(): MongooseModuleOptions {
     return {
-      uri: this.configService.get('database').url, // Connection URI <- database.url
-      dbName: this.configService.get('database').name, // Database name <- database.name
-      user: this.configService.get('database').username, // Auth user <- database.username
-      pass: this.configService.get('database').password, // Auth pass <- database.password
+      uri: this.configService.get('database').url,
+      dbName: this.configService.get('database').name,
+      user: this.configService.get('database').username,
+      pass: this.configService.get('database').password,
     };
   }
 }

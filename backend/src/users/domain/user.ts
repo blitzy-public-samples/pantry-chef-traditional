@@ -12,7 +12,7 @@ export class User {
   id: number | string;
   // Account email; unique in persistence.
   email: string | null;
-  // Hashed password; excluded from serialized output by the schema.
+  // Hashed password; schema @Exclude is NOT enforced, so it is returned in responses.
   password?: string;
   // Embedded dietary preferences.
   preferences?: {

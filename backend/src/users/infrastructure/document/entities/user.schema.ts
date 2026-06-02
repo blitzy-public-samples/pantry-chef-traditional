@@ -62,8 +62,8 @@ export class UserSchemaClass extends EntityDocumentHelper {
   @Expose({ toPlainOnly: true })
   email: string | null;
 
-  // Stores the bcrypt password hash; OMITTED from serialized output via
-  // @Exclude({ toPlainOnly: true }).
+  // Stores the bcrypt password hash; declares @Exclude({ toPlainOnly: true }), but
+  // KNOWN ISSUE: no global serializer runs it, so password IS returned in responses.
   @Exclude({ toPlainOnly: true })
   @Prop()
   password?: string;
