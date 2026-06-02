@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pantry_chef/core/styles/app_theme.dart';
 
+/// Default profile image placeholder shown when no user photo
+/// is available.
+///
+/// A [StatelessWidget] that renders a fixed 100x100 circular
+/// [Container] (BorderRadius 50, theme `darkBeige` background)
+/// with a centered [Icons.person] (size 48, theme `grey`).
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Circular themed container holding a centered person icon.
     return Container(
       height: 100,
       width: 100,

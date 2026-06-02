@@ -9,21 +9,42 @@ import { DeepPartial } from 'src/utils/types/deep-partial.type';
 import { User } from './domain/user';
 import * as bcrypt from 'bcryptjs';
 
+/**
+ * Application service that enforces user business rules before delegating
+ * persistence to the injected abstract {@link UserRepository}.
+ *
+ * Responsibilities include hashing passwords with bcryptjs, rejecting
+ * duplicate email addresses, and validating user existence on update.
+ *
+ */
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UserRepository) {}
 
+  /**
+   * Creates a user, hashing the password with bcryptjs using 10 salt rounds
+   * before persistence and rejecting duplicate email addresses.
+   *
+   * The password is hashed when present.
+   * A duplicate email yields HTTP 422 (emailAlreadyExists).
+   *
+   * @param createProfileDto - The user creation payload to persist.
+   * @returns A promise resolving to the persisted {@link User}.
+   * @throws HttpException 422 Unprocessable Entity when the email exists.
+   */
   async create(createProfileDto: CreateUserDto): Promise<User> {
     const clonedPayload = {
       ...createProfileDto,
     };
 
     if (clonedPayload.password) {
+      // Hash the password with bcryptjs using 10 salt rounds.
       const salt = await bcrypt.genSalt(10);
       clonedPayload.password = await bcrypt.hash(clonedPayload.password, salt);
     }
 
     if (clonedPayload.email) {
+      // Reject creation when the email is already registered (HTTP 422).
       const userObject = await this.usersRepository.findOne({
         email: clonedPayload.email,
       });
@@ -43,6 +64,16 @@ export class UsersService {
     return this.usersRepository.create(clonedPayload);
   }
 
+  /**
+   * Returns a paginated list of users, forwarding filter, sort, and
+   * pagination options to the repository.
+   *
+   * @param options - Query options wrapper.
+   * @param options.filterOptions - Optional filter criteria.
+   * @param options.sortOptions - Optional sort directives.
+   * @param options.paginationOptions - Page and limit settings.
+   * @returns A promise resolving to the matching {@link User} list.
+   */
   findManyWithPagination({
     filterOptions,
     sortOptions,
@@ -59,10 +90,25 @@ export class UsersService {
     });
   }
 
+  /**
+   * Resolves a single user matching the supplied entity condition.
+   *
+   * @param fields - The entity condition used to locate the user.
+   * @returns A promise resolving to the {@link User} or null when absent.
+   */
   findOne(fields: EntityCondition<User>): Promise<NullableType<User>> {
     return this.usersRepository.findOne(fields);
   }
 
+  /**
+   * Updates a user. When `payload.id` is supplied, validates that the user
+   * exists, throwing HTTP 422 (userNotFound) otherwise.
+   *
+   * @param id - The identifier of the user to update.
+   * @param payload - The partial user fields to apply.
+   * @returns A promise resolving to the updated {@link User} or null.
+   * @throws HttpException 422 Unprocessable Entity when the user is not found.
+   */
   async update(
     id: User['id'],
     payload: DeepPartial<User>,
@@ -70,6 +116,7 @@ export class UsersService {
     const clonedPayload = { ...payload };
 
     if (clonedPayload.id) {
+      // Confirm the target user exists before applying the update.
       const userObject = await this.usersRepository.findOne({
         id,
       });
@@ -90,7 +137,16 @@ export class UsersService {
     return this.usersRepository.update(id, clonedPayload);
   }
 
+  /**
+   * Delegates user deletion to the repository.
+   *
+   * @param id - The identifier of the user to delete.
+   * @returns A promise that resolves once the operation completes.
+   */
   async softDelete(id: User['id']): Promise<void> {
+    // KNOWN ISSUE: The repository performs a HARD delete (deleteOne) despite
+    // the soft-delete naming.
+    // Source: backend/src/users/infrastructure/document/repositories/user.repository.ts:L172-L174
     await this.usersRepository.softDelete(id);
   }
 }

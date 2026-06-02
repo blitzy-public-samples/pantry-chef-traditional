@@ -1,13 +1,22 @@
 part of 'pantry_item_edit_bloc.dart';
 
+/// Immutable state for the pantry item edit form.
 class PantryItemEditState extends Equatable {
+  /// Identifier of the pantry item being edited.
   final String id;
+  /// Current quantity input, string-typed for the form field.
   final String quantity;
+  /// Current location input.
   final String location;
+  /// Current expiration-date input.
   final String expirationDate;
+  /// True when quantity validation fails.
   final bool quantityError;
+  /// True while a save or delete operation is in flight.
   final bool isFetching;
+  /// Holds the saved [PantryItem] on success; null otherwise.
   final PantryItem? updatedItem;
+  /// True once the item has been deleted.
   final bool deleted;
 
   const PantryItemEditState({
@@ -32,6 +41,9 @@ class PantryItemEditState extends Equatable {
         deleted,
       ];
 
+  /// Returns a copy with [location], [quantity], [expirationDate],
+  /// [quantityError], [isFetching], [updatedItem] or [deleted]
+  /// overridden; unspecified fields retain their current values.
   PantryItemEditState copyWith({
     final String? location,
     final String? quantity,

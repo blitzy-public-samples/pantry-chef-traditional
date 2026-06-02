@@ -9,6 +9,15 @@ import 'package:pantry_chef/core/styles/app_theme.dart';
 import 'package:pantry_chef/features/profile/presentation/bloc/profile/profile_bloc.dart';
 import 'package:pantry_chef/features/recipe/presentation/widgets/recipe_card.dart';
 
+/// Screen that lists the user's favorite (saved) recipes.
+///
+/// Builds a [PlatformScaffold] with an app bar
+/// ([getAppBarWidget]) and a
+/// [BlocBuilder]<[ProfileBloc], [ProfileState]> body with three
+/// states: (a) when `state.favoriteRecipes == null` it dispatches
+/// [FavoriteRecipesFetched] and shows a [ShimmerList]; (b) when
+/// empty it shows an empty-state icon and message; (c) otherwise
+/// it renders a [ListView] of [RecipeCard] (isFavorite: true).
 class FavoriteRecipes extends StatelessWidget {
   const FavoriteRecipes({super.key});
 

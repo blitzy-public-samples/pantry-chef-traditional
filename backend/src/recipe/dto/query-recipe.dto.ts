@@ -9,26 +9,53 @@ import {
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { Recipe } from '../domain/recipe';
 
+/**
+ * Filter criteria for recipe list/search queries.
+ *
+ * The repository turns these optional constraints into Mongoose query
+ * operators: `name` becomes a `$regex` match and `ids` becomes an `$in` list.
+ *
+ * KNOWN ISSUE: the `name` constraint is applied to a `name` key, but
+ * `RecipeSchemaClass` declares no `name` field (its title field is `title`),
+ * so the `$regex` targets a non-schema field and does not filter by title.
+ * Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L115,
+ * backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L86-L88
+ */
 export class FilterRecipeDto {
+  // Optional `name` filter; repository applies a $regex on a non-schema `name`
+  // key (schema field is `title`), so it does not match recipes by title.
   @IsString()
   @IsOptional()
   name?: string | null;
+  // Optional recipe id list; applied by the repository as an $in constraint.
   @IsString()
   @IsOptional()
   ids?: string[] | null;
 }
 
+/**
+ * Sort specification: which Recipe field to order by and in which direction.
+ */
 export class SortRecipeDto {
+  // Field to sort by; constrained to a key of the Recipe domain model.
   @ApiProperty()
   @IsString()
   orderBy: keyof Recipe;
 
+  // Sort direction string, e.g. 'ASC' or 'DESC'.
   @ApiProperty()
   @IsString()
   order: string;
 }
 
+/**
+ * Query contract for the paginated recipe list endpoint.
+ *
+ * Combines pagination (`page`/`limit`), an optional free-text `query`, an
+ * optional `ids` list, and a JSON-encoded `sort` parsed into SortRecipeDto[].
+ */
 export class QueryRecipeDto {
+  // Page number; @Transform coerces the query string, defaulting to 1.
   @ApiProperty({
     required: false,
   })
@@ -37,6 +64,8 @@ export class QueryRecipeDto {
   @IsOptional()
   page: number;
 
+  // Page size; @Transform defaults to 10. The controller clamps the effective
+  // value to a maximum of 50. Source: backend/src/recipe/recipe.controller.ts:L110-L113
   @ApiProperty({
     required: false,
   })
@@ -45,16 +74,20 @@ export class QueryRecipeDto {
   @IsOptional()
   limit: number;
 
+  // Optional free-text search; controller maps it to the `name` filter, which
+  // targets a non-schema key (see FilterRecipeDto KNOWN ISSUE).
   @IsString()
   @IsOptional()
   query?: string | null;
 
+  // Optional recipe id list; a single string value is normalized into an array.
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
   @Transform(({ value }) => (typeof value === 'string' ? [value] : value))
   ids?: string[] | null;
 
+  // Optional sort spec; a JSON string parsed into an array of SortRecipeDto.
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @Transform(({ value }) => {

@@ -9,6 +9,15 @@ import 'package:pantry_chef/features/profile/presentation/bloc/profile/profile_b
 import 'package:pantry_chef/features/profile/presentation/widgets/profile_avatar.dart';
 import 'package:pantry_chef/features/profile/presentation/widgets/profile_navigation_item.dart';
 
+/// Primary profile overview screen.
+///
+/// Builds a [PlatformScaffold] wrapping a
+/// [BlocBuilder]<[ProfileBloc], [ProfileState]> that shows the
+/// [ProfileAvatar], the user's email (`state.userProfile?.email
+/// ?? ''`), navigation rows to Preferences
+/// ([Navigation.preferences]) and Favorite Recipes
+/// ([Navigation.favoriteRecipes]), and a logout [ActionButton]
+/// whose onPress dispatches `Logout(context: context)`.
 class ProfileMain extends StatelessWidget {
   const ProfileMain({super.key});
 

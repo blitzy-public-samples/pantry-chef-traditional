@@ -7,8 +7,31 @@ import {
 import { PantryRepository } from '../pantry.repository';
 import { PantryIngridientDocumentRepository } from './repositories/pantryIngridient.repository';
 
+/**
+ * Mongoose persistence module for the pantry document (MongoDB) layer.
+ *
+ * `DocumentPantryPersistenceModule` registers the `PantryIngridient` schema and
+ * binds the abstract `PantryRepository` to `PantryIngridientDocumentRepository`,
+ * so consumers depend on the abstraction rather than the concrete adapter. It
+ * performs three composition responsibilities:
+ *
+ * - Registers the Mongoose feature model for `PantryIngridientSchemaClass` via
+ *   `MongooseModule.forFeature`, mapping `PantryIngridientSchemaClass.name` to
+ *   the generated `PantryIngridientSchema`.
+ * - Binds the abstract `PantryRepository` token to the concrete
+ *   `PantryIngridientDocumentRepository` via
+ *   `{ provide: PantryRepository, useClass: PantryIngridientDocumentRepository }`.
+ * - Exports the `PantryRepository` token so consumer modules (e.g.,
+ *   `PantryModule`) resolve the repository transparently without depending on
+ *   the concrete implementation.
+ *
+ * Imported and re-exported by `PantryModule`, the pantry feature module.
+ * Source: backend/src/pantry/pantry.module.ts:L17,L23
+ *
+ */
 @Module({
   imports: [
+    // registers PantryIngridientSchemaClass/PantryIngridientSchema via MongooseModule.forFeature
     MongooseModule.forFeature([
       {
         name: PantryIngridientSchemaClass.name,
@@ -17,11 +40,13 @@ import { PantryIngridientDocumentRepository } from './repositories/pantryIngridi
     ]),
   ],
   providers: [
+    // binds DI token PantryRepository -> useClass PantryIngridientDocumentRepository
     {
       provide: PantryRepository,
       useClass: PantryIngridientDocumentRepository,
     },
   ],
+  // exports PantryRepository for consumer modules
   exports: [PantryRepository],
 })
 export class DocumentPantryPersistenceModule {}

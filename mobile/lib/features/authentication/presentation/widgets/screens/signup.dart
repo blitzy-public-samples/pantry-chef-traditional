@@ -11,15 +11,30 @@ import 'package:pantry_chef/core/utils/get_email_error_text.dart';
 import 'package:pantry_chef/features/authentication/presentation/bloc/auth/auth_bloc.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
+/// Signup screen for the authentication flow.
+///
+/// Provides its own `AuthBloc` via `BlocProvider` and renders email and
+/// password fields using the shared `TextFieldInput` widget. Dispatches
+/// `SignupActionSend` (sic) on submit, navigates to `Navigation.home`
+/// once `AuthState.success` becomes true, and shows a loader overlay
+/// while `AuthState.isFetching` is true.
+///
 class Signup extends StatelessWidget {
   const Signup({super.key});
 
+  /// Builds the signup screen for the given [context].
+  ///
+  /// Provides an [AuthBloc] and renders the email and password fields;
+  /// dispatches `SignupActionSend` (sic) on submit, navigates to
+  /// [Navigation.home] on success, and overlays a loader while fetching.
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => AuthBloc(),
       child: MultiBlocListener(
         listeners: [
+          // On AuthState.success, navigates to Navigation.home and
+          // clears the back stack via pushNamedAndRemoveUntil.
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.success != curr.success,
             listener: (context, state) {
@@ -28,6 +43,8 @@ class Signup extends StatelessWidget {
               }
             },
           ),
+          // On AuthState.isFetching change, shows or hides the
+          // loader overlay; requires a loader-overlay ancestor.
           BlocListener<AuthBloc, AuthState>(
             listenWhen: (prev, curr) => prev.isFetching != curr.isFetching,
             listener: (context, state) {
@@ -58,6 +75,11 @@ class Signup extends StatelessWidget {
                       children: [
                         Column(
                           children: [
+                            // buildWhen limits rebuilds to email,
+                            // emailWrongFormat, and errorMessage. Caps
+                            // at maxLength 50, validates via
+                            // getEmailErrorText, and dispatches
+                            // AuthFormValueChanged(email: value).
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.email != curr.email ||
@@ -77,6 +99,11 @@ class Signup extends StatelessWidget {
                               },
                             ),
                             const SizedBox(height: 24),
+                            // buildWhen limits rebuilds to password
+                            // and passwordToShort. The passwordToShort
+                            // flag drives errorText (shows passwordHint);
+                            // caps at maxLength 10, dispatches
+                            // AuthFormValueChanged(password: value).
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (prev, curr) =>
                                   prev.password != curr.password || prev.passwordToShort != curr.passwordToShort,
@@ -95,6 +122,10 @@ class Signup extends StatelessWidget {
                             )
                           ],
                         ),
+                        // Submit button. onPress stays null (disabled,
+                        // greyed) until both email and password are
+                        // non-empty; otherwise dispatches
+                        // SignupActionSend() (sic) on the AuthBloc.
                         BlocBuilder<AuthBloc, AuthState>(
                           builder: (context, state) {
                             return ActionButton(

@@ -9,16 +9,35 @@ import 'package:pantry_chef/features/recipe/domain/models/recipe.dart';
 import 'package:pantry_chef/features/recipe/presentation/bloc/recipe/recipe_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+/// A tappable summary card that renders a single [item] recipe.
+///
+/// Shows the recipe image, title, description, and the
+/// preparation/cooking/servings figures, plus an optional
+/// match-score bar and a favorite toggle. Intended for recipe
+/// lists, feeds, and recommendation grids.
+///
+/// Stateless: it holds no local state and delegates state changes
+/// to BLoCs. [RecipeBloc] records the selected recipe and drives
+/// navigation; [ProfileBloc] owns the favorites list toggled here.
 class RecipeCard extends StatelessWidget {
+  /// The recipe rendered by this card.
   final Recipe item;
+  /// Whether the recipe is currently in the user's favorites.
   final bool isFavorite;
 
+  /// Creates a card for [item]; [isFavorite] seeds the toggle.
   const RecipeCard({
     super.key,
     required this.item,
     this.isFavorite = false,
   });
 
+  // Returns the match-score bar color from the theme: a score of
+  // >= 0.7 maps to lightGreen, >= 0.3 and < 0.7 to lightOrange,
+  // and anything lower maps to brightRed.
+  // Force-unwraps item.matchScore!, so it is only safe to call when
+  // matchScore != null; the build method guards this at the call
+  // site with its matchScore != null check.
   Color _getProgressBarColor(BuildContext context) {
     if (item.matchScore! >= 0.7) {
       return context.theme.appColors.lightGreen;
@@ -29,17 +48,28 @@ class RecipeCard extends StatelessWidget {
     return context.theme.appColors.brightRed;
   }
 
+  /// Builds the recipe card for the given [context].
+  ///
+  /// Renders the recipe image, title, the match-score progress bar
+  /// (colored via [_getProgressBarColor]), and a favorite toggle; the
+  /// whole surface is tappable and opens the recipe detail screen.
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.hardEdge,
+      // Wrap the whole card in an InkWell so the entire surface is
+      // tappable.
       child: InkWell(
         onTap: () {
+          // Record selection in RecipeBloc BEFORE navigating so the
+          // detail screen can resolve the active recipe: dispatch
+          // RecipeDetailedSelected first, then push the detail route.
           context.read<RecipeBloc>().add(RecipeDetailedSelected(id: item.id));
           Navigator.of(context).pushNamed(Navigation.recipeDetailed);
         },
         child: Column(
           children: [
+            // Cover image for the recipe; fixed 150px tall, full width.
             ImageWidget(
               height: 150,
               width: double.infinity,
@@ -61,6 +91,8 @@ class RecipeCard extends StatelessWidget {
                     style: context.theme.appTextTheme.semiBold18,
                   ),
                   const SizedBox(height: 4),
+                  // Description is clamped to 3 lines with an
+                  // ellipsis when it overflows.
                   Text(
                     item.description,
                     style: context.theme.appTextTheme.regular14,
@@ -68,6 +100,7 @@ class RecipeCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
+                  // Row of preparation, cooking, and servings figures.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -115,6 +148,10 @@ class RecipeCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Match-score bar renders only when matchScore
+                      // != null; bar color comes from
+                      // _getProgressBarColor and its value is
+                      // item.matchScore.
                       SizedBox(
                         width: 200,
                         child: item.matchScore != null
@@ -136,6 +173,11 @@ class RecipeCard extends StatelessWidget {
                               )
                             : null,
                       ),
+                      // Favorite toggle: icon reflects isFavorite;
+                      // onPress dispatches FavoriteRecipesListUpdated.
+                      // Cross-feature: this recipe widget toggles a
+                      // favorite via ProfileBloc; the profile feature
+                      // owns that bloc and event.
                       AppIconButton(
                         icon: isFavorite ? Icons.favorite : Icons.favorite_border,
                         iconColor: context.theme.appColors.red,
