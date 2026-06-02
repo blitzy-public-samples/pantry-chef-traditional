@@ -141,7 +141,7 @@ rules: when creating a recipe it rejects a duplicate title with a `422
 Unprocessable Entity` before persisting
 (`Source: backend/src/recipe/recipe.service.ts:L26-L40`), and its `matches`
 method first loads the caller's preferences and pantry, then delegates the
-scoring query (`Source: backend/src/recipe/recipe.service.ts:L66-L75`).
+scoring query (`Source: backend/src/recipe/recipe.service.ts:L100-L121`).
 
 Persistence is expressed against a contract rather than the database directly.
 `RecipeRepository` is declared as an abstract class enumerating `create`,
@@ -216,9 +216,9 @@ graph TD
 ```
 
 *Diagram: backend module dependencies. Caption sources —
-`backend/src/app.module.ts:L33-L62`, `backend/src/ai/ai.module.ts:L4,L7`,
+`backend/src/app.module.ts:L33-L62`, `backend/src/ai/ai.module.ts:L4,L23`,
 `backend/src/auth/auth.module.ts:L6-L7,L24-L25`,
-`backend/src/recipe/recipe.module.ts:L5-L6,L9`.* Solid
+`backend/src/recipe/recipe.module.ts:L5-L6,L27`.* Solid
 edges are NestJS module imports; the dotted edges indicate that the guarded
 controllers in those modules depend at runtime on the `jwt` Passport strategy
 that `AuthModule` registers — they apply `@UseGuards(AuthGuard('jwt'))` rather
@@ -358,7 +358,7 @@ requests when an access token is present
 `tokenExpired` or `unauthorized` response, transparently refreshes the token and
 retries the original request
 (`Source: mobile/lib/core/utils/dio_client.dart:L65-L75`,
-`Source: mobile/lib/core/utils/dio_client.dart:L129-L155`).
+`Source: mobile/lib/core/utils/dio_client.dart:L117-L143`).
 
 > **SECURITY NOTE:** A `LogInterceptor` is added **unconditionally** to both the
 > main Dio instance and the dedicated refresh instance, in each case with

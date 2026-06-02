@@ -120,10 +120,10 @@ working-tree source (`Source: backend/docker-compose.yml:L26-L27`).
 **Quick start (canonical steps)**
 
 Run these from the `backend/` directory. They mirror the substance of the
-existing project README (`Source: backend/README.md:L1-L19`).
+existing project README (`Source: backend/README.md:L92-L144`).
 
 1. Copy the environment template to `.env` (the `nestjs` service loads
-   `./.env`) (`Source: backend/README.md:L5`,
+   `./.env`) (`Source: backend/README.md:L104`,
    `Source: backend/docker-compose.yml:L23`):
 
    ```bash
@@ -137,7 +137,7 @@ existing project README (`Source: backend/README.md:L1-L19`).
    npm run seed:run:document
    ```
 
-3. Bring up the stack (`Source: backend/README.md:L13`):
+3. Bring up the stack (`Source: backend/README.md:L144`):
 
    ```bash
    docker-compose up
@@ -202,7 +202,7 @@ The AI ingredient-recognition feature uses Google Cloud Vision and is
 **optional** — the stack runs without it; only image recognition is disabled
 when the key is absent.
 
-**Provisioning the key** (`Source: backend/README.md:L16-L19`):
+**Provisioning the key** (`Source: backend/README.md:L160-L176`):
 
 1. Enable the Cloud Vision API in your Google Cloud project.
 2. Create a service-account key file for that project.
@@ -301,7 +301,7 @@ source and are **not** modified by this guide. Address each before deploying.
 
 > SECURITY NOTE: **Bearer tokens in mobile logs.** The mobile Dio client attaches
 > a `LogInterceptor` with `requestHeader: true` in all builds, which logs the
-> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L42-L53,L99-L111`).
+> `Authorization` bearer token (`Source: mobile/lib/core/utils/dio_client.dart:L42-L53,L89-L100`).
 > This detail is covered in [./ARCHITECTURE.md](./ARCHITECTURE.md); avoid
 > shipping verbose logs in release builds.
 

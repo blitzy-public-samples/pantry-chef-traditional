@@ -171,7 +171,7 @@ service-account key placed at `src/config/ai.json`. To provision it
 This integration is **optional**. When `ai.json` is absent the backend degrades
 gracefully: `existsSync(keyPath)` fails, `isGoogleVisionEnabled` is set to `false`,
 and the AI vision endpoint still responds but returns an empty result (`{}`) instead
-of recognized ingredients. `Source: backend/src/ai/ai.service.ts:L53-L56,L64-L67`
+of recognized ingredients. `Source: backend/src/ai/ai.service.ts:L70-L76,L104-L106`
 See [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md) for the end-to-end provisioning
 workflow.
 
