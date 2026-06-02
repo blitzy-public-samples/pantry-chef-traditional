@@ -73,7 +73,7 @@ The in-memory domain `Session` mirrors these fields with an `id` that may be a
 `deletedAt: Date`. Source: backend/src/session/domain/session.ts:L30
 
 A secondary index is declared on the `user` field (`{ user: 1 }`) to support
-lookups by owner. Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L29
+lookups by owner. Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L46
 
 The full cross-module schema catalog — including how sessions relate to users
 and the soft-delete versus hard-delete matrix — lives in the

@@ -55,7 +55,7 @@ Moving from the HTTP edge inward to persistence:
 - **`IngridientSchemaClass`** / **`IngridientSchema`** — the Mongoose entity and
   the schema built from it.
   Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26,
-  backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L52-L54.
+  backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L73-L75.
 - **`IngridientMapper`** — maps between the document entity and the domain model.
   Source: backend/src/ingridient/infrastructure/document/mappers/ingridient.mapper.ts:L10.
 - **`DocumentIngridientPersistenceModule`** — registers the Mongoose model and
@@ -115,11 +115,11 @@ The persisted entity `IngridientSchemaClass` mirrors these fields. Four of them 
 `unit`, `expirationDate`, `imageUrl`, and `confidence` — are annotated
 `@Exclude({ toPlainOnly: true })`, so they are omitted from the serialized JSON
 returned to clients (they remain stored in MongoDB).
-Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L26-L40.
+Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L40-L57.
 
 `confidence` is a 0–1 score: the schema stores it as a number and the create DTO
 validates it with `@Min(0)` / `@Max(1)`.
-Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L38-L40,
+Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L55-L57,
 backend/src/ingridient/dto/create-ingridient.dto.ts:L46-L55.
 
 For the full, cross-module schema reference, see

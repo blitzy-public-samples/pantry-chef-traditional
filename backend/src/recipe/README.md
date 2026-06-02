@@ -70,9 +70,9 @@ as they appear in the source. The full cross-module schema reference lives in
 | `difficulty` | `Difficulty` | Required; one of the enum values listed below. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L116 |
 | `tags` | `string[]` | Free-form tags; matched by the dietary `$all` filter. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L120 |
 | `imageUrl` | `string` | Image URL. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L124 |
-| `matchScore?` | `number` | Optional; populated by the matching engine (range 0 to 1). | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L91-L92 |
+| `matchScore?` | `number` | Optional; populated by the matching engine (range 0 to 1). | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L127-L128 |
 | `createdAt` / `updatedAt` | `Date` | Mongoose timestamps. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L132 |
-| `deletedAt?` | `Date` | Soft-delete marker; `null` for live records. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L100-L101 |
+| `deletedAt?` | `Date` | Soft-delete marker; `null` for live records. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L139-L140 |
 
 **`IngridientList` (sic) subdocument fields:**
 
@@ -90,7 +90,7 @@ as they appear in the source. The full cross-module schema reference lives in
 |-------|------|-------|--------|
 | `step` | `number` | Step number; required. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L48 |
 | `description` | `string` | Step text; required. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L52 |
-| `timer?` | `number` | Optional per-step timer. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L38-L39 |
+| `timer?` | `number` | Optional per-step timer. | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L55-L56 |
 
 **`difficulty` enum values:**
 
@@ -99,7 +99,7 @@ as they appear in the source. The full cross-module schema reference lives in
 | `Difficulty` | `easy`, `medium`, `hard` | Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L60,L115 |
 
 A single secondary index is declared on `{ title: 1 }`.
-Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L108.
+Source: backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L147.
 
 ## API endpoints / public interface
 

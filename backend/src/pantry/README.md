@@ -92,7 +92,7 @@ Source: backend/src/pantry/domain/pantryIngridient.ts:L3-L14.
 
 A single-field index on `{ userId: 1 }` supports the per-user lookups described
 above.
-Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49.
+Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L65.
 
 The `location` field accepts exactly three values:
 

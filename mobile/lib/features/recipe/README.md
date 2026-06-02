@@ -86,18 +86,18 @@ Source: mobile/lib/features/recipe/domain/models/recipe.dart:L14-L88
 
 | Field | Type | Source line |
 |-------|------|-------------|
-| `id` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L69 |
-| `title` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L70 |
-| `description` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L71 |
-| `ingridientList` (sic) | `List<IngredientListItem>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L72 |
-| `instructions` | `List<InstractionItem>` (sic) | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L73 |
-| `prepTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L74 |
-| `cookTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L75 |
-| `servings` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L76 |
-| `difficulty` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L77 |
-| `tags` | `List<String>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L78 |
-| `imageUrl` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L79 |
-| `matchScore` | `double?` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L80 |
+| `id` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L16 |
+| `title` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L18 |
+| `description` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L20 |
+| `ingridientList` (sic) | `List<IngredientListItem>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L23 |
+| `instructions` | `List<InstractionItem>` (sic) | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L26 |
+| `prepTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L28 |
+| `cookTime` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L30 |
+| `servings` | `int` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L32 |
+| `difficulty` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L34 |
+| `tags` | `List<String>` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L36 |
+| `imageUrl` | `String` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L38 |
+| `matchScore` | `double?` | Source: mobile/lib/features/recipe/domain/models/recipe.dart:L41 |
 
 The `matchScore` field carries the codebase's own inline description,
 `// how well it matches available ingredients`, preserved verbatim in source

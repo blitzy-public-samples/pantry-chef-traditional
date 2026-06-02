@@ -79,10 +79,13 @@ The mobile client models live under
 (`Source: mobile/pubspec.yaml:L62` — `json_serializable ^6.7.1`) on top of
 `json_annotation` (`Source: mobile/pubspec.yaml:L40` —
 `json_annotation ^4.9.0`); the generated code is produced by `build_runner`
-(`Source: mobile/pubspec.yaml:L63` — `build_runner ^2.4.6`). Each model
-declares a `part '*.g.dart'` directive and exposes a `fromJson` factory and a
+(`Source: mobile/pubspec.yaml:L63` — `build_runner ^2.4.6`). Most models
+declare a `part '*.g.dart'` directive and expose a `fromJson` factory and a
 `toJson` method that delegate to the generated `_$...FromJson` / `_$...ToJson`
-functions. The Dart models mirror the JSON the backend serializes; the
+functions; the sole exception is the deserialize-only `IngredientAddData`,
+which exposes a `fromJson` factory but defines no `toJson`
+(`Source: mobile/lib/features/ingredient/domain/models/ingredient_add_data.dart:L31-L38`).
+The Dart models mirror the JSON the backend serializes; the
 field-by-field mapping appears in [Section 10](#10-mobile-dart-models).
 
 > **Note on identifier spelling.** The backend module directory is spelled
@@ -259,7 +262,7 @@ Owning module source: [`backend/src/session/`](../backend/src/session/).
 | `deletedAt` | `Date` | Declared field; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `session.schema.ts:L39-L40` |
 
 The schema declares a secondary index on `{ user: 1 }`
-(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L29`);
+(`Source: backend/src/session/infrastructure/document/entities/session.schema.ts:L46`);
 see [Section 8](#8-indexes).
 
 ## 5. Ingridient
@@ -294,14 +297,14 @@ Owning module source: [`backend/src/ingridient/`](../backend/src/ingridient/).
 
 The `Ingridient` schema declares no secondary index — `SchemaFactory.createForClass`
 is the final statement and no `.index(...)` call follows
-(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L52-L54`);
+(`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L73-L75`);
 see [Section 8](#8-indexes).
 
 ## 6. PantryIngridient
 
 The `PantryIngridient` collection is backed by `PantryIngridientSchemaClass`,
 which extends `EntityDocumentHelper`
-(`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L16`).
+(`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L21`).
 Each pantry record references an `Ingridient` by `ObjectId`, is scoped to a user
 through `userId`, and carries a storage `location` enum.
 
@@ -323,7 +326,7 @@ Owning module source: [`backend/src/pantry/`](../backend/src/pantry/).
 | `deletedAt` | `Date?` | Declared for soft deletion; see [Section 9](#9-soft-delete-vs-hard-delete-matrix) | `pantryIngridient.schema.ts:L56-L57` |
 
 The schema declares a secondary index on `{ userId: 1 }`
-(`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49`);
+(`Source: backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L65`);
 see [Section 8](#8-indexes). The schema declares a `deletedAt` field, but the
 repository removes pantry documents physically; see
 [Section 9](#9-soft-delete-vs-hard-delete-matrix).
@@ -404,8 +407,8 @@ index that MongoDB creates implicitly on every collection is omitted.
 | Collection | Index | Source |
 |---|---|---|
 | Users | `email` unique | `backend/src/users/infrastructure/document/entities/user.schema.ts:L58-L63` |
-| Sessions | `{ user: 1 }` | `backend/src/session/infrastructure/document/entities/session.schema.ts:L28` |
-| PantryIngridients | `{ userId: 1 }` | `backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L49` |
+| Sessions | `{ user: 1 }` | `backend/src/session/infrastructure/document/entities/session.schema.ts:L46` |
+| PantryIngridients | `{ userId: 1 }` | `backend/src/pantry/infrastructure/document/entities/pantryIngridient.schema.ts:L65` |
 | Recipes | `{ title: 1 }` | `backend/src/recipe/infrastructure/document/entities/recipe.schema.ts:L147` |
 | Ingridients | (none declared) | `backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts` |
 
@@ -443,8 +446,10 @@ This matrix records the behavior as built; it does not prescribe a change.
 ## 10. Mobile Dart Models
 
 The mobile client decodes API responses into `@JsonSerializable` Dart models.
-Each model declares a `part '*.g.dart'` directive and exposes a `fromJson`
-factory plus a `toJson` method. The tables below map each model field to its
+Most models declare a `part '*.g.dart'` directive and expose a `fromJson`
+factory plus a `toJson` method; the deserialize-only `IngredientAddData`
+exposes a `fromJson` factory but no `toJson`. The tables below map each model
+field to its
 Dart type. Misspelled identifiers (`ingridient`, `ingridientList`,
 `InstractionItem`) are reproduced exactly.
 
@@ -473,10 +478,10 @@ composes a list of `IngredientListItem` through the misspelled field
 **KNOWN ISSUE:** `Recipe.copyWith` accepts a `bool? inFavorite` parameter but
 never applies it — `Recipe` declares no `inFavorite` field, and the method
 reconstructs an identical copy from the existing fields, so the parameter is a
-no-op (`Source: mobile/lib/features/recipe/domain/models/recipe.dart:L37-L53`).
+no-op (`Source: mobile/lib/features/recipe/domain/models/recipe.dart:L59-L81`).
 This is recorded as built; no change is prescribed. For a working `copyWith`
 by contrast, see [`Profile`](#profile) below
-(`Source: mobile/lib/features/profile/domain/models/profile.dart:L28-L34`).
+(`Source: mobile/lib/features/profile/domain/models/profile.dart:L47-L53`).
 
 ### `InstractionItem`
 
@@ -526,6 +531,50 @@ backend and on the `ingridient` field names that reference this class.
 | `imageUrl` | `String?` | Optional image URL | `ingredient.dart:L41` |
 | `expirationDate` | `String?` | Optional expiry | `ingredient.dart:L43` |
 
+### `Category`
+
+`Category` is a lightweight `@JsonSerializable` reference value object used to
+classify ingredients (for example, the categories offered by the
+add-ingredient form). It is bidirectional, exposing both a `fromJson` factory
+and a `toJson` method
+(`Source: mobile/lib/features/ingredient/domain/models/category.dart:L10-L28`).
+
+| Field | Dart type | Notes | Source |
+|---|---|---|---|
+| `id` | `int` | Unique category identifier | `category.dart:L13` |
+| `name` | `String` | Category display name | `category.dart:L15` |
+
+### `Unit`
+
+`Unit` is a lightweight `@JsonSerializable` reference value object used to label
+ingredient quantities (for example, the units offered by the add-ingredient
+form). Like `Category`, it is bidirectional, exposing both a `fromJson` factory
+and a `toJson` method
+(`Source: mobile/lib/features/ingredient/domain/models/unit.dart:L10-L28`).
+
+| Field | Dart type | Notes | Source |
+|---|---|---|---|
+| `id` | `int` | Unique unit identifier | `unit.dart:L13` |
+| `name` | `String` | Unit display name | `unit.dart:L15` |
+
+### `IngredientAddData`
+
+`IngredientAddData` is the `@JsonSerializable` aggregate that wraps the
+reference data used to populate the add-ingredient form — the available
+`Category` and `Unit` options. It is the deserialized shape of the
+`GET /api/ingredient/creation-data` response
+(`Source: mobile/lib/features/ingredient/domain/models/ingredient_add_data.dart:L15-L39`).
+
+| Field | Dart type | Notes | Source |
+|---|---|---|---|
+| `categories` | `List<Category>` | Selectable ingredient categories | `ingredient_add_data.dart:L20` |
+| `units` | `List<Unit>` | Selectable measurement units | `ingredient_add_data.dart:L24` |
+
+**KNOWN ISSUE:** `IngredientAddData` is deserialize-only — it defines a
+`fromJson` factory but no `toJson` method, unlike the bidirectional `Category`
+and `Unit` models. This is recorded as built; no change is prescribed
+(`Source: mobile/lib/features/ingredient/domain/models/ingredient_add_data.dart:L31-L38`).
+
 ### `PantryItem`
 
 `PantryItem` is annotated `@JsonSerializable` and exposes the misspelled field
@@ -559,7 +608,7 @@ backend and on the `ingridient` field names that reference this class.
 Unlike `Recipe.copyWith`, `Profile.copyWith({ List<String>? favoriteRecipes })`
 applies its parameter via `favoriteRecipes ?? this.favoriteRecipes`, so it
 produces an updated copy as expected
-(`Source: mobile/lib/features/profile/domain/models/profile.dart:L28-L34`).
+(`Source: mobile/lib/features/profile/domain/models/profile.dart:L47-L53`).
 
 ### `Preferences`
 
