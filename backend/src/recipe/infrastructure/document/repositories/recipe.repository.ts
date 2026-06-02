@@ -300,7 +300,8 @@ export class RecipeDocumentRepository implements RecipeRepository {
    * - users (`deleteOne`):
    *   backend/src/users/infrastructure/document/repositories/user.repository.ts:L172-L174
    * - pantry (`deleteOne`):
-   *   backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186
+   *   backend/src/pantry/infrastructure/document/repositories/
+   *   pantryIngridient.repository.ts:L184-L186
    * - session (`deleteMany`):
    *   backend/src/session/infrastructure/document/repositories/session.repository.ts:L106
    *

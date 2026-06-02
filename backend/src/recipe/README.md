@@ -162,7 +162,7 @@ After the query runs, the repository scores each returned recipe in application 
 - `matchScore = availableIngredients.length / totalIngredients` (range 0 to 1). Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L231.
 - `isQuickMake = totalIngredients <= 5`. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L234.
 - `isAlmostThere` is true when 1 to 2 ingredients are missing. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L237-L238.
-- Filter by the `FilterType` flags. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L152-L166.
+- Filter by the `FilterType` flags. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L250-L264.
 - **Sort by `matchScore` descending**. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L266.
 - Map documents to domain via `RecipeMapper.toDomain`. Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L268.
 
@@ -227,7 +227,7 @@ backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L92
   contrasts with the hard-delete behavior in Users, Pantry, and Session — see the
   soft-delete matrix in [`../../../docs/DATA_MODELS.md`](../../../docs/DATA_MODELS.md).
 - A pre-existing Russian-language comment is retained as-is at
-  backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L129 and is
+  backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L213 and is
   intentionally left unchanged. It is preserved verbatim in the source and is neither
   reproduced nor translated in this README.
 

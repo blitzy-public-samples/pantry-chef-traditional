@@ -166,7 +166,8 @@ export class PantryController {
     // KNOWN ISSUE: despite the `softDelete` name, the document repository
     // performs a HARD delete via `deleteOne`; the record is physically
     // removed, not soft-deleted. Source:
-    // backend/src/pantry/infrastructure/document/repositories/pantryIngridient.repository.ts:L184-L186
+    // backend/src/pantry/infrastructure/document/repositories/
+    // pantryIngridient.repository.ts:L184-L186
     return this.pantryService.softDelete(id);
   }
 }

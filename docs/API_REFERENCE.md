@@ -364,9 +364,9 @@ Deletes the user identified by the `:id` path parameter via
 The pantry controller is tagged `@ApiTags('Pantry')` and mounted at base
 `pantry`. The whole controller is protected by class-level `@ApiBearerAuth()`
 and `@UseGuards(AuthGuard('jwt'))`
-(`Source: backend/src/pantry/pantry.controller.ts:L47`). Pantry items are
+(`Source: backend/src/pantry/pantry.controller.ts:L40-L41`). Pantry items are
 scoped to the authenticated user: the `userId` is taken from the request rather
-than the body (`Source: backend/src/pantry/pantry.controller.ts:L41`).
+than the body (`Source: backend/src/pantry/pantry.controller.ts:L65-L66`).
 
 | Method | Path | Auth | Success | Source |
 |--------|------|------|---------|--------|
@@ -380,7 +380,7 @@ than the body (`Source: backend/src/pantry/pantry.controller.ts:L41`).
 
 Adds an ingredient to the authenticated user's pantry from a
 `CreatePantryIngridientDto` body. Returns `201 Created`; the `userId` is taken
-from `req.user?.id` (`Source: backend/src/pantry/pantry.controller.ts:L35-L43`).
+from `req.user?.id` (`Source: backend/src/pantry/pantry.controller.ts:L65-L67`).
 
 Request body — `CreatePantryIngridientDto` (filename misspelled as
 `create-pantry-ingridient.dto.ts`, preserved verbatim):
@@ -414,7 +414,7 @@ reference (`Source: backend/src/pantry/dto/create-pantry-ingridient.dto.ts:L11-L
 
 Returns a paginated list of the authenticated user's pantry items from a
 `QueryPantryIngridientDto` query. The filter is scoped to `userId`
-(`Source: backend/src/pantry/pantry.controller.ts:L60`). Returns `200 OK`.
+(`Source: backend/src/pantry/pantry.controller.ts:L97-L98`). Returns `200 OK`.
 
 | Parameter | Type | Required | Description | Source |
 |-----------|------|----------|-------------|--------|
@@ -424,26 +424,26 @@ Returns a paginated list of the authenticated user's pantry items from a
 | `sort` | object | optional | Sort options | `Source: backend/src/pantry/pantry.controller.ts:L99` |
 
 > **KNOWN ISSUE — pagination is capped at 50.** A requested `limit` above `50`
-> is reduced to `50` (`Source: backend/src/pantry/pantry.controller.ts:L59`).
+> is reduced to `50` (`Source: backend/src/pantry/pantry.controller.ts:L89-L92`).
 
 ### 5.3 `GET /api/pantry/:id`
 
 Returns a single pantry item by `:id`. Returns `200 OK`
-(`Source: backend/src/pantry/pantry.controller.ts:L71-L82`).
+(`Source: backend/src/pantry/pantry.controller.ts:L115-L126`).
 
 | Parameter | Type | Description | Source |
 |-----------|------|-------------|--------|
-| `id` | `string` | Pantry item id (path) | `Source: backend/src/pantry/pantry.controller.ts:L71-L81` |
+| `id` | `string` | Pantry item id (path) | `Source: backend/src/pantry/pantry.controller.ts:L122-L124` |
 
 ### 5.4 `PATCH /api/pantry/:id`
 
 Updates a pantry item by `:id` from an `UpdatePantryIngridientDto` body. Returns
-`200 OK` (`Source: backend/src/pantry/pantry.controller.ts:L84-L96`).
+`200 OK` (`Source: backend/src/pantry/pantry.controller.ts:L138-L150`).
 
 ### 5.5 `DELETE /api/pantry/:id`
 
 Deletes a pantry item by `:id` via `pantryService.softDelete`. Returns
-`204 No Content` (`Source: backend/src/pantry/pantry.controller.ts:L98-L107`).
+`204 No Content` (`Source: backend/src/pantry/pantry.controller.ts:L158-L171`).
 
 > **KNOWN ISSUE — `softDelete` is a hard delete.** The pantry repository
 > implements `softDelete` with `deleteOne`, permanently removing the document
@@ -470,8 +470,8 @@ and `@UseGuards(AuthGuard('jwt'))`
 
 > **Note on routing order.** `GET /api/recipe/matches` is declared **before**
 > `GET /api/recipe/:id`
-> (`Source: backend/src/recipe/recipe.controller.ts:L43-L48`,
-> `Source: backend/src/recipe/recipe.controller.ts:L85`), so `matches` is
+> (`Source: backend/src/recipe/recipe.controller.ts:L85-L90`,
+> `Source: backend/src/recipe/recipe.controller.ts:L138-L147`), so `matches` is
 > matched as a literal route and is not shadowed by the `:id` parameter route.
 
 ### 6.1 `POST /api/recipe`
@@ -526,7 +526,7 @@ a bare id string: `IngridientListDto` declares `ingridient: Ingridient`
 
 > **KNOWN ISSUE — duplicate `title` returns `422`.** Creating a recipe whose
 > `title` already exists throws `422 Unprocessable Entity`
-> (`Source: backend/src/recipe/recipe.service.ts:L26-L41`). The error payload
+> (`Source: backend/src/recipe/recipe.service.ts:L44-L59`). The error payload
 > uses the key `recipeAlreadyExists` (nested under an `email` errors key in the
 > response shape).
 
@@ -534,7 +534,7 @@ a bare id string: `IngridientListDto` declares `ingridient: Ingridient`
 
 Runs the recipe matching engine for the authenticated user against their pantry
 and preferences and returns scored recipes. Returns `200 OK`
-(`Source: backend/src/recipe/recipe.controller.ts:L43-L48`). The query uses the
+(`Source: backend/src/recipe/recipe.controller.ts:L85-L90`). The query uses the
 `FilterType` shape (`Source: backend/src/recipe/types/filter.types.ts:L9`).
 
 | Parameter | Type | Required | Description | Source |
@@ -568,7 +568,7 @@ and preferences and returns scored recipes. Returns `200 OK`
    and `isAlmostThere` when 1–2 ingredients are missing
    (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L237-L238`).
 5. Filter by the `isQuickMake` / `isAlmostThere` query flags
-   (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L152-L166`)
+   (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L250-L264`)
    and sort by `matchScore` descending
    (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L266`).
 
@@ -585,14 +585,14 @@ Authorization: Bearer <access_token>
 > regardless of amount
 > (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L222-L231`).
 > An existing developer comment documents the scoring intent at
-> `backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L129`.
+> `backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L213`.
 
 ### 6.3 `GET /api/recipe`
 
 Returns a paginated list of recipes from a `QueryRecipeDto` query. The list
 excludes soft-deleted recipes via `deletedAt: null`
 (`Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L127`).
-Returns `200 OK` (`Source: backend/src/recipe/recipe.controller.ts:L50-L72`).
+Returns `200 OK` (`Source: backend/src/recipe/recipe.controller.ts:L104-L127`).
 
 | Parameter | Type | Required | Description | Source |
 |-----------|------|----------|-------------|--------|
@@ -603,7 +603,7 @@ Returns `200 OK` (`Source: backend/src/recipe/recipe.controller.ts:L50-L72`).
 | `sort` | `SortRecipeDto[]` | optional | Sort options (JSON) | `Source: backend/src/recipe/dto/query-recipe.dto.ts:L100` |
 
 > **KNOWN ISSUE — pagination is capped at 50.** A requested `limit` above `50`
-> is reduced to `50` (`Source: backend/src/recipe/recipe.controller.ts:L63`).
+> is reduced to `50` (`Source: backend/src/recipe/recipe.controller.ts:L111-L114`).
 
 ```http
 GET /api/recipe?query=pasta&limit=20 HTTP/1.1
@@ -613,17 +613,17 @@ Authorization: Bearer <access_token>
 ### 6.4 `GET /api/recipe/:id`
 
 Returns a single recipe by `:id`. Returns `200 OK`
-(`Source: backend/src/recipe/recipe.controller.ts:L85`).
+(`Source: backend/src/recipe/recipe.controller.ts:L138-L147`).
 
 ### 6.5 `PATCH /api/recipe/:id`
 
 Updates a recipe by `:id` from an `UpdateRecipeDto` body. Returns `200 OK`
-(`Source: backend/src/recipe/recipe.controller.ts:L85-L97`).
+(`Source: backend/src/recipe/recipe.controller.ts:L161-L173`).
 
 ### 6.6 `DELETE /api/recipe/:id`
 
 Deletes a recipe by `:id`. Returns `204 No Content`
-(`Source: backend/src/recipe/recipe.controller.ts:L99-L107`).
+(`Source: backend/src/recipe/recipe.controller.ts:L187-L196`).
 
 Unlike the user and pantry deletes, the recipe `softDelete` is a **true soft
 delete**: it sets `deletedAt` with `updateOne` rather than removing the
@@ -637,7 +637,7 @@ See the soft-delete vs hard-delete matrix in
 
 The ingredient controller is tagged `@ApiTags('Ingredient')` and the served
 route base is the correctly-spelled `ingredient`
-(`Source: backend/src/ingridient/ingridient.controller.ts:L51`).
+(`Source: backend/src/ingridient/ingridient.controller.ts:L48`).
 
 > **Preserved misspelling.** The module directory is spelled `ingridient/` and
 > the DTO files are `create-ingridient.dto.ts` / `update-ingridient.dto.ts`
@@ -663,7 +663,7 @@ The whole controller is protected by class-level `@ApiBearerAuth()` and
 
 Returns the reference data used by clients when creating an ingredient: a fixed
 list of categories and a fixed list of units, each as `{ id, name }`. Returns
-`200 OK` (`Source: backend/src/ingridient/ingridient.controller.ts:L41-L71`).
+`200 OK` (`Source: backend/src/ingridient/ingridient.controller.ts:L62-L95`).
 This route is declared before `:id`, so it is not shadowed by the parameter
 route.
 
@@ -703,7 +703,7 @@ The **9 units** are hardcoded
 ### 7.2 `POST /api/ingredient`
 
 Creates an ingredient from a `CreateIngridientDto` (sic) body. Returns
-`201 Created` (`Source: backend/src/ingridient/ingridient.controller.ts:L73-L79`).
+`201 Created` (`Source: backend/src/ingridient/ingridient.controller.ts:L106-L112`).
 
 Request body — `CreateIngridientDto` (filename `create-ingridient.dto.ts`, sic):
 
@@ -719,7 +719,7 @@ Request body — `CreateIngridientDto` (filename `create-ingridient.dto.ts`, sic
 
 The `confidence` field models AI-recognition certainty and is constrained to
 the `0`–`1` range; on the persisted entity it is excluded from JSON output by
-default (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L38-L40`).
+default (`Source: backend/src/ingridient/infrastructure/document/entities/ingridient.schema.ts:L54-L57`).
 
 ```http
 POST /api/ingredient HTTP/1.1
@@ -732,12 +732,12 @@ Content-Type: application/json
 
 > **KNOWN ISSUE — duplicate `name` returns `422`.** Creating an ingredient with
 > a `name` that already exists throws `422 Unprocessable Entity`
-> (`Source: backend/src/ingridient/ingridient.service.ts:L20-L35`).
+> (`Source: backend/src/ingridient/ingridient.service.ts:L40-L58`).
 
 ### 7.3 `GET /api/ingredient`
 
 Returns a paginated list of ingredients from a `QueryIngridientDto` query.
-Returns `200 OK` (`Source: backend/src/ingridient/ingridient.controller.ts:L81-L103`).
+Returns `200 OK` (`Source: backend/src/ingridient/ingridient.controller.ts:L121-L145`).
 
 | Parameter | Type | Required | Description | Source |
 |-----------|------|----------|-------------|--------|
@@ -748,12 +748,12 @@ Returns `200 OK` (`Source: backend/src/ingridient/ingridient.controller.ts:L81-L
 
 > **KNOWN ISSUE — pagination is capped at 50.** A requested `limit` above `50`
 > is reduced to `50`
-> (`Source: backend/src/ingridient/ingridient.controller.ts:L88-L90`).
+> (`Source: backend/src/ingridient/ingridient.controller.ts:L129-L131`).
 
 ### 7.4 `GET /api/ingredient/:id`
 
 Returns a single ingredient by `:id`. Returns `200 OK`
-(`Source: backend/src/ingridient/ingridient.controller.ts:L105-L116`).
+(`Source: backend/src/ingridient/ingridient.controller.ts:L153-L164`).
 
 ### 7.5 `PATCH /api/ingredient/:id`
 
@@ -763,7 +763,7 @@ Updates an ingredient by `:id` from an `UpdateIngridientDto` (sic) body. Returns
 ### 7.6 `DELETE /api/ingredient/:id`
 
 Deletes an ingredient by `:id` via `ingridientService.softDelete`. Returns
-`204 No Content` (`Source: backend/src/ingridient/ingridient.controller.ts:L131-L140`).
+`204 No Content` (`Source: backend/src/ingridient/ingridient.controller.ts:L198-L207`).
 
 
 ## 8. AI Vision Endpoint
@@ -774,7 +774,7 @@ The AI controller is mounted at base `ai` with `@Controller('ai')` — it declar
 
 | Method | Path | Auth | Success | Source |
 |--------|------|------|---------|--------|
-| `POST` | `/api/ai/vision` | **none** | `200 OK` | `Source: backend/src/ai/ai.controller.ts:L43-L77` |
+| `POST` | `/api/ai/vision` | **none** | `201 Created` | `Source: backend/src/ai/ai.controller.ts:L43-L77` |
 
 ### 8.1 `POST /api/ai/vision`
 
@@ -856,8 +856,8 @@ endpoint uses `400` for an empty upload.
 | `400 Bad Request` | AI vision called with no file | `POST /api/ai/vision` | `Source: backend/src/ai/ai.controller.ts:L64-L65` |
 | `401 Unauthorized` | Missing/invalid Bearer token | any class- or route-guarded endpoint | `Source: backend/src/users/users.controller.ts:L40-L45` |
 | `422 Unprocessable Entity` | Validation failure | global `ValidationPipe` | `Source: backend/src/main.ts:L38` |
-| `422 Unprocessable Entity` | Duplicate recipe `title` | `POST /api/recipe` | `Source: backend/src/recipe/recipe.service.ts:L26-L41` |
-| `422 Unprocessable Entity` | Duplicate ingredient `name` | `POST /api/ingredient` | `Source: backend/src/ingridient/ingridient.service.ts:L20-L35` |
+| `422 Unprocessable Entity` | Duplicate recipe `title` | `POST /api/recipe` | `Source: backend/src/recipe/recipe.service.ts:L44-L59` |
+| `422 Unprocessable Entity` | Duplicate ingredient `name` | `POST /api/ingredient` | `Source: backend/src/ingridient/ingridient.service.ts:L40-L58` |
 | `422 Unprocessable Entity` | Login email not found / wrong password | `POST /api/auth/email/login` | `Source: backend/src/auth/auth.service.ts:L52-L116` |
 
 Validation errors are produced by the global `ValidationPipe` registered at
@@ -892,7 +892,7 @@ http://<host>:3000/docs
 
 The sequence below traces `GET /api/recipe/matches` from the client through the
 controller, service, and document repository
-(`Source: backend/src/recipe/recipe.controller.ts:L43-L48`,
+(`Source: backend/src/recipe/recipe.controller.ts:L85-L90`,
 `Source: backend/src/recipe/infrastructure/document/repositories/recipe.repository.ts:L166-L266`).
 
 ```mermaid
